@@ -17,4 +17,28 @@ class KhachHang extends Model
     public $timestamps = false;
 
     protected $guarded = [];
+    public function hangThanhVien()
+{
+    return $this->belongsTo(HangThanhVien::class, 'MaHangThanhVien', 'MaHangThanhVien');
+}
+
+public function hoaDons()
+{
+    return $this->hasMany(HoaDon::class, 'MaKhachHang', 'MaKhachHang');
+}
+
+public function lichSuGiaoDichDiems()
+{
+    return $this->hasMany(LichSuGiaoDichDiem::class, 'MaKhachHang', 'MaKhachHang');
+}
+
+public function voucherKhachHangs()
+{
+    return $this->hasMany(VoucherKhachHang::class, 'MaKhachHang', 'MaKhachHang');
+}
+
+public function phanHois()
+{
+    return $this->hasMany(PhanHoiKhachHang::class, 'MaKhachHang', 'MaKhachHang');
+}
 }

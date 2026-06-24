@@ -17,4 +17,18 @@ class NhanVien extends Model
     public $timestamps = false;
 
     protected $guarded = [];
+    public function hoaDons()
+{
+    return $this->hasMany(HoaDon::class, 'MaNhanVien', 'MaNhanVien');
+}
+
+public function phanHoiXuLys()
+{
+    return $this->hasMany(PhanHoiKhachHang::class, 'MaNhanVien', 'MaNhanVien');
+}
+
+public function lichSuThayDoiQuyTacs()
+{
+    return $this->hasMany(LichSuThayDoiQuyTac::class, 'MaNhanVien', 'MaNhanVien');
+}
 }
