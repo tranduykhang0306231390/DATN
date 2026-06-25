@@ -2,9 +2,10 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use PHPOpenSourceSaver\JWTAuth\Contracts\JWTSubject;
 
-class NhanVien extends Model
+class NhanVien extends Authenticatable implements JWTSubject
 {
     protected $table = 'nhanvien';
 
@@ -17,18 +18,43 @@ class NhanVien extends Model
     public $timestamps = false;
 
     protected $guarded = [];
+    protected $hidden = [
+    'MatKhau'
+];
+    // ===== JWT =====
+
+    public function getJWTIdentifier()
+    {
+        return $this->getKey();
+    }
+
+    public function getJWTCustomClaims()
+    {
+        return [];
+    }
+
+    // ===== Relationships =====
+
     public function hoaDons()
-{
-    return $this->hasMany(HoaDon::class, 'MaNhanVien', 'MaNhanVien');
-}
+    {
+        return $this->hasMany(HoaDon::class, 'MaNhanVien', 'MaNhanVien');
+    }
 
-public function phanHoiXuLys()
-{
-    return $this->hasMany(PhanHoiKhachHang::class, 'MaNhanVien', 'MaNhanVien');
-}
+    public function phanHoiXuLys()
+    {
+        return $this->hasMany(
+            PhanHoiKhachHang::class,
+            'MaNhanVien',
+            'MaNhanVien'
+        );
+    }
 
-public function lichSuThayDoiQuyTacs()
-{
-    return $this->hasMany(LichSuThayDoiQuyTac::class, 'MaNhanVien', 'MaNhanVien');
-}
+    public function lichSuThayDoiQuyTacs()
+    {
+        return $this->hasMany(
+            LichSuThayDoiQuyTac::class,
+            'MaNhanVien',
+            'MaNhanVien'
+        );
+    }
 }

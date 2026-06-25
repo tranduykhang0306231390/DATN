@@ -1,0 +1,141 @@
+body {
+    margin: 0;
+    padding: 0;
+}
+
+.auth-container {
+    min-height: 100vh;
+
+    background:
+        linear-gradient(
+            rgba(0,0,0,0.65),
+            rgba(0,0,0,0.65)
+        ),
+        url("https://images.unsplash.com/photo-1517248135467-4c7edcad34c4");
+
+    background-size: cover;
+    background-position: center;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.auth-card {
+
+    width: 450px;
+
+    background: rgba(18,18,18,0.85);
+
+    backdrop-filter: blur(10px);
+
+    border: 1px solid #D4AF37;
+
+    border-radius: 20px;
+
+    padding: 40px;
+
+    box-shadow:
+        0 10px 40px rgba(0,0,0,0.5);
+
+    color: #F8F4E9;
+}
+
+.auth-title {
+
+    text-align: center;
+
+    font-size: 30px;
+
+    font-weight: bold;
+
+    color: #D4AF37;
+
+    margin-bottom: 30px;
+}
+
+.auth-input {
+
+    height: 50px;
+
+    border-radius: 12px;
+
+    background: #1f1f1f;
+
+    border: 1px solid #444;
+
+    color: white;
+}
+
+.auth-input:focus {
+
+    background: #1f1f1f;
+
+    color: white;
+
+    border-color: #D4AF37;
+
+    box-shadow: 0 0 10px rgba(212,175,55,.5);
+}
+
+.auth-btn {
+
+    width: 100%;
+
+    height: 50px;
+
+    border: none;
+
+    border-radius: 12px;
+
+    background: #D4AF37;
+
+    color: black;
+
+    font-weight: bold;
+
+    transition: .3s;
+}
+
+.auth-btn:hover {
+
+    transform: translateY(-2px);
+
+    background: #e6c75a;
+}
+
+.auth-link {
+
+    color: #D4AF37;
+
+    text-decoration: none;
+}
+
+.auth-link:hover {
+
+    color: white;
+}
+.restaurant-logo {
+    color: #D4AF37;
+    font-weight: bold;
+    letter-spacing: 3px;
+    margin-bottom: 10px;
+}
+
+.restaurant-subtitle {
+    color: #ddd;
+    font-size: 14px;
+}
+
+.auth-title {
+    text-align: center;
+    color: #D4AF37;
+    margin-bottom: 30px;
+    font-weight: bold;
+}
+
+.form-label {
+    color: #F8F4E9;
+    margin-bottom: 8px;
+    display: block;
+}
