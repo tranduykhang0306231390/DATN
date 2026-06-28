@@ -1,16 +1,29 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
+import Home from "./pages/Home";
+
 import LoginMember from "./pages/auth/LoginMember";
 import LoginStaff from "./pages/auth/LoginStaff";
-import Home from "./pages/Home";
+import Register from "./pages/auth/Register";
+
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import StaffDashboard from "./pages/staff/StaffDashboard";
+
+import MemberLayout from "./layouts/MemberLayout";
 import MemberHome from "./pages/member/MemberHome";
-import Register from "./pages/auth/Register";
+import Profile from "./pages/member/Profile";
+import Points from "./pages/member/Points";
 function App() {
     return (
         <BrowserRouter>
+
             <Routes>
+
+                {/* Trang chủ */}
+                <Route
+                    path="/"
+                    element={<Home />}
+                />
 
                 {/* Khách hàng */}
                 <Route
@@ -18,17 +31,44 @@ function App() {
                     element={<LoginMember />}
                 />
 
-                {/* Nhân viên/Admin */}
+                <Route
+                    path="/register"
+                    element={<Register />}
+                />
+
+                {/* Staff */}
                 <Route
                     path="/staff/login"
                     element={<LoginStaff />}
                 />
 
+                {/* Layout dành cho Member */}
                 <Route
-                    path="/member/home"
-                    element={<MemberHome />}
-                />
+                    path="/member"
+                    element={<MemberLayout />}
+                >
 
+                    <Route
+                        index
+                        element={<MemberHome />}
+                    />
+
+                    <Route
+                        path="home"
+                        element={<MemberHome />}
+                    />
+
+                    <Route
+                        path="profile"
+                        element={<Profile />}
+                    />
+                    <Route
+                        path="points"
+                        element={<Points />}
+                    />
+                </Route>
+
+                {/* Dashboard */}
                 <Route
                     path="/staff/dashboard"
                     element={<StaffDashboard />}
@@ -38,14 +78,9 @@ function App() {
                     path="/admin/dashboard"
                     element={<AdminDashboard />}
                 />
-                <Route
-                    path="/register"
-                    element={<Register />}
-                />
-                <Route path="/" element={<Home />} />
-
 
             </Routes>
+
         </BrowserRouter>
     );
 }
