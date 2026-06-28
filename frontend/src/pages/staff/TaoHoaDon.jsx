@@ -1,8 +1,5 @@
-// src/pages/staff/TaoHoaDon.jsx
 import { useState, useEffect, useCallback } from 'react';
 import hoaDonApi from '../../api/hoaDonApi';
-
-// ─── helpers ────────────────────────────────────────────────────────────────
 const fmt = (n) =>
   Number(n).toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
 

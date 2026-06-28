@@ -1,7 +1,4 @@
 <?php
-// =====================================================
-// app/Models/HoaDon.php
-// =====================================================
 namespace App\Models;
  
 use Illuminate\Database\Eloquent\Model;
