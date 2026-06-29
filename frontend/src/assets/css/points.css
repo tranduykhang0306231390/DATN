@@ -1,0 +1,45 @@
+.point-card{
+
+    background:white;
+
+    border-radius:15px;
+
+    padding:30px;
+
+    text-align:center;
+
+    box-shadow:0 10px 30px rgba(0,0,0,.08);
+
+    transition:.3s;
+
+}
+
+.point-card:hover{
+
+    transform:translateY(-5px);
+
+}
+
+.point-card h6{
+
+    color:#777;
+
+    margin-bottom:20px;
+
+}
+
+.point-card h1{
+
+    color:#d4af37;
+
+    font-size:52px;
+
+    font-weight:bold;
+
+}
+
+.point-card h2{
+
+    font-weight:bold;
+
+}
