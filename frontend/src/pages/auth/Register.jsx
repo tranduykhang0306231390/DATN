@@ -3,7 +3,7 @@ import { registerMember } from "../../api/authApi";
 import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
 import "../../assets/css/auth.css";
-
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 function Register() {
 
     const navigate = useNavigate();
@@ -17,6 +17,8 @@ function Register() {
         MatKhau: ""
     });
 
+    const [confirmPassword, setConfirmPassword] = useState("");
+
     const handleChange = (e) => {
         setFormData({
             ...formData,
@@ -28,9 +30,36 @@ function Register() {
 
         e.preventDefault();
 
+        // Kiểm tra xác nhận mật khẩu
+        if (formData.MatKhau !== confirmPassword) {
+            Swal.fire({
+                icon: "warning",
+                title: "Mật khẩu xác nhận không khớp"
+            });
+            return;
+        }
+
+        // Kiểm tra độ mạnh mật khẩu
+        const passwordRegex =
+            /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*#?&]).{8,20}$/;
+
+        if (!passwordRegex.test(formData.MatKhau)) {
+
+            Swal.fire({
+                icon: "warning",
+                title: "Mật khẩu chưa đủ mạnh",
+                text: "Mật khẩu phải từ 8-20 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt."
+            });
+
+            return;
+        }
+
         try {
 
-            await registerMember(formData);
+            await registerMember({
+                ...formData,
+                MatKhau_confirmation: confirmPassword
+            });
 
             Swal.fire({
                 icon: "success",
@@ -39,22 +68,70 @@ function Register() {
                 showConfirmButton: false
             });
 
-            navigate("/login");
+            navigate("/member/login");
 
         } catch (error) {
+
+            console.log(error);
+            console.log(error.response);
+            console.log(error.response?.data);
+
+            let message = "Có lỗi xảy ra";
+
+            if (error.response?.data?.errors) {
+                message = Object.values(error.response.data.errors)[0][0];
+            }
+            else if (error.response?.data?.message) {
+                message = error.response.data.message;
+            }
 
             Swal.fire({
                 icon: "error",
                 title: "Đăng ký thất bại",
-                text:
-                    error.response?.data?.message ||
-                    "Có lỗi xảy ra"
+                text: message
             });
 
         }
 
     };
+    const [showPassword, setShowPassword] = useState(false);
 
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const getPasswordStrength = (password) => {
+
+        let score = 0;
+
+        if (password.length >= 8) score++;
+
+        if (/[A-Z]/.test(password)) score++;
+
+        if (/[a-z]/.test(password)) score++;
+
+        if (/[0-9]/.test(password)) score++;
+
+        if (/[@$!%*#?&]/.test(password)) score++;
+
+        if (score <= 2)
+            return {
+                text: "Yếu",
+                color: "#dc3545",
+                width: "33%"
+            };
+
+        if (score <= 4)
+            return {
+                text: "Trung bình",
+                color: "#ffc107",
+                width: "66%"
+            };
+
+        return {
+            text: "Mạnh",
+            color: "#198754",
+            width: "100%"
+        };
+
+    };
     return (
         <div className="auth-container">
 
@@ -152,21 +229,95 @@ function Register() {
                         />
                     </div>
 
-                    <div className="mb-4">
-                        <label className="form-label">
-                            Mật khẩu
-                        </label>
+                    <div className="mb-3">
 
-                        <input
-                            className="form-control auth-input"
-                            type="password"
-                            name="MatKhau"
-                            placeholder="Nhập mật khẩu"
-                            onChange={handleChange}
-                            required
-                        />
+                        <label>Mật khẩu</label>
+
+                        <div className="password-box">
+
+                            <input
+                                className="form-control auth-input"
+                                type={showPassword ? "text" : "password"}
+                                name="MatKhau"
+                                onChange={handleChange}
+                            />
+
+                            <span
+                                className="password-eye"
+                                onClick={() =>
+                                    setShowPassword(!showPassword)
+                                }
+                            >
+                                {
+                                    showPassword
+                                        ? <FaEyeSlash />
+                                        : <FaEye />
+                                }
+                            </span>
+
+                        </div>
+
                     </div>
 
+                    <div className="password-box">
+
+                        <input
+                            type={showConfirmPassword ? "text" : "password"}
+                            className={`form-control auth-input ${confirmPassword
+                                ? formData.MatKhau === confirmPassword
+                                    ? "is-valid"
+                                    : "is-invalid"
+                                : ""
+                                }`}
+                            value={confirmPassword}
+                            onChange={(e) =>
+                                setConfirmPassword(e.target.value)
+                            }
+                        />
+
+                        <span
+                            className="password-eye"
+                            onClick={() =>
+                                setShowConfirmPassword(!showConfirmPassword)
+                            }
+                        >
+
+                            {
+                                showConfirmPassword
+                                    ?
+                                    <FaEyeSlash />
+                                    :
+                                    <FaEye />
+                            }
+
+                        </span>
+
+                    </div>
+                    {
+                        formData.MatKhau.trim() !== "" && (
+                            <div className="strength-wrapper">
+
+                                <div
+                                    className="strength-bar"
+                                    style={{
+                                        width: getPasswordStrength(formData.MatKhau).width,
+                                        background: getPasswordStrength(formData.MatKhau).color
+                                    }}
+                                />
+                                <p
+                                    style={{
+                                        color: getPasswordStrength(formData.MatKhau).color,
+                                        fontWeight: 600
+                                    }}
+                                >
+
+                                    {getPasswordStrength(formData.MatKhau).text}
+
+                                </p>
+
+                            </div>
+                        )
+                    }
                     <button
                         className="auth-btn"
                         type="submit"
@@ -181,7 +332,7 @@ function Register() {
                         </span>
 
                         <a
-                            href="/login"
+                            href="/member/login"
                             className="auth-link ms-2"
                         >
                             Đăng nhập

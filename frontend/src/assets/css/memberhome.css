@@ -1,0 +1,101 @@
+body{
+    background:#f7f7f7;
+}
+
+.member-navbar{
+
+    height:75px;
+
+    background:#1d1d1d;
+
+    color:white;
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    padding:0 40px;
+
+    box-shadow:0 3px 10px rgba(0,0,0,.2);
+
+}
+
+.logo{
+
+    font-size:28px;
+
+    color:#d4af37;
+
+    font-weight:bold;
+
+}
+
+.member-right{
+
+    display:flex;
+
+    gap:15px;
+
+    align-items:center;
+
+}
+
+.member-right span{
+
+    font-size:17px;
+
+}
+
+.welcome-card{
+
+    background:white;
+
+    border-radius:15px;
+
+    padding:40px;
+
+    text-align:center;
+
+    box-shadow:0 5px 20px rgba(0,0,0,.1);
+
+}
+
+.dashboard-card{
+
+    background:white;
+
+    border-radius:15px;
+
+    text-align:center;
+
+    padding:35px;
+
+    transition:.3s;
+
+    box-shadow:0 5px 15px rgba(0,0,0,.08);
+
+}
+
+.dashboard-card:hover{
+
+    transform:translateY(-8px);
+
+}
+
+.dashboard-card i{
+
+    font-size:45px;
+
+    color:#d4af37;
+
+    margin-bottom:15px;
+
+}
+
+.dashboard-card h5{
+
+    margin-bottom:20px;
+
+}
