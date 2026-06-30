@@ -45,98 +45,97 @@ function MemberHome() {
 
     };
 
-    return (
+   return (
+    <>
 
-        <>
+        <section className="hero-section">
 
-            <div className="welcome-card">
+            <div className="hero-overlay">
 
-                <h2>
-                    🎉 Chào mừng quay trở lại, {user.HoTen}
-                </h2>
+                <h1>
+                    Buffet VIP
+                </h1>
 
                 <p>
-                    Chúc bạn có những bữa tiệc buffet tuyệt vời tại
-                    <strong> Buffet VIP</strong>
+                    Trải nghiệm ẩm thực đẳng cấp cùng chương trình
+                    khách hàng thân thiết.
                 </p>
 
             </div>
 
-            <div className="row mt-4 g-4">
+        </section>
 
-                <div className="col-lg-3 col-md-6">
+        <div className="container">
 
-                    <div className="dashboard-card">
+            <div className="welcome-box">
 
-                        <i className="bi bi-award-fill dashboard-icon"></i>
+                <h2>
+                    Chào mừng {user.HoTen}
+                </h2>
 
-                        <h5>Hạng thành viên</h5>
+                <p>
+                    Hạng hiện tại:
+                    <strong>
+                        {" "}
+                        {getRankName(user.MaHangThanhVien)}
+                    </strong>
+                </p>
 
-                        <h4 className="text-warning">
-                            {getRankName(user.MaHangThanhVien)}
-                        </h4>
+            </div>
 
-                    </div>
+            <div className="row mt-4">
 
-                </div>
+                <div className="col-md-6">
 
-                <div className="col-lg-3 col-md-6">
+                    <div className="promo-slider">
 
-                    <div className="dashboard-card">
+                        <h3>🔥 Vé Hot</h3>
 
-                        <i className="bi bi-star-fill dashboard-icon"></i>
+                        <div className="promo-card">
 
-                        <h5>Tổng điểm</h5>
+                            Buffet Hải Sản Premium
 
-                        <h3>
-                            {user.TongDiem}
-                        </h3>
+                        </div>
 
-                    </div>
+                        <div className="promo-card">
 
-                </div>
+                            Buffet BBQ Hàn Quốc
 
-                <div className="col-lg-3 col-md-6">
+                        </div>
 
-                    <div className="dashboard-card">
+                        <div className="promo-card">
 
-                        <i className="bi bi-ticket-perforated-fill dashboard-icon"></i>
+                            Buffet Lẩu Nhật Bản
 
-                        <h5>Voucher</h5>
-
-                        <p>
-                            Xem voucher hiện có
-                        </p>
-
-                        <Link
-                            to="/member/voucher"
-                            className="btn btn-dark"
-                        >
-                            Xem
-                        </Link>
+                        </div>
 
                     </div>
 
                 </div>
 
-                <div className="col-lg-3 col-md-6">
+                <div className="col-md-6">
 
-                    <div className="dashboard-card">
+                    <div className="promo-slider">
 
-                        <i className="bi bi-person-circle dashboard-icon"></i>
+                        <h3>🎁 Voucher Hot</h3>
 
-                        <h5>Thông tin cá nhân</h5>
+                        <div className="promo-card">
 
-                        <p>
-                            Quản lý tài khoản
-                        </p>
+                            Giảm 50.000 VNĐ
 
-                        <Link
-                            to="/member/profile"
-                            className="btn btn-dark"
-                        >
-                            Xem
-                        </Link>
+                        </div>
+
+                        <div className="promo-card">
+
+                            Tặng nước miễn phí
+
+                        </div>
+
+                        <div className="promo-card">
+
+                            Giảm 10%
+
+                        </div>
 
                     </div>
 
@@ -144,81 +143,31 @@ function MemberHome() {
 
             </div>
 
-            <div className="row mt-4 g-4">
+            <section className="story-section">
 
-                <div className="col-lg-4">
+                <h2>Câu chuyện Buffet VIP</h2>
 
-                    <div className="dashboard-card">
+                <p>
 
-                        <i className="bi bi-receipt dashboard-icon"></i>
+                    Buffet VIP được xây dựng với mong muốn mang
+                    đến trải nghiệm ẩm thực cao cấp, đa dạng
+                    và chất lượng cho mọi khách hàng.
 
-                        <h5>Lịch sử hóa đơn</h5>
+                </p>
 
-                        <p>
-                            Theo dõi các lần dùng bữa.
-                        </p>
+                <p>
 
-                        <Link
-                            to="/member/history"
-                            className="btn btn-outline-dark"
-                        >
-                            Xem
-                        </Link>
+                    Chúng tôi luôn đặt sự hài lòng của khách hàng
+                    lên hàng đầu và không ngừng cải tiến dịch vụ.
 
-                    </div>
+                </p>
 
-                </div>
+            </section>
 
-                <div className="col-lg-4">
+        </div>
 
-                    <div className="dashboard-card">
-
-                        <i className="bi bi-chat-dots-fill dashboard-icon"></i>
-
-                        <h5>Gửi phản hồi</h5>
-
-                        <p>
-                            Đóng góp ý kiến để phục vụ tốt hơn.
-                        </p>
-
-                        <Link
-                            to="/member/feedback"
-                            className="btn btn-outline-dark"
-                        >
-                            Gửi ngay
-                        </Link>
-
-                    </div>
-
-                </div>
-
-                <div className="col-lg-4">
-
-                    <div className="dashboard-card">
-
-                        <i className="bi bi-gift-fill dashboard-icon"></i>
-
-                        <h5>Ưu đãi hôm nay</h5>
-
-                        <p>
-                            Khám phá các ưu đãi dành riêng cho bạn.
-                        </p>
-
-                        <button
-                            className="btn btn-outline-dark"
-                        >
-                            Xem ưu đãi
-                        </button>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-        </>
-
-    );
+    </>
+);
 
 }
 

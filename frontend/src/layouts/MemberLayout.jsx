@@ -1,21 +1,25 @@
-import { Outlet, Link, useNavigate } from "react-router-dom";
+import { Outlet, Link, useNavigate, useLocation } from "react-router-dom";
 import Swal from "sweetalert2";
 import "../assets/css/memberLayout.css";
 
 function MemberLayout() {
 
     const navigate = useNavigate();
+    const location = useLocation();
 
     const user = JSON.parse(localStorage.getItem("user"));
 
     const handleLogout = () => {
 
         Swal.fire({
+
             title: "Đăng xuất?",
+            text: "Bạn muốn đăng xuất khỏi hệ thống?",
             icon: "question",
             showCancelButton: true,
             confirmButtonText: "Đăng xuất",
             cancelButtonText: "Hủy"
+
         }).then(result => {
 
             if (result.isConfirmed) {
@@ -28,71 +32,195 @@ function MemberLayout() {
 
         });
 
-    };
+    }
 
     return (
 
         <>
+
+            {/* HEADER */}
+
             <header className="member-header">
 
-                <div className="logo">
+                <div className="container member-header-content">
 
-                    BUFFET VIP
+                    <div className="member-logo">
 
-                </div>
+                        🍽️ BUFFET VIP
 
-                <nav>
+                    </div>
 
-                    <Link to="/member/home">
-                        Trang chủ
-                    </Link>
+                    <div className="member-user">
 
-                    <Link to="/member/profile">
-                        Hồ sơ
-                    </Link>
+                        <div>
 
-                    <Link to="/member/voucher">
-                        Voucher
-                    </Link>
+                            <small>Xin chào</small>
 
-                    <Link to="/member/history">
-                        Tích điểm
-                    </Link>
-                    <Link
-                        to="/member/points"
-                        className="btn btn-warning"
-                    >
+                            <h6>{user?.HoTen}</h6>
 
-                        Điểm của tôi
+                        </div>
 
-                    </Link>
+                        <Link
+                            to="/member/profile"
+                            className="btn btn-light btn-sm"
+                        >
 
-                </nav>
+                            Hồ sơ
 
-                <div className="right">
+                        </Link>
 
-                    Xin chào <b>{user?.HoTen}</b>
+                        <button
+                            className="btn btn-danger btn-sm"
+                            onClick={handleLogout}
+                        >
 
-                    <button
-                        className="btn btn-danger ms-3"
-                        onClick={handleLogout}
-                    >
-                        Đăng xuất
-                    </button>
+                            Đăng xuất
+
+                        </button>
+
+                    </div>
 
                 </div>
 
             </header>
 
-            <main className="container py-4">
 
-                <Outlet />
+            {/* MENU */}
+
+            <div className="member-menu">
+
+                <div className="container">
+
+                    <Link
+                        className={location.pathname==="/member/home"?"active":""}
+                        to="/member/home"
+                    >
+
+                        Trang chủ
+
+                    </Link>
+
+                    <Link
+                        className={location.pathname==="/member/points"?"active":""}
+                        to="/member/points"
+                    >
+
+                        Tích điểm
+
+                    </Link>
+
+                    <Link
+                        to="/member/rank"
+                    >
+
+                        Hạng thành viên
+
+                    </Link>
+
+                    <Link
+                        to="/member/voucher"
+                    >
+
+                        Kho Voucher
+
+                    </Link>
+
+                    <Link
+                        to="/member/ticket"
+                    >
+
+                        Vé Buffet
+
+                    </Link>
+
+                    <Link
+                        to="/member/invoice"
+                    >
+
+                        Lịch sử hóa đơn
+
+                    </Link>
+
+                    <Link
+                        className={location.pathname==="/member/profile"?"active":""}
+                        to="/member/profile"
+                    >
+
+                        Thông tin cá nhân
+
+                    </Link>
+
+                </div>
+
+            </div>
+
+
+            {/* CONTENT */}
+
+            <main className="member-content">
+
+                <Outlet/>
 
             </main>
 
+
+            {/* FOOTER */}
+
             <footer className="member-footer">
 
-                © 2026 Buffet VIP Loyalty
+                <div className="container">
+
+                    <div className="row">
+
+                        <div className="col-md-4">
+
+                            <h4>BUFFET VIP</h4>
+
+                            <p>
+
+                                Hệ thống khách hàng thân thiết dành cho Buffet VIP.
+
+                            </p>
+
+                        </div>
+
+                        <div className="col-md-4">
+
+                            <h5>Liên hệ</h5>
+
+                            <p>📍 TP.HCM</p>
+
+                            <p>☎ 1900 9999</p>
+
+                            <p>✉ buffetvip@gmail.com</p>
+
+                        </div>
+
+                        <div className="col-md-4">
+
+                            <h5>Kết nối</h5>
+
+                            <div className="social">
+
+                                <i className="bi bi-facebook"></i>
+
+                                <i className="bi bi-tiktok"></i>
+
+                                <i className="bi bi-instagram"></i>
+
+                            </div>
+
+                            <div className="map">
+
+                                Google Map
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
 
             </footer>
 

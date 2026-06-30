@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { getMemberPoints } from "../../api/authApi";
 import "../../assets/css/points.css";
 import Swal from "sweetalert2";
-
+import PointHistory from "../../components/member/PointHistory";
 function Points() {
 
     const [points, setPoints] = useState(null);
@@ -156,11 +156,10 @@ function Points() {
                 </div>
 
             </div>
-
+            <PointHistory />
         </div>
 
     );
-
 }
 
 export default Points;

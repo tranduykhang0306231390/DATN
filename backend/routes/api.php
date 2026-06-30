@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\MemberPointController;
+use App\Http\Controllers\Api\MemberHistoryController;
 
 /*
 |--------------------------------------------------------------------------
@@ -28,7 +29,7 @@ Route::middleware('member')->prefix('member')->group(function () {
 
     Route::get('/profile', [AuthController::class, 'memberProfile']);
     Route::get('/points',  [MemberPointController::class, 'index']);
-
+    Route::get('/history', [MemberHistoryController::class, 'index']);
     // Thêm các API khách hàng ở đây
     // Route::get('/history',     [PointHistoryController::class, 'index']);
     // Route::get('/vouchers',    [VoucherController::class, 'myVouchers']);

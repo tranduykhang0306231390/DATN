@@ -25,3 +25,6 @@ export const getStaffProfile = () => {
 export const getMemberPoints = () => {
     return axiosClient.get("/member/points");
 };
+export const getPointHistory = (page = 1) => {
+    return axiosClient.get(`/member/history?page=${page}`);
+};
