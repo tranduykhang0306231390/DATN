@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Model;
  
 class LichSuGiaoDichDiem extends Model
 {
-<<<<<<< HEAD
     protected $table = 'lichsugiaodichdiem';
 
     protected $primaryKey = 'MaGiaoDichDiem';
@@ -27,16 +26,4 @@ class LichSuGiaoDichDiem extends Model
             'MaKhachHang'
         );
     }
-=======
-    protected $table      = 'lichsugiaodichdiem';
-    protected $primaryKey = 'MaGiaoDichDiem';
-    public    $incrementing = false;
-    protected $keyType    = 'string';
-    public    $timestamps = false;
- 
-    protected $fillable = [
-        'MaGiaoDichDiem','LoaiGiaoDich','SoDiem','SoDiemTruoc',
-        'SoDiemSau','MaKhachHang','MaThamChieu','ThoiGianGiaoDich',
-    ];
->>>>>>> 6605e29e98dff2a474acf8ecbecbaca207846763
 }
