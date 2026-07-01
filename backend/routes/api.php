@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
+<<<<<<< HEAD
 use App\Http\Controllers\Api\MemberPointController;
 use App\Http\Controllers\Api\MemberHistoryController;
 
@@ -15,8 +16,17 @@ Route::post('/member/login', [AuthController::class, 'memberLogin']);
 Route::post('/member/register', [AuthController::class, 'register']);
 Route::post('/staff/login',  [AuthController::class, 'staffLogin']);
 Route::post('/logout',       [AuthController::class, 'logout']);
+=======
+use App\Http\Controllers\Api\HoaDonController;
+
+Route::post('/member/login', [AuthController::class, 'memberLogin']);
+Route::post('/staff/login', [AuthController::class, 'staffLogin']);
+Route::post('/member/register', [AuthController::class, 'register']);
+
+>>>>>>> 6605e29e98dff2a474acf8ecbecbaca207846763
 
 
+<<<<<<< HEAD
 /*
 |--------------------------------------------------------------------------
 | Vùng KHÁCH HÀNG — middleware 'member'
@@ -24,6 +34,19 @@ Route::post('/logout',       [AuthController::class, 'logout']);
 | Nhân viên dù có token hợp lệ cũng bị chặn tại đây.
 |--------------------------------------------------------------------------
 */
+=======
+    Route::post('/staff/logout', [AuthController::class, 'logout']);
+
+    Route::get('/staff/profile',   [AuthController::class, 'staffProfile']);
+
+    Route::get('/loai-ve',[HoaDonController::class, 'getLoaiVe']);
+
+    Route::post('/khach-hang/lookup',[HoaDonController::class, 'lookupKhachHang']);
+
+    Route::post('/hoa-don', [HoaDonController::class, 'taoHoaDon']);
+
+    Route::get('/hoa-don/{maHoaDon}', [HoaDonController::class, 'chiTietHoaDon']);
+>>>>>>> 6605e29e98dff2a474acf8ecbecbaca207846763
 
 Route::middleware('member')->prefix('member')->group(function () {
 
@@ -40,6 +63,12 @@ Route::middleware('member')->prefix('member')->group(function () {
     // Route::get('/notifications', [NotificationController::class, 'index']);
 });
 
+<<<<<<< HEAD
+=======
+
+
+Route::middleware('auth:khachhang')->group(function () {
+>>>>>>> 6605e29e98dff2a474acf8ecbecbaca207846763
 
 /*
 |--------------------------------------------------------------------------
@@ -49,6 +78,7 @@ Route::middleware('member')->prefix('member')->group(function () {
 |--------------------------------------------------------------------------
 */
 
+<<<<<<< HEAD
 Route::middleware('staff:Admin,NhanVien')->prefix('staff')->group(function () {
 
     Route::get('/profile', [AuthController::class, 'staffProfile']);
@@ -100,3 +130,11 @@ Route::middleware('staff:Admin')->prefix('admin')->group(function () {
     // Route::get('/report/revenue',  [ReportController::class, 'revenue']);
     // Route::get('/report/points',   [ReportController::class, 'points']);
 });
+=======
+    Route::post('/member/logout',  [AuthController::class, 'logout']);
+    
+
+});
+Route::post('/logout', [AuthController::class, 'logout']);
+
+>>>>>>> 6605e29e98dff2a474acf8ecbecbaca207846763
