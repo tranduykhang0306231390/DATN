@@ -229,4 +229,56 @@ class AuthController extends Controller
             'user' => $khachHang
         ]);
     }
+    public function updateMemberProfile(Request $request)
+    {
+        $khachHang = auth('khachhang')->user();
+
+        $request->validate(
+            [
+                'HoTen' => [
+                    'required',
+                    'min:3',
+                    'max:100',
+                    'regex:/^[\pL\s]+$/u'
+                ],
+
+                'Email' => [
+                    'required',
+                    'email',
+                    'unique:khachhang,Email,' . $khachHang->MaKhachHang . ',MaKhachHang'
+                ],
+
+                'SoDienThoai' => [
+                    'required',
+                    'regex:/^(0)[0-9]{9}$/',
+                    'unique:khachhang,SoDienThoai,' . $khachHang->MaKhachHang . ',MaKhachHang'
+                ],
+
+                'NgaySinh' => [
+                    'required',
+                    'date',
+                    'before:today'
+                ],
+
+                'GioiTinh' => [
+                    'required',
+                    'in:Nam,Nữ'
+                ]
+            ]
+        );
+
+        $khachHang->update([
+            'HoTen' => $request->HoTen,
+            'Email' => $request->Email,
+            'SoDienThoai' => $request->SoDienThoai,
+            'NgaySinh' => $request->NgaySinh,
+            'GioiTinh' => $request->GioiTinh
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Cập nhật thông tin thành công',
+            'user' => $khachHang->fresh()
+        ]);
+    }
 }

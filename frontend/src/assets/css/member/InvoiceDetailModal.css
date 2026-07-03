@@ -1,0 +1,187 @@
+.invoice-modal .modal-content {
+    border: none;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .2);
+}
+
+.invoice-modal {
+    max-width: 750px;
+}
+
+.invoice-header {
+    background: #006241;
+    color: #fff;
+    padding: 18px 24px;
+}
+
+.invoice-header h4 {
+    margin: 0;
+    font-weight: 700;
+}
+
+.invoice-header small {
+    opacity: .85;
+}
+
+.modal-body {
+    padding: 24px;
+}
+
+/* =========================
+   THÔNG TIN HÓA ĐƠN
+========================= */
+
+.invoice-info {
+    border-bottom: 1px solid #e5e5e5;
+    padding-bottom: 18px;
+    margin-bottom: 25px;
+}
+
+.invoice-info p {
+    margin-bottom: 10px;
+    font-size: 15px;
+    text-align: left;
+}
+
+.invoice-info strong {
+    display: inline-block;
+    min-width: 130px;
+    color: #555;
+    font-weight: 600;
+}
+
+/* =========================
+   TIÊU ĐỀ SECTION
+========================= */
+
+.invoice-section-title {
+    color: #006241;
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    text-align: left;
+}
+
+/* =========================
+   BẢNG DANH SÁCH VÉ
+========================= */
+
+.invoice-table {
+    margin-bottom: 25px;
+}
+
+.invoice-table thead th {
+    background: #f5f5f5;
+    font-weight: 700;
+}
+
+.invoice-table th:first-child,
+.invoice-table td:first-child {
+    text-align: left;
+}
+
+.invoice-table td,
+.invoice-table th {
+    vertical-align: middle;
+}
+
+/* =========================
+   VOUCHER
+========================= */
+
+.voucher-box {
+    border: 1px solid #d7eadf;
+    background: #f8fffb;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 25px;
+    text-align: left;
+}
+
+.voucher-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: #198754;
+    margin-bottom: 5px;
+}
+
+.voucher-desc {
+    color: #666;
+    font-size: 14px;
+}
+
+/* =========================
+   TỔNG THANH TOÁN
+========================= */
+
+.invoice-total {
+    border-top: 2px solid #e5e5e5;
+    padding-top: 20px;
+}
+
+.invoice-total table {
+    width: 100%;
+}
+
+.invoice-total td {
+    padding: 8px 0;
+    font-size: 15px;
+}
+
+.invoice-total td:first-child {
+    text-align: left;
+    color: #444;
+}
+
+.invoice-total td:last-child {
+    text-align: right;
+    font-weight: 600;
+}
+
+.invoice-final {
+    border-top: 2px solid #ccc;
+}
+
+.invoice-final td {
+    padding-top: 16px;
+}
+
+.invoice-final strong {
+    font-size: 22px;
+    color: #006241;
+}
+
+/* =========================
+   FOOTER
+========================= */
+
+.modal-footer {
+    border-top: 1px solid #ececec;
+    padding: 16px 24px;
+}
+
+.modal-footer .btn {
+    min-width: 110px;
+}
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 768px) {
+
+    .invoice-modal {
+        max-width: 95%;
+        margin: auto;
+    }
+
+    .invoice-info strong {
+        min-width: 110px;
+    }
+
+    .invoice-final strong {
+        font-size: 18px;
+    }
+
+}

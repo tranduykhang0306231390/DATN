@@ -1,311 +1,177 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
-
-*{
-    font-family:'Poppins',sans-serif;
-}
+/* ===========================
+   GENERAL
+=========================== */
 
 body{
+    background:#F8F6F1;
+    font-family: "Segoe UI", sans-serif;
+    color:#2d2d2d;
+}
 
-    background:#f7f5f2;
-
+a{
+    text-decoration:none;
 }
 
 /* ===========================
-        HEADER
+   HEADER (COMPACT + LEFT ALIGN)
 =========================== */
 
 .member-header{
-
-    background:#0E4F3A;
-
-    color:#fff;
-
-    padding:18px 0;
-
-    box-shadow:0 3px 12px rgba(0,0,0,.15);
-
-    position:sticky;
-
-    top:0;
-
-    z-index:999;
-
+    background:#0B5D3B;
+    color:white;
+    padding:10px 0;   /* giảm size */
+    box-shadow:0 4px 12px rgba(0,0,0,.08);
 }
 
 .member-header-content{
-
     display:flex;
-
     justify-content:space-between;
-
     align-items:center;
-
+    text-align:left;
 }
 
 .member-logo{
-
-    font-size:28px;
-
+    font-size:22px;   /* nhỏ lại */
     font-weight:700;
-
     letter-spacing:1px;
-
-    color:#fff;
-
+    color:#E8C76A;
 }
 
 .member-user{
-
     display:flex;
-
     align-items:center;
-
-    gap:15px;
-
+    gap:10px;
+    font-size:13px;   /* nhỏ lại */
+    text-align:left;
 }
 
-.member-user small{
-
-    color:#dcdcdc;
-
-}
-
-.member-user h6{
-
-    margin:0;
-
-    font-weight:600;
-
+.member-user strong{
+    color:#E8C76A;
 }
 
 /* ===========================
-            MENU
+   MENU
 =========================== */
 
 .member-menu{
-
     background:white;
-
-    box-shadow:0 4px 12px rgba(0,0,0,.08);
-
+    border-bottom:1px solid #ececec;
     position:sticky;
-
-    top:74px;
-
-    z-index:998;
-
+    top:0;
+    z-index:999;
 }
 
 .member-menu .container{
-
     display:flex;
-
-    justify-content:center;
-
-    gap:18px;
-
-    flex-wrap:wrap;
-
-    padding:15px;
-
+    justify-content:flex-start;  /* căn trái */
+    gap:25px;
+    padding:0 15px;
+    text-align:left;
 }
 
 .member-menu a{
-
-    text-decoration:none;
-
     color:#333;
-
-    font-weight:500;
-
-    padding:10px 24px;
-
-    border-radius:12px;
-
+    font-weight:600;
+    padding:14px 0;
+    position:relative;
     transition:.3s;
-
+    font-size:14px;
+    text-align:left;
 }
 
 .member-menu a:hover{
-
-    background:#0E4F3A;
-
-    color:white;
-
+    color:#0B5D3B;
 }
 
-.member-menu .active{
+.member-menu a.active{
+    color:#0B5D3B;
+}
 
-    background:#0E4F3A;
-
-    color:white;
-
+.member-menu a.active::after{
+    content:"";
+    position:absolute;
+    left:0;
+    bottom:0;
+    width:100%;
+    height:3px;
+    background:#E8C76A;
+    border-radius:20px;
 }
 
 /* ===========================
-          CONTENT
+   CONTENT
 =========================== */
 
 .member-content{
-
-    min-height:75vh;
-
-    padding:35px 0;
-
+    min-height:70vh;
+    padding:35px 0 50px;
+    text-align:left;
 }
 
 /* ===========================
-          FOOTER
+   BUTTON
+=========================== */
+
+.btn-outline-light{
+    border:1px solid #fff;
+    transition:.3s;
+}
+
+.btn-outline-light:hover{
+    background:#E8C76A;
+    color:#222;
+    border-color:#E8C76A;
+}
+
+/* ===========================
+   FOOTER (COMPACT + LEFT)
 =========================== */
 
 .member-footer{
-
-    background:#103b2f;
-
+    background:#6B4226;
     color:white;
-
-    margin-top:80px;
-
-    padding:50px 0;
-
+    margin-top:40px;
+    padding:25px 0;   /* giảm mạnh */
+    text-align:left;
 }
 
-.member-footer h4{
-
-    font-weight:700;
-
-    margin-bottom:20px;
-
+.member-footer .container{
+    text-align:left;
 }
 
 .member-footer h5{
-
-    margin-bottom:20px;
-
+    color:#E8C76A;
+    margin-bottom:10px;
+    font-size:16px;
 }
 
 .member-footer p{
-
-    color:#d7d7d7;
-
-    margin-bottom:8px;
-
-}
-
-.social{
-
-    display:flex;
-
-    gap:18px;
-
-    font-size:28px;
-
-    margin-top:15px;
-
-}
-
-.social i{
-
-    cursor:pointer;
-
-    transition:.3s;
-
-}
-
-.social i:hover{
-
-    color:#d4af37;
-
-    transform:translateY(-4px);
-
-}
-
-.map{
-
-    margin-top:20px;
-
-    height:150px;
-
-    background:white;
-
-    border-radius:12px;
-
-    color:#777;
-
-    display:flex;
-
-    align-items:center;
-
-    justify-content:center;
-
-    font-weight:600;
-
+    margin-bottom:6px;
+    color:#f4f4f4;
+    font-size:13px;
 }
 
 /* ===========================
-        BUTTON
-=========================== */
-
-.btn-danger{
-
-    background:#b42323;
-
-    border:none;
-
-}
-
-.btn-danger:hover{
-
-    background:#8d1919;
-
-}
-
-.btn-light{
-
-    border:none;
-
-}
-
-/* ===========================
-       RESPONSIVE
+   RESPONSIVE
 =========================== */
 
 @media(max-width:992px){
 
 .member-header-content{
-
     flex-direction:column;
-
-    gap:15px;
-
+    gap:10px;
+    align-items:flex-start;
+    text-align:left;
 }
 
 .member-menu .container{
-
+    flex-wrap:wrap;
+    gap:15px;
     justify-content:flex-start;
-
-    overflow-x:auto;
-
-    flex-wrap:nowrap;
-
-}
-
-.member-menu a{
-
-    white-space:nowrap;
-
 }
 
 .member-footer{
-
-    text-align:center;
-
-}
-
-.social{
-
-    justify-content:center;
-
+    text-align:left;
 }
 
 }

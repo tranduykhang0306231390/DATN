@@ -1,0 +1,350 @@
+/* ===========================
+   MEMBER VOUCHER
+=========================== */
+
+.voucher-page {
+    max-width: 1300px;
+    margin: 0 auto;
+}
+
+/* ===========================
+   SECTION
+=========================== */
+
+.voucher-section {
+    margin-bottom: 45px;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #198754;
+}
+
+.section-header h3 {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 700;
+    color: #198754;
+}
+
+.section-header span {
+    background: #198754;
+    color: white;
+    padding: 6px 18px;
+    border-radius: 50px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+/* ===========================
+   GRID
+=========================== */
+
+.voucher-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px,1fr));
+    gap: 22px;
+}
+
+/* ===========================
+   EMPTY
+=========================== */
+
+.empty-voucher {
+    background: #fff;
+    border: 2px dashed #ccc;
+    border-radius: 15px;
+    padding: 50px;
+    text-align: center;
+    color: #777;
+    font-size: 18px;
+}
+
+/* ===========================
+   MY VOUCHER CARD
+=========================== */
+
+.my-voucher-card {
+
+    background: white;
+
+    border-radius: 18px;
+
+    padding: 22px;
+
+    box-shadow: 0 8px 22px rgba(0,0,0,.08);
+
+    transition: .3s;
+
+    border-left: 8px solid #198754;
+
+}
+
+.my-voucher-card:hover{
+
+    transform: translateY(-5px);
+
+    box-shadow:0 15px 30px rgba(0,0,0,.12);
+
+}
+
+.voucher-top{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    margin-bottom:15px;
+
+}
+
+.voucher-top h4{
+
+    margin:0;
+
+    font-size:20px;
+
+    font-weight:700;
+
+    color:#222;
+
+}
+
+.status{
+
+    padding:6px 14px;
+
+    border-radius:30px;
+
+    color:white;
+
+    font-size:13px;
+
+    font-weight:600;
+
+}
+
+.status.active{
+
+    background:#198754;
+
+}
+
+.status.used{
+
+    background:#6c757d;
+
+}
+
+.status.expired{
+
+    background:#dc3545;
+
+}
+
+.voucher-money{
+
+    font-size:32px;
+
+    font-weight:bold;
+
+    color:#198754;
+
+    margin-bottom:12px;
+
+}
+
+.voucher-desc{
+
+    color:#666;
+
+    line-height:1.7;
+
+    min-height:60px;
+
+    margin-bottom:20px;
+
+}
+
+.voucher-info{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    border-top:1px solid #eee;
+
+    padding-top:15px;
+
+}
+
+.voucher-info strong{
+
+    color:#333;
+
+}
+/* ===========================
+   STORE CARD
+=========================== */
+
+.store-voucher-card{
+
+    background:white;
+
+    border-radius:18px;
+
+    padding:22px;
+
+    box-shadow:0 8px 22px rgba(0,0,0,.08);
+
+    transition:.3s;
+
+    border-top:6px solid #198754;
+
+}
+
+.store-voucher-card:hover{
+
+    transform:translateY(-6px);
+
+    box-shadow:0 15px 35px rgba(0,0,0,.12);
+
+}
+
+.voucher-header{
+
+    margin-bottom:15px;
+
+}
+
+.voucher-header h4{
+
+    margin:0;
+
+    font-size:22px;
+
+    color:#222;
+
+    font-weight:700;
+
+}
+
+.discount{
+
+    color:#198754;
+
+    font-size:28px;
+
+    font-weight:bold;
+
+    margin-top:10px;
+
+}
+
+.voucher-description{
+
+    color:#666;
+
+    line-height:1.8;
+
+    min-height:70px;
+
+    margin-bottom:18px;
+
+}
+
+.voucher-detail{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    margin-bottom:20px;
+
+    font-size:15px;
+
+    color:#555;
+
+}
+
+.exchange-btn{
+
+    width:100%;
+
+    border-radius:30px;
+
+    padding:12px;
+
+    font-size:16px;
+
+    font-weight:600;
+
+}
+
+/* ===========================
+   LOADING
+=========================== */
+
+.voucher-loading{
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    min-height:400px;
+
+    font-size:24px;
+
+    color:#198754;
+
+    font-weight:bold;
+
+}
+
+/* ===========================
+   RESPONSIVE
+=========================== */
+
+@media(max-width:768px){
+
+    .voucher-grid{
+
+        grid-template-columns:1fr;
+
+    }
+
+    .section-header{
+
+        flex-direction:column;
+
+        gap:12px;
+
+        align-items:flex-start;
+
+    }
+
+    .voucher-info{
+
+        flex-direction:column;
+
+        gap:15px;
+
+    }
+
+    .voucher-detail{
+
+        flex-direction:column;
+
+        gap:10px;
+
+    }
+
+}

@@ -1,5 +1,4 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-
 import Home from "./pages/Home";
 
 import LoginMember from "./pages/auth/LoginMember";
@@ -14,9 +13,10 @@ import TaoHoaDon from "./pages/staff/TaoHoaDon";
 
 import MemberLayout from "./layouts/MemberLayout";
 import MemberHome from "./pages/member/MemberHome";
-import Profile from "./pages/member/Profile";
-import Points from "./pages/member/Points";
-
+import MemberRank from "./pages/member/MemberRank";
+import Ticket from "./pages/member/Ticket";
+import Voucher from "./pages/member/Voucher";
+import Invoice from "./pages/member/Invoice";
 import {
     MemberRoute,
     StaffRoute,
@@ -45,9 +45,15 @@ function App() {
                     }
                 >
                     <Route index element={<MemberHome />} />
+
                     <Route path="home" element={<MemberHome />} />
-                    <Route path="profile" element={<Profile />} />
-                    <Route path="points" element={<Points />} />
+
+                    <Route path="rank" element={<MemberRank />} />
+
+                    <Route path="ticket" element={<Ticket />} />
+                    <Route path="voucher" element={<Voucher />} />
+                    <Route path="invoice" element={<Invoice />} />
+
                 </Route>
 
                 {/* STAFF */}
