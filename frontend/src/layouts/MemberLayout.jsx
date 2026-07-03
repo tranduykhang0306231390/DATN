@@ -13,26 +13,25 @@ function MemberLayout() {
 
         Swal.fire({
 
-            title: "Đăng xuất?",
-            text: "Bạn muốn đăng xuất khỏi hệ thống?",
+            title: "Đăng xuất",
+            text: "Bạn có muốn đăng xuất không?",
             icon: "question",
             showCancelButton: true,
             confirmButtonText: "Đăng xuất",
             cancelButtonText: "Hủy"
 
-        }).then(result => {
+        }).then((result) => {
 
             if (result.isConfirmed) {
 
                 localStorage.clear();
-
                 navigate("/");
 
             }
 
         });
 
-    }
+    };
 
     return (
 
@@ -46,31 +45,20 @@ function MemberLayout() {
 
                     <div className="member-logo">
 
-                        🍽️ BUFFET VIP
+                        BUFFET VIP
 
                     </div>
 
                     <div className="member-user">
 
-                        <div>
+                        <span>
 
-                            <small>Xin chào</small>
+                            Xin chào, <strong>{user?.HoTen}</strong>
 
-                            <h6>{user?.HoTen}</h6>
-
-                        </div>
-
-                        <Link
-                            to="/member/profile"
-                            className="btn btn-light btn-sm"
-                        >
-
-                            Hồ sơ
-
-                        </Link>
+                        </span>
 
                         <button
-                            className="btn btn-danger btn-sm"
+                            className="btn btn-outline-light btn-sm ms-3"
                             onClick={handleLogout}
                         >
 
@@ -84,85 +72,58 @@ function MemberLayout() {
 
             </header>
 
-
             {/* MENU */}
 
-            <div className="member-menu">
+            <nav className="member-menu">
 
                 <div className="container">
 
                     <Link
-                        className={location.pathname==="/member/home"?"active":""}
                         to="/member/home"
+                        className={location.pathname === "/member/home" ? "active" : ""}
                     >
-
                         Trang chủ
-
-                    </Link>
-
-                    <Link
-                        className={location.pathname==="/member/points"?"active":""}
-                        to="/member/points"
-                    >
-
-                        Tích điểm
-
-                    </Link>
-
-                    <Link
-                        to="/member/rank"
-                    >
-
-                        Hạng thành viên
-
-                    </Link>
-
-                    <Link
-                        to="/member/voucher"
-                    >
-
-                        Kho Voucher
-
                     </Link>
 
                     <Link
                         to="/member/ticket"
+                        className={location.pathname === "/member/ticket" ? "active" : ""}
                     >
+                        Tham khảo vé
+                    </Link>
 
-                        Vé Buffet
+                    <Link
+                        to="/member/rank"
+                        className={location.pathname === "/member/rank" ? "active" : ""}
+                    >
+                        Hạng thành viên
+                    </Link>
 
+                    <Link
+                        to="/member/voucher"
+                        className={location.pathname === "/member/voucher" ? "active" : ""}
+                    >
+                        Kho Voucher
                     </Link>
 
                     <Link
                         to="/member/invoice"
+                        className={location.pathname === "/member/invoice" ? "active" : ""}
                     >
-
-                        Lịch sử hóa đơn
-
-                    </Link>
-
-                    <Link
-                        className={location.pathname==="/member/profile"?"active":""}
-                        to="/member/profile"
-                    >
-
-                        Thông tin cá nhân
-
+                        Lịch sử giao dịch
                     </Link>
 
                 </div>
 
-            </div>
-
+            </nav>
 
             {/* CONTENT */}
 
             <main className="member-content">
 
-                <Outlet/>
+                <Outlet />
 
             </main>
-
 
             {/* FOOTER */}
 
@@ -172,49 +133,25 @@ function MemberLayout() {
 
                     <div className="row">
 
-                        <div className="col-md-4">
+                        <div className="col-md-6">
 
-                            <h4>BUFFET VIP</h4>
+                            <h5>BUFFET VIP</h5>
 
                             <p>
 
-                                Hệ thống khách hàng thân thiết dành cho Buffet VIP.
+                                Chương trình khách hàng thân thiết dành cho những khách hàng yêu thích Buffet VIP.
 
                             </p>
 
                         </div>
 
-                        <div className="col-md-4">
+                        <div className="col-md-6 text-md-end">
 
-                            <h5>Liên hệ</h5>
+                            <p>Email: buffetvip@gmail.com</p>
 
-                            <p>📍 TP.HCM</p>
+                            <p>Hotline: 1900 9999</p>
 
-                            <p>☎ 1900 9999</p>
-
-                            <p>✉ buffetvip@gmail.com</p>
-
-                        </div>
-
-                        <div className="col-md-4">
-
-                            <h5>Kết nối</h5>
-
-                            <div className="social">
-
-                                <i className="bi bi-facebook"></i>
-
-                                <i className="bi bi-tiktok"></i>
-
-                                <i className="bi bi-instagram"></i>
-
-                            </div>
-
-                            <div className="map">
-
-                                Google Map
-
-                            </div>
+                            <p>© 2026 Buffet VIP. All Rights Reserved.</p>
 
                         </div>
 
