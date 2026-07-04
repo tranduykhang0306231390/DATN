@@ -5,7 +5,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\HoaDonController;
 use App\Http\Controllers\Api\LoaiVeController;
 use App\Http\Controllers\Api\TraCuuKhachHangController;
-
+use App\Http\Controllers\Api\QuanLyHoaDonController;
 
 Route::post('/member/login', [AuthController::class, 'memberLogin']);
 Route::post('/staff/login', [AuthController::class, 'staffLogin']);
@@ -28,7 +28,9 @@ Route::middleware('auth:nhanvien')->group(function () {
     Route::post('/hoa-don',           [HoaDonController::class, 'store']);
     Route::get('/hoa-don/{maHoaDon}', [HoaDonController::class, 'show']);
  
-    
+    Route::get('/quan-ly-hoa-don',              [QuanLyHoaDonController::class, 'index']);
+    Route::get('/quan-ly-hoa-don/{maHD}',       [QuanLyHoaDonController::class, 'show']);
+    Route::patch('/quan-ly-hoa-don/{maHD}/huy', [QuanLyHoaDonController::class, 'huy']);
    
 });
 
