@@ -12,6 +12,8 @@ use App\Http\Controllers\Api\MemberVoucherController;
 use App\Http\Controllers\Api\HoaDonKhachHangController;
 use App\Http\Controllers\Api\LoaiVeController;
 use App\Http\Controllers\Api\TraCuuKhachHangController;
+use App\Http\Controllers\Api\QuanLyHoaDonController;
+
 /*
 |--------------------------------------------------------------------------
 | Public API
@@ -98,7 +100,9 @@ Route::middleware('auth:nhanvien')->group(function () {
     Route::post('/hoa-don',           [HoaDonController::class, 'store']);
     Route::get('/hoa-don/{maHoaDon}', [HoaDonController::class, 'show']);
  
-    
+    Route::get('/quan-ly-hoa-don',              [QuanLyHoaDonController::class, 'index']);
+    Route::get('/quan-ly-hoa-don/{maHD}',       [QuanLyHoaDonController::class, 'show']);
+    Route::patch('/quan-ly-hoa-don/{maHD}/huy', [QuanLyHoaDonController::class, 'huy']);
    
 });
 

@@ -22,3 +22,13 @@ const hoaDonApi = {
 
 export default hoaDonApi;
 
+export const quanLyHoaDonApi = {
+    /** Danh sách hóa đơn có lọc + phân trang */
+    danhSach: (params) => axiosClient.get("/quan-ly-hoa-don", { params }),
+ 
+    /** Chi tiết hóa đơn */
+    chiTiet: (maHD) => axiosClient.get(`/quan-ly-hoa-don/${maHD}`),
+ 
+    /** Hủy hóa đơn */
+    huy: (maHD) => axiosClient.patch(`/quan-ly-hoa-don/${maHD}/huy`),
+};

@@ -28,6 +28,7 @@ import {
     StaffRoute,
     AdminRoute,
 } from "./routes/ProtectedRoute";
+import QuanLyHoaDon from "./pages/staff/QuanLyHoaDon";
 
 function App() {
     return (
@@ -79,9 +80,7 @@ function App() {
                     <Route
                         path="/staff/quan-ly-hoa-don"
                         element={
-                            <div style={{ padding: 32 }}>
-                                <h2>Quản lý hóa đơn</h2>
-                            </div>
+                            <QuanLyHoaDon />
                         }
                     />
                 </Route>
