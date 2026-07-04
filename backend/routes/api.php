@@ -10,6 +10,8 @@ use App\Http\Controllers\Api\TicketController;
 use App\Http\Controllers\Api\VoucherController;
 use App\Http\Controllers\Api\MemberVoucherController;
 use App\Http\Controllers\Api\HoaDonKhachHangController;
+use App\Http\Controllers\Api\LoaiVeController;
+use App\Http\Controllers\Api\TraCuuKhachHangController;
 /*
 |--------------------------------------------------------------------------
 | Public API
@@ -79,6 +81,24 @@ Route::middleware('staff:Admin,NhanVien')->prefix('staff')->group(function () {
     Route::get('/hoa-don/{maHoaDon}', [HoaDonController::class, 'chiTietHoaDon']);
 
     // Các API nhân viên khác...
+
+Route::middleware('auth:nhanvien')->group(function () {
+
+    Route::post('/logout',  [AuthController::class, 'logout']);
+    Route::get('/profile',  [AuthController::class, 'staffProfile']);
+ 
+    // Loại vé
+    Route::get('/loai-ve', [LoaiVeController::class, 'index']);
+ 
+    // Tra cứu khách hàng
+    Route::post('/khach-hang/lookup', [TraCuuKhachHangController::class, 'lookup']);
+ 
+    // Hóa đơn
+    Route::post('/hoa-don',           [HoaDonController::class, 'store']);
+    Route::get('/hoa-don/{maHoaDon}', [HoaDonController::class, 'show']);
+ 
+    
+   
 });
 
 /*
@@ -97,4 +117,4 @@ Route::middleware('staff:Admin')->prefix('admin')->group(function () {
     });
 
     // API admin...
-});
+}); 
