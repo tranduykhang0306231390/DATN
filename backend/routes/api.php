@@ -79,6 +79,7 @@ Route::middleware('staff:Admin,NhanVien')->prefix('staff')->group(function () {
     Route::post('/hoa-don', [HoaDonController::class, 'taoHoaDon']);
 
     Route::get('/hoa-don/{maHoaDon}', [HoaDonController::class, 'chiTietHoaDon']);
+});
 
     // Các API nhân viên khác...
 
