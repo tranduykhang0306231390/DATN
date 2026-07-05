@@ -31,6 +31,10 @@ Route::middleware('auth:nhanvien')->group(function () {
     Route::get('/quan-ly-hoa-don',              [QuanLyHoaDonController::class, 'index']);
     Route::get('/quan-ly-hoa-don/{maHD}',       [QuanLyHoaDonController::class, 'show']);
     Route::patch('/quan-ly-hoa-don/{maHD}/huy', [QuanLyHoaDonController::class, 'huy']);
+
+    Route::middleware('staff:Admin')->prefix('admin')->group(function () {
+        
+    });
    
 });
 
