@@ -1,0 +1,317 @@
+/* src/assets/css/admin.css
+   Toàn bộ style của khu vực Admin.
+   Mọi selector đều nằm trong .admin-page để không ảnh hưởng staff.css. */
+
+.admin-page {
+    --admin-bg: #f5f6fb;
+    --admin-surface: #ffffff;
+    --admin-ink: #1e293b;
+    --admin-muted: #64748b;
+    --admin-line: #e6e9f2;
+    --admin-primary: #4f46e5;
+    --admin-radius: 16px;
+    --admin-shadow: 0 1px 2px rgba(15, 23, 42, 0.04),
+        0 8px 24px rgba(15, 23, 42, 0.05);
+
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 28px 24px 56px;
+    color: var(--admin-ink);
+    font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* ---------- HERO / LỜI CHÀO ---------- */
+.admin-page .admin-hero {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 28px 30px;
+    border-radius: 20px;
+    background: linear-gradient(120deg, #4f46e5 0%, #6366f1 45%, #7c3aed 100%);
+    color: #fff;
+    box-shadow: 0 12px 30px rgba(79, 70, 229, 0.28);
+}
+
+.admin-page .admin-hero-eyebrow {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.75);
+    margin-bottom: 6px;
+}
+
+.admin-page .admin-hero-title {
+    margin: 0;
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.admin-page .admin-hero-sub {
+    margin: 8px 0 0;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.admin-page .admin-hero-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+}
+
+.admin-page .admin-hero-badge {
+    padding: 6px 14px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    font-size: 13px;
+    font-weight: 600;
+    backdrop-filter: blur(4px);
+}
+
+.admin-page .admin-logout-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 16px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.38);
+    background: rgba(255, 255, 255, 0.14);
+    color: #fff;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    backdrop-filter: blur(4px);
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.admin-page .admin-logout-btn:hover {
+    background: rgba(255, 255, 255, 0.26);
+    border-color: rgba(255, 255, 255, 0.6);
+}
+
+.admin-page .admin-logout-btn:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+}
+
+.admin-page .admin-logout-btn:disabled {
+    opacity: 0.6;
+    cursor: default;
+}
+
+.admin-page .admin-logout-btn svg {
+    display: block;
+}
+
+/* ---------- SỐ LIỆU TỔNG QUAN ---------- */
+.admin-page .admin-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin: 24px 0 8px;
+}
+
+.admin-page .admin-stat {
+    background: var(--admin-surface);
+    border: 1px solid var(--admin-line);
+    border-radius: var(--admin-radius);
+    padding: 18px 20px;
+    box-shadow: var(--admin-shadow);
+    position: relative;
+    overflow: hidden;
+}
+
+.admin-page .admin-stat::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: var(--stat-accent, var(--admin-primary));
+}
+
+.admin-page .admin-stat-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--admin-muted);
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.admin-page .admin-stat-icon {
+    font-size: 16px;
+    line-height: 1;
+}
+
+.admin-page .admin-stat-value {
+    margin-top: 10px;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--admin-ink);
+    letter-spacing: -0.01em;
+}
+
+.admin-page .admin-stat-hint {
+    margin-top: 4px;
+    font-size: 12px;
+    color: var(--admin-muted);
+}
+
+/* ---------- NHÓM CHỨC NĂNG ---------- */
+.admin-page .admin-section {
+    margin-top: 32px;
+}
+
+.admin-page .admin-section-head {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.admin-page .admin-section-eyebrow {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--admin-primary);
+    background: #eef2ff;
+    padding: 3px 8px;
+    border-radius: 6px;
+}
+
+.admin-page .admin-section-title {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--admin-ink);
+}
+
+.admin-page .admin-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+}
+
+/* ---------- Ô CHỨC NĂNG ---------- */
+.admin-page .admin-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+    text-align: left;
+    padding: 18px;
+    background: var(--admin-surface);
+    border: 1px solid var(--admin-line);
+    border-radius: var(--admin-radius);
+    box-shadow: var(--admin-shadow);
+    cursor: pointer;
+    font: inherit;
+    color: inherit;
+    transition: transform 0.15s ease, box-shadow 0.15s ease,
+        border-color 0.15s ease;
+}
+
+.admin-page .admin-card:hover {
+    transform: translateY(-3px);
+    border-color: color-mix(in srgb, var(--card-accent) 45%, var(--admin-line));
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.1);
+}
+
+.admin-page .admin-card:focus-visible {
+    outline: 2px solid var(--card-accent, var(--admin-primary));
+    outline-offset: 2px;
+}
+
+.admin-page .admin-card-icon {
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    font-size: 22px;
+    background: color-mix(in srgb, var(--card-accent) 15%, #fff);
+    transition: background 0.15s ease;
+}
+
+.admin-page .admin-card:hover .admin-card-icon {
+    background: color-mix(in srgb, var(--card-accent) 24%, #fff);
+}
+
+.admin-page .admin-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+
+.admin-page .admin-card-label {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--admin-ink);
+}
+
+.admin-page .admin-card-desc {
+    font-size: 13px;
+    color: var(--admin-muted);
+    line-height: 1.35;
+}
+
+.admin-page .admin-card-arrow {
+    margin-left: auto;
+    flex-shrink: 0;
+    color: var(--card-accent, var(--admin-primary));
+    font-size: 18px;
+    opacity: 0;
+    transform: translateX(-4px);
+    transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.admin-page .admin-card:hover .admin-card-arrow {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+/* ---------- RESPONSIVE ---------- */
+@media (max-width: 900px) {
+    .admin-page .admin-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 560px) {
+    .admin-page {
+        padding: 20px 16px 40px;
+    }
+    .admin-page .admin-hero {
+        flex-direction: column;
+        padding: 22px;
+    }
+    .admin-page .admin-stats {
+        grid-template-columns: 1fr;
+    }
+    .admin-page .admin-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ---------- GIẢM CHUYỂN ĐỘNG ---------- */
+@media (prefers-reduced-motion: reduce) {
+    .admin-page .admin-card,
+    .admin-page .admin-card-icon,
+    .admin-page .admin-card-arrow {
+        transition: none;
+    }
+    .admin-page .admin-card:hover {
+        transform: none;
+    }
+}
