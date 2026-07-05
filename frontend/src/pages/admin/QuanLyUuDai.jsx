@@ -1,8 +1,10 @@
 // src/pages/admin/QuanLyUuDai.jsx
 import { useEffect, useState, useCallback } from 'react';
 import '../../assets/css/admin.css';
-import uuDaiApi from '../../api/uuDaiApi.js';
-import Modal from '../../components/admin/Modal.jsx';
+import uuDaiApi from '../../api/uuDaiApi';
+import Modal from '../../components/admin/Modal';
+
+const PER_PAGE = 10;
 
 const NHOM_OPTIONS = [
     { value: 'GiamTien', label: 'Giảm tiền' },
@@ -29,6 +31,32 @@ const EMPTY_FORM = {
 const fmtMoney = (n) =>
     new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(n || 0);
 
+// Ngày hôm nay theo giờ địa phương, dạng YYYY-MM-DD
+const todayStr = () => {
+    const d = new Date();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${d.getFullYear()}-${m}-${day}`;
+};
+
+// Tạo dãy số trang có dấu "…" khi quá nhiều trang
+const buildPageList = (current, last) => {
+    const delta = 2;
+    const range = [];
+    for (let i = Math.max(1, current - delta); i <= Math.min(last, current + delta); i++) {
+        range.push(i);
+    }
+    if (range[0] > 1) {
+        if (range[0] > 2) range.unshift('…');
+        range.unshift(1);
+    }
+    if (range[range.length - 1] < last) {
+        if (range[range.length - 1] < last - 1) range.push('…');
+        range.push(last);
+    }
+    return range;
+};
+
 export default function QuanLyUuDai() {
     const [list, setList] = useState([]);
     const [pagination, setPagination] = useState({ current_page: 1, last_page: 1, total: 0 });
@@ -51,7 +79,7 @@ export default function QuanLyUuDai() {
     const loadList = useCallback(() => {
         setLoading(true);
         uuDaiApi
-            .getAll({ search, trang_thai: trangThai, nhom, page, per_page: 10 })
+            .getAll({ search, trang_thai: trangThai, nhom, page, per_page: PER_PAGE })
             .then((res) => {
                 if (res.data?.success) {
                     setList(res.data.data);
@@ -104,6 +132,19 @@ export default function QuanLyUuDai() {
     const setField = (key, value) => setForm((f) => ({ ...f, [key]: value }));
 
     const handleSubmit = async () => {
+        // Khi thêm mới: không cho phép ngày bắt đầu / kết thúc nằm trong quá khứ
+        if (!editing) {
+            const today = todayStr();
+            if (form.NgayBatDau && form.NgayBatDau < today) {
+                setFormError('Ngày bắt đầu không được nằm trong quá khứ.');
+                return;
+            }
+            if (form.NgayKetThuc && form.NgayKetThuc < today) {
+                setFormError('Ngày kết thúc không được nằm trong quá khứ.');
+                return;
+            }
+        }
+
         setSaving(true);
         setFormError('');
         const payload = {
@@ -119,6 +160,7 @@ export default function QuanLyUuDai() {
                 await uuDaiApi.update(editing, payload);
             } else {
                 await uuDaiApi.create(payload);
+                setPage(1);
             }
             setModalOpen(false);
             loadList();
@@ -142,10 +184,14 @@ export default function QuanLyUuDai() {
         }
     };
 
-    const applyFilter = () => {
-        setPage(1);
-        loadList();
+    const applyFilter = () => setPage(1);
+
+    const goToPage = (p) => {
+        if (p < 1 || p > pagination.last_page || p === pagination.current_page) return;
+        setPage(p);
     };
+
+    const pageList = buildPageList(pagination.current_page, pagination.last_page);
 
     return (
         <div className="admin-page">
@@ -275,26 +321,44 @@ export default function QuanLyUuDai() {
                 </table>
             </div>
 
-            {/* Phân trang */}
+            {/* Phân trang: hiện khi có nhiều hơn 10 ưu đãi */}
             {pagination.last_page > 1 && (
                 <div className="admin-pagination">
                     <button
                         className="admin-btn admin-btn--ghost admin-btn--sm"
                         disabled={pagination.current_page <= 1}
-                        onClick={() => setPage((p) => Math.max(1, p - 1))}
+                        onClick={() => goToPage(pagination.current_page - 1)}
                     >
                         ← Trước
                     </button>
-                    <span className="admin-page-info">
-                        Trang {pagination.current_page} / {pagination.last_page} · {pagination.total} ưu đãi
-                    </span>
+
+                    <div className="admin-page-numbers">
+                        {pageList.map((p, i) =>
+                            p === '…' ? (
+                                <span key={`dots-${i}`} className="admin-page-dots">…</span>
+                            ) : (
+                                <button
+                                    key={p}
+                                    className={`admin-btn admin-btn--sm ${p === pagination.current_page ? 'admin-btn--primary' : 'admin-btn--ghost'}`}
+                                    onClick={() => goToPage(p)}
+                                >
+                                    {p}
+                                </button>
+                            )
+                        )}
+                    </div>
+
                     <button
                         className="admin-btn admin-btn--ghost admin-btn--sm"
                         disabled={pagination.current_page >= pagination.last_page}
-                        onClick={() => setPage((p) => p + 1)}
+                        onClick={() => goToPage(pagination.current_page + 1)}
                     >
                         Sau →
                     </button>
+
+                    <span className="admin-page-info">
+                        {pagination.total} ưu đãi
+                    </span>
                 </div>
             )}
 
@@ -392,6 +456,8 @@ export default function QuanLyUuDai() {
                             type="date"
                             className="admin-input"
                             value={form.NgayBatDau}
+                            min={editing ? undefined : todayStr()}
+                            max={form.NgayKetThuc || undefined}
                             onChange={(e) => setField('NgayBatDau', e.target.value)}
                         />
                     </div>
@@ -402,6 +468,7 @@ export default function QuanLyUuDai() {
                             type="date"
                             className="admin-input"
                             value={form.NgayKetThuc}
+                            min={form.NgayBatDau || (editing ? undefined : todayStr())}
                             onChange={(e) => setField('NgayKetThuc', e.target.value)}
                         />
                     </div>
