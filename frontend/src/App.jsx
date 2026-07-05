@@ -10,6 +10,7 @@ import StaffDashboard from "./pages/staff/StaffDashboard";
 import TaoHoaDon from "./pages/staff/TaoHoaDon";
 
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import QuanLyUuDai from './pages/admin/QuanLyUuDai';
 
 import StaffLayout from "./layouts/StaffLayout";
 import { 
@@ -72,6 +73,14 @@ function App() {
                     element={
                         <AdminRoute>
                             <AdminDashboard />
+                        </AdminRoute>
+                    }
+                />
+                <Route
+                    path="/admin/uu-dai"
+                    element={
+                        <AdminRoute>
+                            <QuanLyUuDai />
                         </AdminRoute>
                     }
                 />

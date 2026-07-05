@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\HoaDonController;
 use App\Http\Controllers\Api\LoaiVeController;
 use App\Http\Controllers\Api\TraCuuKhachHangController;
 use App\Http\Controllers\Api\QuanLyHoaDonController;
+use App\Http\Controllers\Api\Admin\UuDaiController;
 
 Route::post('/member/login', [AuthController::class, 'memberLogin']);
 Route::post('/staff/login', [AuthController::class, 'staffLogin']);
@@ -33,7 +34,12 @@ Route::middleware('auth:nhanvien')->group(function () {
     Route::patch('/quan-ly-hoa-don/{maHD}/huy', [QuanLyHoaDonController::class, 'huy']);
 
     Route::middleware('staff:Admin')->prefix('admin')->group(function () {
-        
+        Route::get('/uu-dai/tuy-chon',              [UuDaiController::class, 'tuyChon']);
+        Route::get('/uu-dai',                       [UuDaiController::class, 'index']);
+        Route::get('/uu-dai/{ma}',                  [UuDaiController::class, 'show']);
+        Route::post('/uu-dai',                      [UuDaiController::class, 'store']);
+        Route::put('/uu-dai/{ma}',                  [UuDaiController::class, 'update']);
+        Route::patch('/uu-dai/{ma}/trang-thai',     [UuDaiController::class, 'toggleTrangThai']);
     });
    
 });
