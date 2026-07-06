@@ -13,7 +13,7 @@ use App\Http\Controllers\Api\HoaDonKhachHangController;
 use App\Http\Controllers\Api\LoaiVeController;
 use App\Http\Controllers\Api\TraCuuKhachHangController;
 use App\Http\Controllers\Api\QuanLyHoaDonController;
-
+use App\Http\Controllers\Api\PhanHoiKhachHangController;
 /*
 |--------------------------------------------------------------------------
 | Public API
@@ -62,6 +62,9 @@ Route::middleware('member')->prefix('member')->group(function () {
     // ===== Hóa đơn =====
     Route::get('/invoices', [HoaDonKhachHangController::class, 'index']);
     Route::get('/invoices/{id}', [HoaDonKhachHangController::class, 'show']);
+    // ====== Phản hồi =====
+    Route::post('/invoices/{id}/feedback', [PhanHoiKhachHangController::class, 'store']);
+    Route::get('/invoices/{id}/feedback', [PhanHoiKhachHangController::class, 'show']);
 });
 
 /*
@@ -85,27 +88,27 @@ Route::middleware('staff:Admin,NhanVien')->prefix('staff')->group(function () {
     Route::get('/hoa-don/{maHoaDon}', [HoaDonController::class, 'chiTietHoaDon']);
 });
 
-    // Các API nhân viên khác...
+// Các API nhân viên khác...
 
 Route::middleware('auth:nhanvien')->group(function () {
 
-    Route::post('/logout',  [AuthController::class, 'logout']);
-    Route::get('/profile',  [AuthController::class, 'staffProfile']);
- 
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/profile', [AuthController::class, 'staffProfile']);
+
     // Loại vé
     Route::get('/loai-ve', [LoaiVeController::class, 'index']);
- 
+
     // Tra cứu khách hàng
     Route::post('/khach-hang/lookup', [TraCuuKhachHangController::class, 'lookup']);
- 
+
     // Hóa đơn
-    Route::post('/hoa-don',           [HoaDonController::class, 'store']);
+    Route::post('/hoa-don', [HoaDonController::class, 'store']);
     Route::get('/hoa-don/{maHoaDon}', [HoaDonController::class, 'show']);
- 
-    Route::get('/quan-ly-hoa-don',              [QuanLyHoaDonController::class, 'index']);
-    Route::get('/quan-ly-hoa-don/{maHD}',       [QuanLyHoaDonController::class, 'show']);
+
+    Route::get('/quan-ly-hoa-don', [QuanLyHoaDonController::class, 'index']);
+    Route::get('/quan-ly-hoa-don/{maHD}', [QuanLyHoaDonController::class, 'show']);
     Route::patch('/quan-ly-hoa-don/{maHD}/huy', [QuanLyHoaDonController::class, 'huy']);
-   
+
 });
 
 /*
@@ -124,4 +127,4 @@ Route::middleware('staff:Admin')->prefix('admin')->group(function () {
     });
 
     // API admin...
-}); 
+});

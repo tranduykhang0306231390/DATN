@@ -1,6 +1,46 @@
 import "../../assets/css/member/InvoiceDetailModal.css";
+import { useState, useEffect } from "react";
+import FeedbackModal from "../../components/member/FeedbackModal";
+import { getInvoiceFeedback } from "../../api/authApi";
 
 function InvoiceDetailModal({ show, onClose, invoice }) {
+
+    const [showFeedback, setShowFeedback] = useState(false);
+    const [feedback, setFeedback] = useState(null);
+    const [loadingFeedback, setLoadingFeedback] = useState(false);
+
+    // ==============================
+    // FETCH FEEDBACK FUNCTION
+    // ==============================
+    const fetchFeedback = async () => {
+        if (!invoice?.MaHoaDon) return;
+
+        try {
+            setLoadingFeedback(true);
+
+            const res = await getInvoiceFeedback(invoice.MaHoaDon);
+
+            // Backend trả về: { success: true, data: <feedback object hoặc null> }
+            // Sửa lại cho khớp field "data" mà backend thực sự trả về
+            // (trước đây code đọc nhầm res.data?.feedback -> luôn undefined)
+            setFeedback(res.data?.data || null);
+
+        } catch (err) {
+            console.log("No feedback:", err);
+            setFeedback(null);
+        } finally {
+            setLoadingFeedback(false);
+        }
+    };
+
+    // ==============================
+    // LOAD WHEN OPEN MODAL
+    // ==============================
+    useEffect(() => {
+        if (!show || !invoice?.MaHoaDon) return;
+
+        fetchFeedback();
+    }, [show, invoice]);
 
     if (!show || !invoice) return null;
 
@@ -18,9 +58,10 @@ function InvoiceDetailModal({ show, onClose, invoice }) {
 
     const chiTiet =
         invoice.chiTietHoaDon ||
-        invoice.chi_tiet_hoa_don;
+        invoice.chi_tiet_hoa_don ||
+        [];
 
-    const tongTien = Number(invoice.TongTien);
+    const tongTien = Number(invoice.TongTien || 0);
 
     const giamGia = uuDai
         ? Number(uuDai.GiaTriGiam || 0)
@@ -29,349 +70,185 @@ function InvoiceDetailModal({ show, onClose, invoice }) {
     const thanhToan = tongTien - giamGia;
 
     return (
-
         <div
             className="modal fade show"
-            style={{
-                display: "block",
-                background: "rgba(0,0,0,.45)"
-            }}
+            style={{ display: "block", background: "rgba(0,0,0,.45)" }}
         >
-
             <div className="modal-dialog modal-lg invoice-modal">
-
                 <div className="modal-content">
 
-                    {/* Header */}
-
+                    {/* HEADER */}
                     <div className="invoice-header">
-
                         <div className="d-flex justify-content-between align-items-center">
-
                             <div>
-
-                                <h4 className="mb-1">
-                                    CHI TIẾT HÓA ĐƠN
-                                </h4>
-
-                                <small>
-                                    Buffet VIP
-                                </small>
-
+                                <h4 className="mb-1">CHI TIẾT HÓA ĐƠN</h4>
+                                <small>Buffet VIP</small>
                             </div>
 
                             <button
                                 className="btn-close btn-close-white"
                                 onClick={onClose}
-                            ></button>
-
+                            />
                         </div>
-
                     </div>
 
                     <div className="modal-body">
 
-                        {/* Thông tin hóa đơn */}
-
+                        {/* INFO */}
                         <div className="invoice-info">
-
                             <div className="row">
-
                                 <div className="col-md-6">
-
+                                    <p><strong>Mã hóa đơn</strong> <span>{invoice.MaHoaDon}</span></p>
+                                    <p><strong>Ngày lập</strong> <span>{invoice.NgayLap}</span></p>
                                     <p>
-
-                                        <strong>Mã hóa đơn</strong>
-
-                                        <span>{invoice.MaHoaDon}</span>
-
-                                    </p>
-
-                                    <p>
-
-                                        <strong>Ngày lập</strong>
-
-                                        <span>{invoice.NgayLap}</span>
-
-                                    </p>
-
-                                    <p>
-
                                         <strong>Nhân viên</strong>
-
                                         <span>
-
                                             {nhanVien?.HoTen ||
                                                 nhanVien?.TenNhanVien ||
                                                 "Không xác định"}
-
                                         </span>
-
                                     </p>
-
                                 </div>
 
                                 <div className="col-md-6">
-
-                                    <p>
-
-                                        <strong>Trạng thái</strong>
-
-                                        <span>
-
-                                            {invoice.TrangThai}
-
-                                        </span>
-
-                                    </p>
-
-                                    <p>
-
-                                        <strong>Điểm sử dụng</strong>
-
-                                        <span>
-
-                                            {invoice.DiemSuDung}
-
-                                        </span>
-
-                                    </p>
-
-                                    <p>
-
-                                        <strong>Điểm tích lũy</strong>
-
-                                        <span>
-
-                                            {invoice.DiemTichLuy}
-
-                                        </span>
-
-                                    </p>
-
+                                    <p><strong>Trạng thái</strong> <span>{invoice.TrangThai}</span></p>
+                                    <p><strong>Điểm sử dụng</strong> <span>{invoice.DiemSuDung}</span></p>
+                                    <p><strong>Điểm tích lũy</strong> <span>{invoice.DiemTichLuy}</span></p>
                                 </div>
-
                             </div>
-
                         </div>
-                        {/* Danh sách vé */}
 
+                        {/* CHI TIẾT */}
                         <div className="invoice-section">
+                            <h5>Danh sách vé</h5>
 
-                            <h5 className="invoice-section-title">
-
-                                Danh sách vé
-
-                            </h5>
-
-                            <table className="table invoice-table">
-
+                            <table className="table">
                                 <thead>
-
                                     <tr>
-
                                         <th>Loại vé</th>
-
-                                        <th className="text-center" width="80">
-
-                                            SL
-
-                                        </th>
-
-                                        <th className="text-end" width="130">
-
-                                            Đơn giá
-
-                                        </th>
-
-                                        <th className="text-end" width="150">
-
-                                            Thành tiền
-
-                                        </th>
-
+                                        <th className="text-center">SL</th>
+                                        <th className="text-end">Đơn giá</th>
+                                        <th className="text-end">Thành tiền</th>
                                     </tr>
-
                                 </thead>
 
                                 <tbody>
-
-                                    {
-
-                                        chiTiet.map(item => (
-
-                                            <tr key={item.MaChiTietHD}>
-
-                                                <td>
-
-                                                    {item.loaiVe?.TenLoaiVe ||
-                                                        item.loai_ve?.TenLoaiVe}
-
-                                                </td>
-
-                                                <td className="text-center">
-
-                                                    {item.SoLuong}
-
-                                                </td>
-
-                                                <td className="text-end">
-
-                                                    {Number(item.DonGia).toLocaleString()} đ
-
-                                                </td>
-
-                                                <td className="text-end fw-semibold">
-
-                                                    {(item.SoLuong * item.DonGia).toLocaleString()} đ
-
-                                                </td>
-
-                                            </tr>
-
-                                        ))
-
-                                    }
-
+                                    {chiTiet.map(item => (
+                                        <tr key={item.MaChiTietHD}>
+                                            <td>
+                                                {item.loaiVe?.TenLoaiVe ||
+                                                    item.loai_ve?.TenLoaiVe}
+                                            </td>
+                                            <td className="text-center">{item.SoLuong}</td>
+                                            <td className="text-end">
+                                                {Number(item.DonGia).toLocaleString()} đ
+                                            </td>
+                                            <td className="text-end fw-bold">
+                                                {(item.SoLuong * item.DonGia).toLocaleString()} đ
+                                            </td>
+                                        </tr>
+                                    ))}
                                 </tbody>
-
                             </table>
-
                         </div>
 
-                        {/* Voucher */}
+                        {/* VOUCHER */}
+                        {uuDai && (
+                            <div className="voucher-box">
+                                <h5>Voucher áp dụng</h5>
+                                <div>{uuDai.TenUuDai}</div>
+                                <div>{uuDai.MoTa}</div>
+                            </div>
+                        )}
 
-                        {
-
-                            uuDai && (
-
-                                <div className="voucher-box">
-
-                                    <h5 className="invoice-section-title">
-
-                                        Voucher áp dụng
-
-                                    </h5>
-
-                                    <div className="voucher-name">
-
-                                        {uuDai.TenUuDai}
-
-                                    </div>
-
-                                    <div className="voucher-desc">
-
-                                        {uuDai.MoTa}
-
-                                    </div>
-
-                                </div>
-
-                            )
-
-                        }
-                        {/* Thanh toán */}
-
+                        {/* THANH TOÁN */}
                         <div className="invoice-total">
+                            <h5>Thanh toán</h5>
 
-                            <h5 className="invoice-section-title">
-
-                                Thanh toán
-
-                            </h5>
-
-                            <table className="table table-borderless mb-0">
-
+                            <table className="table table-borderless">
                                 <tbody>
-
                                     <tr>
-
                                         <td>Tạm tính</td>
-
-                                        <td className="text-end">
-
-                                            {tongTien.toLocaleString()} đ
-
-                                        </td>
-
+                                        <td className="text-end">{tongTien.toLocaleString()} đ</td>
                                     </tr>
 
                                     <tr>
-
                                         <td>Giảm voucher</td>
-
                                         <td className="text-end text-danger">
-
                                             - {giamGia.toLocaleString()} đ
-
                                         </td>
-
                                     </tr>
 
                                     <tr>
-
                                         <td>Điểm sử dụng</td>
-
-                                        <td className="text-end">
-
-                                            {invoice.DiemSuDung} điểm
-
-                                        </td>
-
+                                        <td className="text-end">{invoice.DiemSuDung}</td>
                                     </tr>
 
-                                    <tr className="invoice-final">
-
-                                        <td>
-
-                                            <strong>TỔNG THANH TOÁN</strong>
-
-                                        </td>
-
+                                    <tr className="fw-bold">
+                                        <td>TỔNG</td>
                                         <td className="text-end">
-
-                                            <strong>
-
-                                                {thanhToan.toLocaleString()} đ
-
-                                            </strong>
-
+                                            {thanhToan.toLocaleString()} đ
                                         </td>
-
                                     </tr>
-
                                 </tbody>
-
                             </table>
+                        </div>
 
+                        {/* FEEDBACK */}
+                        <div className="invoice-section">
+                            <h5>Đánh giá của bạn</h5>
+
+                            {loadingFeedback && <p>Đang tải...</p>}
+
+                            {!loadingFeedback && feedback && (
+                                <div className="feedback-box">
+                                    <div>⭐ {feedback.DiemDanhGia}/5</div>
+                                    <div>{feedback.NoiDungCuaKhachHang}</div>
+                                </div>
+                            )}
+
+                            {!loadingFeedback && !feedback && (
+                                <p className="text-muted">
+                                    Chưa có đánh giá
+                                </p>
+                            )}
                         </div>
 
                     </div>
 
-                    <div className="modal-footer justify-content-end">
+                    {/* FOOTER */}
+                    <div className="modal-footer justify-content-between">
 
-                        <button
+                        {!feedback ? (
+                            <button
+                                className="btn btn-outline-warning"
+                                onClick={() => setShowFeedback(true)}
+                            >
+                                ⭐ Đánh giá
+                            </button>
+                        ) : (
+                            <span className="text-success">✔ Đã đánh giá</span>
+                        )}
 
-                            className="btn btn-success px-4"
-
-                            onClick={onClose}
-
-                        >
-
+                        <button className="btn btn-success" onClick={onClose}>
                             Đóng
-
                         </button>
-
                     </div>
 
                 </div>
-
             </div>
 
+            <FeedbackModal
+                show={showFeedback}
+                invoice={invoice}
+                onClose={() => setShowFeedback(false)}
+                onSuccess={() => {
+                    setShowFeedback(false);
+                    fetchFeedback(); // reload lại sau khi đánh giá
+                }}
+            />
         </div>
-
     );
-
 }
 
-export default InvoiceDetailModal;                             
+export default InvoiceDetailModal;

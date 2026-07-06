@@ -75,3 +75,14 @@ export const getHotVoucher = () => {
 export const updateMemberProfile = (data) => {
     return axiosClient.put("/member/profile", data);
 };
+export const getInvoiceFeedback = (maHoaDon) => {
+    return axiosClient.get(`/member/invoices/${maHoaDon}/feedback`);
+};
+
+// Gửi phản hồi
+export const sendInvoiceFeedback = (maHoaDon, data) => {
+    return axiosClient.post(
+        `/member/invoices/${maHoaDon}/feedback`,
+        data
+    );
+};
