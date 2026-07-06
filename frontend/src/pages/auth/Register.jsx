@@ -3,7 +3,7 @@ import { registerMember } from "../../api/authApi";
 import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
 import "../../assets/css/auth.css";
-import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { FaEye, FaEyeSlash, FaGift, FaPercent, FaStar, FaCrown, FaUtensils } from "react-icons/fa";
 
 function Register() {
     const navigate = useNavigate();
@@ -38,12 +38,12 @@ function Register() {
         if (/[@$!%*#?&]/.test(password)) score++;
 
         if (score <= 2)
-            return { text: "Yếu", color: "#dc3545", width: "33%" };
+            return { text: "Yếu", color: "#FF5A3C", width: "33%" };
 
         if (score <= 4)
-            return { text: "Trung bình", color: "#ffc107", width: "66%" };
+            return { text: "Trung bình", color: "#FFB100", width: "66%" };
 
-        return { text: "Mạnh", color: "#198754", width: "100%" };
+        return { text: "Mạnh", color: "#04B26D", width: "100%" };
     };
 
     const handleSubmit = async (e) => {
@@ -116,122 +116,143 @@ function Register() {
                     </p>
                 </div>
 
+                {/* HÀNG TEM TÍCH ĐIỂM - điểm nhấn hành trình thành viên */}
+                <div className="stamp-trail">
+                    <div className="stamp stamp-filled"><FaGift /></div>
+                    <div className="stamp stamp-filled"><FaPercent /></div>
+                    <div className="stamp stamp-filled"><FaStar /></div>
+                    <div className="stamp stamp-locked"><FaUtensils /></div>
+                    <div className="stamp stamp-locked"><FaCrown /></div>
+                </div>
+
+                <div className="ticket-divider">
+                    <span className="ticket-notch left" />
+                    <span className="ticket-notch right" />
+                </div>
+
                 <h2 className="auth-title">Đăng ký thành viên</h2>
 
                 <form onSubmit={handleSubmit}>
 
-                    {/* HỌ TÊN */}
-                    <div className="form-group">
-                        <label className="form-label">Họ và tên</label>
-                        <input
-                            className="auth-input"
-                            type="text"
-                            name="HoTen"
-                            onChange={handleChange}
-                            required
-                        />
-                    </div>
-
-                    {/* NGÀY SINH */}
-                    <div className="form-group">
-                        <label className="form-label">Ngày sinh</label>
-                        <input
-                            className="auth-input"
-                            type="date"
-                            name="NgaySinh"
-                            onChange={handleChange}
-                            required
-                        />
-                    </div>
-
-                    {/* GIỚI TÍNH */}
-                    <div className="form-group">
-                        <label className="form-label">Giới tính</label>
-                        <select
-                            className="auth-input"
-                            name="GioiTinh"
-                            onChange={handleChange}
-                        >
-                            <option value="Nam">Nam</option>
-                            <option value="Nu">Nữ</option>
-                        </select>
-                    </div>
-
-                    {/* EMAIL */}
-                    <div className="form-group">
-                        <label className="form-label">Email</label>
-                        <input
-                            className="auth-input"
-                            type="email"
-                            name="Email"
-                            onChange={handleChange}
-                            required
-                        />
-                    </div>
-
-                    {/* SĐT */}
-                    <div className="form-group">
-                        <label className="form-label">Số điện thoại</label>
-                        <input
-                            className="auth-input"
-                            type="text"
-                            name="SoDienThoai"
-                            onChange={handleChange}
-                            required
-                        />
-                    </div>
-
-                    {/* PASSWORD */}
-                    <div className="form-group">
-                        <label className="form-label">Mật khẩu</label>
-
-                        <div className="password-box">
+                    {/* HÀNG 1: HỌ TÊN - NGÀY SINH - GIỚI TÍNH */}
+                    <div className="form-grid-row">
+                        <div className="form-group">
+                            <label className="form-label">Họ và tên</label>
                             <input
                                 className="auth-input"
-                                type={showPassword ? "text" : "password"}
-                                name="MatKhau"
+                                type="text"
+                                name="HoTen"
                                 onChange={handleChange}
                                 required
                             />
+                        </div>
 
-                            <span
-                                className="password-eye"
-                                onClick={() => setShowPassword(!showPassword)}
+                        <div className="form-group">
+                            <label className="form-label">Ngày sinh</label>
+                            <input
+                                className="auth-input"
+                                type="date"
+                                name="NgaySinh"
+                                onChange={handleChange}
+                                required
+                            />
+                        </div>
+
+                        <div className="form-group">
+                            <label className="form-label">Giới tính</label>
+                            <select
+                                className="auth-input"
+                                name="GioiTinh"
+                                onChange={handleChange}
                             >
-                                {showPassword ? <FaEyeSlash /> : <FaEye />}
-                            </span>
+                                <option value="Nam">Nam</option>
+                                <option value="Nu">Nữ</option>
+                            </select>
                         </div>
                     </div>
 
-                    {/* CONFIRM PASSWORD */}
-                    <div className="form-group">
-                        <label className="form-label">
-                            Xác nhận mật khẩu
-                        </label>
-
-                        <div className="password-box">
+                    {/* HÀNG 2: EMAIL - SĐT */}
+                    <div className="form-grid-row">
+                        <div className="form-group">
+                            <label className="form-label">Email</label>
                             <input
                                 className="auth-input"
-                                type={showConfirmPassword ? "text" : "password"}
-                                value={confirmPassword}
-                                onChange={(e) =>
-                                    setConfirmPassword(e.target.value)
-                                }
+                                type="email"
+                                name="Email"
+                                onChange={handleChange}
                                 required
                             />
+                        </div>
 
-                            <span
-                                className="password-eye"
-                                onClick={() =>
-                                    setShowConfirmPassword(!showConfirmPassword)
-                                }
-                            >
-                                {showConfirmPassword ? (
-                                    <FaEyeSlash />
-                                ) : (
-                                    <FaEye />
-                                )}
-                            </span>
+                        <div className="form-group">
+                            <label className="form-label">Số điện thoại</label>
+                            <input
+                                className="auth-input"
+                                type="text"
+                                name="SoDienThoai"
+                                onChange={handleChange}
+                                required
+                            />
+                        </div>
+                    </div>
+
+                    {/* HÀNG 3: MẬT KHẨU - XÁC NHẬN MẬT KHẨU */}
+                    <div className="form-grid-row">
+                        <div className="form-group">
+                            <label className="form-label">Mật khẩu</label>
+
+                            <div className="password-box">
+                                <input
+                                    className="auth-input"
+                                    type={showPassword ? "text" : "password"}
+                                    name="MatKhau"
+                                    onChange={handleChange}
+                                    required
+                                />
+
+                                <span
+                                    className="password-eye"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                >
+                                    {showPassword ? <FaEyeSlash /> : <FaEye />}
+                                </span>
+                            </div>
+
+                            {/* GỢI Ý YÊU CẦU MẬT KHẨU */}
+                            <div className="password-hint">
+                                8-20 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt (@$!%*#?&)
+                            </div>
+                        </div>
+
+                        <div className="form-group">
+                            <label className="form-label">
+                                Xác nhận mật khẩu
+                            </label>
+
+                            <div className="password-box">
+                                <input
+                                    className="auth-input"
+                                    type={showConfirmPassword ? "text" : "password"}
+                                    value={confirmPassword}
+                                    onChange={(e) =>
+                                        setConfirmPassword(e.target.value)
+                                    }
+                                    required
+                                />
+
+                                <span
+                                    className="password-eye"
+                                    onClick={() =>
+                                        setShowConfirmPassword(!showConfirmPassword)
+                                    }
+                                >
+                                    {showConfirmPassword ? (
+                                        <FaEyeSlash />
+                                    ) : (
+                                        <FaEye />
+                                    )}
+                                </span>
+                            </div>
                         </div>
                     </div>
 
@@ -261,7 +282,7 @@ function Register() {
 
                     {/* SUBMIT */}
                     <button className="auth-btn" type="submit">
-                        Đăng ký
+                        <FaGift /> Đăng ký nhận ưu đãi
                     </button>
 
                     {/* LOGIN LINK */}

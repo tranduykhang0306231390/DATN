@@ -25,6 +25,8 @@ Route::post('/member/register', [AuthController::class, 'register']);
 Route::post('/staff/login', [AuthController::class, 'staffLogin']);
 Route::post('/logout', [AuthController::class, 'logout']);
 Route::get('/banner', [BannerController::class, 'index']);
+Route::get('/tickets', [TicketController::class, 'index']);
+Route::get('/tickets/hot', [TicketController::class, 'hot']);
 /*
 |--------------------------------------------------------------------------
 | MEMBER

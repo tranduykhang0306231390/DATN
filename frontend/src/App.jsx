@@ -29,14 +29,22 @@ import {
     AdminRoute,
 } from "./routes/ProtectedRoute";
 import QuanLyHoaDon from "./pages/staff/QuanLyHoaDon";
-
+import PublicLayout from "./layouts/PublicLayout";
 function App() {
     return (
         <BrowserRouter>
             <Routes>
 
                 {/* ---------------- PUBLIC ROUTES ---------------- */}
-                <Route path="/" element={<Home />} />
+                <Route element={<PublicLayout />}>
+
+                    <Route
+                        path="/"
+                        element={<Home />}
+                    />
+
+                </Route>
+
                 <Route path="/login" element={<LoginMember />} />
                 <Route path="/member/login" element={<LoginMember />} />
                 <Route path="/register" element={<Register />} />

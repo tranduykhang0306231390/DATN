@@ -2,10 +2,12 @@ import { useState } from "react";
 import { memberLogin } from "../../api/authApi";
 import Swal from "sweetalert2";
 import "../../assets/css/auth.css";
+import { FaEye, FaEyeSlash, FaGift, FaPercent, FaStar, FaCrown, FaUtensils } from "react-icons/fa";
 
 function LoginMember() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -54,7 +56,7 @@ function LoginMember() {
 
             <div className="auth-card">
 
-                <div className="text-center mb-4">
+                <div className="text-center">
 
                     <h1 className="restaurant-logo">
                         BUFFET VIP
@@ -66,20 +68,34 @@ function LoginMember() {
 
                 </div>
 
+                {/* HÀNG TEM TÍCH ĐIỂM - đồng bộ với trang đăng ký */}
+                <div className="stamp-trail">
+                    <div className="stamp stamp-filled"><FaGift /></div>
+                    <div className="stamp stamp-filled"><FaPercent /></div>
+                    <div className="stamp stamp-filled"><FaStar /></div>
+                    <div className="stamp stamp-locked"><FaUtensils /></div>
+                    <div className="stamp stamp-locked"><FaCrown /></div>
+                </div>
+
+                <div className="ticket-divider">
+                    <span className="ticket-notch left" />
+                    <span className="ticket-notch right" />
+                </div>
+
                 <h2 className="auth-title">
-                    Member Login
+                    Đăng nhập thành viên
                 </h2>
 
                 <form onSubmit={handleLogin}>
 
-                    <div className="mb-3">
+                    <div className="form-group">
 
                         <label className="form-label">
                             Email
                         </label>
 
                         <input
-                            className="form-control auth-input"
+                            className="auth-input"
                             type="email"
                             placeholder="Nhập email của bạn"
                             value={email}
@@ -91,22 +107,31 @@ function LoginMember() {
 
                     </div>
 
-                    <div className="mb-4">
+                    <div className="form-group">
 
                         <label className="form-label">
                             Mật khẩu
                         </label>
 
-                        <input
-                            className="form-control auth-input"
-                            type="password"
-                            placeholder="Nhập mật khẩu"
-                            value={password}
-                            onChange={(e) =>
-                                setPassword(e.target.value)
-                            }
-                            required
-                        />
+                        <div className="password-box">
+                            <input
+                                className="auth-input"
+                                type={showPassword ? "text" : "password"}
+                                placeholder="Nhập mật khẩu"
+                                value={password}
+                                onChange={(e) =>
+                                    setPassword(e.target.value)
+                                }
+                                required
+                            />
+
+                            <span
+                                className="password-eye"
+                                onClick={() => setShowPassword(!showPassword)}
+                            >
+                                {showPassword ? <FaEyeSlash /> : <FaEye />}
+                            </span>
+                        </div>
 
                     </div>
 
@@ -114,7 +139,7 @@ function LoginMember() {
                         className="auth-btn"
                         type="submit"
                     >
-                        Đăng nhập
+                        <FaGift /> Đăng nhập
                     </button>
 
                     <div className="text-center mt-4">
@@ -123,6 +148,7 @@ function LoginMember() {
                             Chưa có tài khoản?
                         </span>
 
+                        {/* ĐÃ SỬA: Thêm thẻ mở <a ở đây */}
                         <a
                             href="/register"
                             className="auth-link ms-2"

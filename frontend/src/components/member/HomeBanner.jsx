@@ -40,14 +40,6 @@ function HomeBanner() {
                                 height: "420px"
                             }}
                         >
-                            <div className="banner-content">
-                                <h2>{item.TieuDe}</h2>
-                                <p>{item.NoiDung}</p>
-
-                                <button className="btn banner-btn">
-                                    Xem ngay
-                                </button>
-                            </div>
                         </div>
                     </div>
                 ))}
