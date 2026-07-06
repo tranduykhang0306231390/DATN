@@ -99,7 +99,19 @@ Route::middleware('auth:nhanvien')->group(function () {
     Route::get('/quan-ly-hoa-don/{maHD}', [QuanLyHoaDonController::class, 'show']);
     Route::patch('/quan-ly-hoa-don/{maHD}/huy', [QuanLyHoaDonController::class, 'huy']);
 
-    Route::get('/uu-dai/tuy-chon',              [UuDaiController::class, 'tuyChon']);
+   
+});
+
+
+
+Route::get('/test', function () {
+        return response()->json([
+            'success' => true,
+            'message' => 'Chỉ Admin mới truy cập được.'
+        ]);
+    });
+Route::middleware('staff:Admin')->prefix('admin')->group(function () {
+        Route::get('/uu-dai/tuy-chon',              [UuDaiController::class, 'tuyChon']);
         Route::get('/uu-dai',                       [UuDaiController::class, 'index']);
         Route::get('/uu-dai/{ma}',                  [UuDaiController::class, 'show']);
         Route::post('/uu-dai',                      [UuDaiController::class, 'store']);
@@ -113,16 +125,6 @@ Route::middleware('auth:nhanvien')->group(function () {
         Route::patch('/loai-ve/{ma}/trang-thai',    [LoaiVeController::class, 'toggleTrangThai']);
 
         
-   
-});
-
-
-
-Route::get('/test', function () {
-        return response()->json([
-            'success' => true,
-            'message' => 'Chỉ Admin mới truy cập được.'
-        ]);
     });
 
     // API admin...
