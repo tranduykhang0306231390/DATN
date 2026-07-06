@@ -9,6 +9,7 @@ import MemberHome from "./pages/member/MemberHome"
 import StaffDashboard from "./pages/staff/StaffDashboard";
 import TaoHoaDon from "./pages/staff/TaoHoaDon";
 
+import AdminLayout from './layouts/AdminLayout';
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import QuanLyUuDai from './pages/admin/QuanLyUuDai';
 
@@ -65,9 +66,11 @@ function App() {
                             <QuanLyHoaDon />
                         }
                     />
+
                 </Route>
 
                 {/* ---------------- ADMIN ROUTES ---------------- */}
+                <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute> }>
                 <Route
                     path="/admin/dashboard"
                     element={
@@ -84,6 +87,7 @@ function App() {
                         </AdminRoute>
                     }
                 />
+                </Route>
             </Routes>
         </BrowserRouter>
     );
