@@ -28,7 +28,7 @@ class NhanVien extends Authenticatable implements JWTSubject
         return $this->getKey();
     }
 
-    public function getJWTCustomClaims()
+    public function getJWTCustomClaims():array
     {
         return [];
     }
@@ -56,5 +56,9 @@ class NhanVien extends Authenticatable implements JWTSubject
             'MaNhanVien',
             'MaNhanVien'
         );
+    }
+     public function getAuthPassword()
+    {
+        return $this->MatKhau;
     }
 }

@@ -1,0 +1,1209 @@
+/* Phóng to toàn bộ layout thêm 30%. zoom được hỗ trợ tốt trên
+   Chrome/Edge; nếu cần hỗ trợ Firefox cũ, có thể thay bằng
+   font-size gốc + đơn vị rem thay vì px. */
+
+html{
+
+    zoom:1.1;
+     scroll-behavior:smooth;
+}
+
+/* Hệ font kiểu Apple: trên máy Apple sẽ hiện đúng San Francisco,
+   các nền tảng khác dùng font hệ thống tương đương (Segoe UI, Roboto...) */
+
+:root{
+
+    --font-apple:-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
+        "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+}
+
+/* =======================================================
+   DESIGN TOKENS
+   Buffet VIP — ngọc lục bảo đậm + vàng đồng, gợi thiệp mời
+   thành viên cao cấp thay vì mặc định xanh Starbucks.
+======================================================= */
+
+:root{
+
+    --ink:#211c14;
+    --ink-soft:#6b6255;
+
+    --forest:#0c3b2e;
+    --forest-deep:#082922;
+    --forest-tint:#e4efe9;
+
+    --gold:#b8874a;
+    --gold-light:#d9b978;
+    --gold-pale:#f1e2c0;
+
+    --cream:#f4f4f5;
+    --cream-deep:#ececed;
+    --white:#ffffff;
+
+    --line:#e0e0e2;
+
+    --shadow-sm:0 2px 10px rgba(33,28,20,0.07);
+    --shadow-md:0 16px 40px rgba(12,59,46,0.14);
+    --shadow-lg:0 30px 70px rgba(12,59,46,0.22);
+
+    --radius-sm:10px;
+    --radius-md:20px;
+    --radius-full:999px;
+
+}
+
+/* =======================================================
+   GLOBAL
+======================================================= */
+
+*{
+    box-sizing:border-box;
+}
+
+body{
+
+    font-family:var(--font-apple);
+
+    color:var(--ink);
+
+    background:var(--cream);
+
+    -webkit-font-smoothing:antialiased;
+
+    padding-top:76px;
+
+}
+
+h1,h2,h3,h4,h5{
+
+    font-family:var(--font-apple);
+
+    font-weight:700;
+
+    letter-spacing:-0.01em;
+
+}
+
+.container{
+
+    width:1180px;
+
+    max-width:95%;
+
+    margin:auto;
+
+}
+
+/* =======================================================
+   HEADER
+======================================================= */
+
+.public-header{
+
+    height:76px;
+
+    background:rgba(250,246,238,0.92);
+
+    backdrop-filter:blur(10px);
+
+    -webkit-backdrop-filter:blur(10px);
+
+    border-bottom:1px solid var(--gold-pale);
+
+    position:fixed;
+
+    top:0;
+
+    left:0;
+
+    right:0;
+
+    z-index:1000;
+
+}
+
+.navbar-wrapper{
+
+    height:76px;
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+}
+
+.logo a{
+
+    font-family:var(--font-apple);
+
+    font-size:21px;
+
+    font-weight:700;
+
+    color:var(--forest);
+
+    letter-spacing:-0.01em;
+
+    display:flex;
+
+    align-items:center;
+
+    gap:10px;
+
+}
+
+.logo a::before{
+
+    content:"";
+
+    display:inline-block;
+
+    width:26px;
+
+    height:26px;
+
+    border-radius:50%;
+
+    background:radial-gradient(circle at 35% 30%, var(--forest), var(--forest-deep) 75%);
+
+    box-shadow:0 0 0 3px var(--gold-pale), inset 0 0 0 1px rgba(255,255,255,0.3);
+
+}
+
+.menu{
+
+    display:flex;
+
+    gap:38px;
+
+}
+
+.menu a{
+
+    font-size:14.5px;
+
+    font-weight:600;
+
+    color:var(--ink);
+
+    position:relative;
+
+    padding-bottom:5px;
+
+    letter-spacing:0.01em;
+
+    transition:color 0.2s ease;
+
+}
+
+.menu a::after{
+
+    content:"";
+
+    position:absolute;
+
+    left:50%;
+
+    bottom:0;
+
+    width:0;
+
+    height:1.5px;
+
+    background:var(--gold);
+
+    transition:all 0.25s ease;
+
+    transform:translateX(-50%);
+
+}
+
+.menu a:hover{
+
+    color:var(--forest);
+
+}
+
+.menu a:hover::after{
+
+    width:100%;
+
+}
+
+.navbar-action{
+
+    display:flex;
+
+    gap:12px;
+
+    align-items:center;
+
+}
+
+.btn-login{
+
+    padding:9px 22px;
+
+    border:1.5px solid var(--forest);
+
+    border-radius:var(--radius-full);
+
+    color:var(--forest);
+
+    font-weight:600;
+
+    font-size:13.5px;
+
+    letter-spacing:0.02em;
+
+    transition:all 0.2s ease;
+
+}
+
+.btn-login:hover{
+
+    background:var(--forest);
+
+    color:var(--white);
+
+}
+
+.btn-register{
+
+    padding:10px 24px;
+
+    border-radius:var(--radius-full);
+
+    background:linear-gradient(135deg, var(--forest) 0%, var(--forest-deep) 100%);
+
+    color:var(--white);
+
+    font-weight:600;
+
+    font-size:13.5px;
+
+    letter-spacing:0.02em;
+
+    box-shadow:var(--shadow-sm);
+
+    transition:all 0.2s ease;
+
+    border:1px solid transparent;
+
+}
+
+.btn-register:hover{
+
+    box-shadow:0 10px 26px rgba(12,59,46,0.28);
+
+    transform:translateY(-1px);
+
+    border-color:var(--gold-light);
+
+}
+
+/* =======================================================
+   HERO
+======================================================= */
+
+.hero-banner{
+
+    width:100%;
+
+    overflow:hidden;
+
+    position:relative;
+
+}
+
+.hero-banner img{
+
+    width:100%;
+
+    height:400px;
+
+    display:block;
+
+}
+
+/* =======================================================
+   LOGIN
+======================================================= */
+
+.login-section{
+
+    padding:36px 0 64px;
+
+    margin-top:0;
+
+    position:relative;
+
+    z-index:2;
+
+}
+
+.login-wrapper{
+
+    display:grid;
+
+    grid-template-columns:1.1fr 0.9fr;
+
+    gap:0;
+
+    align-items:stretch;
+
+    background:var(--white);
+
+    border-radius:var(--radius-md);
+
+    box-shadow:var(--shadow-lg);
+
+    overflow:hidden;
+
+    position:relative;
+
+    border:1px solid var(--gold-pale);
+
+    max-width:1000px;
+
+    margin:0 auto;
+
+}
+
+/* thin inset gold hairline, like the border of an
+   invitation / membership card */
+
+.login-wrapper::before{
+
+    content:"";
+
+    position:absolute;
+
+    inset:8px;
+
+    border:1px solid rgba(184,135,74,0.35);
+
+    pointer-events:none;
+
+    z-index:3;
+
+}
+
+/* corner flourishes at the four inset corners */
+
+.login-wrapper::after{
+
+    content:"";
+
+    position:absolute;
+
+    inset:8px;
+
+    pointer-events:none;
+
+    z-index:4;
+
+    background-image:
+
+        linear-gradient(var(--gold) 0 0), linear-gradient(var(--gold) 0 0),
+
+        linear-gradient(var(--gold) 0 0), linear-gradient(var(--gold) 0 0),
+
+        linear-gradient(var(--gold) 0 0), linear-gradient(var(--gold) 0 0),
+
+        linear-gradient(var(--gold) 0 0), linear-gradient(var(--gold) 0 0);
+
+    background-repeat:no-repeat;
+
+    background-size:16px 2px, 2px 16px;
+
+    background-position:
+
+        top 0 left 0, top 0 left 0,
+
+        top 0 right 0, top 0 right 0,
+
+        bottom 0 left 0, bottom 0 left 0,
+
+        bottom 0 right 0, bottom 0 right 0;
+
+}
+
+.login-left{
+
+    padding:34px 32px;
+
+    position:relative;
+
+    z-index:2;
+
+}
+
+.login-right{
+
+    border-left:1px solid var(--line);
+
+    padding:34px 32px;
+
+    background:var(--cream-deep);
+
+    position:relative;
+
+    z-index:2;
+
+}
+
+.login-left h2,
+
+.login-right h2{
+
+    font-size:22px;
+
+    font-weight:700;
+
+    margin-bottom:4px;
+
+    text-align:left;
+
+    color:var(--forest);
+
+    letter-spacing:-0.01em;
+
+}
+
+.login-left h2::after,
+
+.login-right h2::after{
+
+    content:"";
+
+    display:block;
+
+    width:36px;
+
+    height:2px;
+
+    margin:10px 0 14px;
+
+    background:linear-gradient(90deg, var(--gold) 0%, var(--gold-pale) 100%);
+
+}
+
+.login-desc{
+
+    margin-bottom:20px;
+
+    color:var(--ink-soft);
+
+    line-height:1.65;
+
+    text-align:left;
+
+    font-size:13.5px;
+
+}
+
+.form-group{
+
+    margin-bottom:14px;
+
+}
+
+.form-group label{
+
+    display:block;
+
+    font-size:11px;
+
+    font-weight:700;
+
+    margin-bottom:6px;
+
+    text-align:left;
+
+    color:var(--ink);
+
+    text-transform:uppercase;
+
+    letter-spacing:0.06em;
+
+}
+
+.form-control{
+
+    width:100%;
+
+    height:40px;
+
+    padding:0 14px;
+
+    border:1.5px solid var(--line);
+
+    border-radius:var(--radius-sm);
+
+    font-size:14px;
+
+    font-family:var(--font-apple);
+
+    text-align:left;
+
+    background:var(--white);
+
+    transition:border-color 0.2s ease, box-shadow 0.2s ease;
+
+}
+
+.form-control:focus{
+
+    outline:none;
+
+    border-color:var(--gold);
+
+    box-shadow:0 0 0 4px rgba(184,135,74,0.16);
+
+}
+
+.login-btn{
+
+    margin-top:6px;
+
+    padding:10px 26px;
+
+    border:none;
+
+    border-radius:var(--radius-full);
+
+    background:linear-gradient(135deg, var(--forest) 0%, var(--forest-deep) 100%);
+
+    color:var(--white);
+
+    cursor:pointer;
+
+    font-weight:700;
+
+    font-size:13px;
+
+    letter-spacing:0.03em;
+
+    text-transform:uppercase;
+
+    box-shadow:var(--shadow-sm);
+
+    transition:all 0.2s ease;
+
+    position:relative;
+
+    overflow:hidden;
+
+}
+
+.login-btn:hover{
+
+    box-shadow:0 12px 28px rgba(12,59,46,0.3);
+
+    transform:translateY(-1px);
+
+}
+
+.login-right p{
+
+    color:var(--ink-soft);
+
+    line-height:1.7;
+
+    margin-bottom:18px;
+
+    text-align:left;
+
+    font-size:13.5px;
+
+}
+
+.register-btn{
+
+    display:inline-block;
+
+    padding:9px 22px;
+
+    border:1.5px solid var(--forest);
+
+    border-radius:var(--radius-full);
+
+    color:var(--forest);
+
+    font-weight:700;
+
+    font-size:12.5px;
+
+    letter-spacing:0.03em;
+
+    text-transform:uppercase;
+
+    transition:all 0.2s ease;
+
+}
+
+.register-btn:hover{
+
+    background:var(--forest);
+
+    color:var(--white);
+
+    box-shadow:var(--shadow-sm);
+
+}
+
+/* =======================================================
+   FOOTER
+======================================================= */
+
+.public-footer{
+
+    margin-top:0;
+
+    background:var(--forest-deep);
+
+    padding:10px 0 6px;
+
+    color:#cfe0d9;
+
+    position:relative;
+
+}
+
+.public-footer::before{
+
+    content:"";
+
+    position:absolute;
+
+    top:0;
+
+    left:0;
+
+    right:0;
+
+    height:1px;
+
+    background:linear-gradient(90deg, transparent, var(--gold) 50%, transparent);
+
+}
+
+.footer-grid{
+
+    display:grid;
+
+    grid-template-columns:1.3fr 1fr;
+
+    gap:14px;
+
+}
+
+.footer-item{
+
+    text-align:left;
+
+}
+
+.footer-item h5{
+
+    font-family:var(--font-apple);
+
+    font-size:12.5px;
+
+    margin-bottom:3px;
+
+    font-weight:700;
+
+    color:var(--white);
+
+    position:relative;
+
+    padding-bottom:4px;
+
+    letter-spacing:0.01em;
+
+}
+
+.footer-item h5::after{
+
+    content:"";
+
+    position:absolute;
+
+    left:0;
+
+    bottom:0;
+
+    width:30px;
+
+    height:2px;
+
+    background:var(--gold-light);
+
+}
+
+.footer-item p{
+
+    color:#a9bdb4;
+
+    line-height:1.3;
+
+    text-align:left;
+
+    font-size:11px;
+
+}
+
+.footer-item ul{
+
+    list-style:none;
+
+    padding:0;
+
+    margin:0;
+
+}
+
+.footer-item li{
+
+    margin-bottom:2px;
+
+    color:#a9bdb4;
+
+    text-align:left;
+
+    font-size:11px;
+
+    transition:color 0.2s ease;
+
+}
+
+.footer-item li:hover{
+
+    color:var(--gold-light);
+
+}
+
+.footer-bottom{
+
+    margin-top:5px;
+
+    padding-top:5px;
+
+    border-top:1px solid rgba(255,255,255,0.1);
+
+    text-align:left;
+
+    color:#7d9089;
+
+    font-size:10.5px;
+
+    letter-spacing:0.02em;
+
+}
+
+/* =======================================================
+   TICKET SECTION — "Loại vé nổi bật"
+   (Trước đây file chỉ có phần grid + hiệu ứng chữ, THIẾU
+   toàn bộ style khung layout của .ticket-card và các phần
+   tử con, nên các dòng chữ bị chồng lên nhau. Đã bổ sung
+   đầy đủ bên dưới.)
+======================================================= */
+
+.ticket-section{
+
+    padding:80px 0;
+
+    text-align:center;
+
+}
+
+.ticket-eyebrow{
+
+    display:inline-block;
+
+    font-size:20px;
+
+    font-weight:700;
+
+    letter-spacing:.08em;
+
+    text-transform:uppercase;
+
+    background:linear-gradient(100deg, #a9821f, #f6dc8a, #a9821f);
+
+    background-size:200% auto;
+
+    -webkit-background-clip:text;
+
+    background-clip:text;
+
+    color:transparent;
+
+    animation:goldShimmer 4s linear infinite;
+
+}
+
+.ticket-section h2{
+
+    display:block;
+
+    font-size:32px;
+
+    font-weight:800;
+
+    margin:8px 0 12px;
+
+    background:linear-gradient(100deg, #7a5a1e 0%, #f6dc8a 20%, #fffbe6 40%, #d4af37 60%, #f6dc8a 80%, #7a5a1e 100%);
+
+    background-size:200% auto;
+
+    -webkit-background-clip:text;
+
+    background-clip:text;
+
+    color:transparent;
+
+    text-shadow:0 1px 0 rgba(255,255,255,.15);
+
+    animation:goldShimmer 4s linear infinite;
+
+}
+
+@keyframes goldShimmer{
+
+    0%{ background-position:0% center; }
+
+    100%{ background-position:200% center; }
+
+}
+
+.ticket-subtitle{
+
+    color:var(--ink-soft);
+
+    font-size:15px;
+
+    margin-bottom:36px;
+
+}
+
+/* ======= GRID: 3 vé/hàng, tự wrap khi hết chỗ ======= */
+
+.ticket-grid{
+
+    display:flex;
+
+    flex-wrap:wrap;
+
+    gap:24px;
+
+    justify-content:center;
+
+    align-items:stretch;
+
+}
+
+/* ======= CARD ======= */
+
+.ticket-card{
+
+    position:relative;
+
+    flex:1 1 280px;
+
+    max-width:300px;
+
+    background:var(--white);
+
+    border:1.5px solid var(--gold-pale);
+
+    border-radius:var(--radius-sm);
+
+    padding:18px 20px;
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:10px;
+
+    text-align:left;
+
+    box-shadow:var(--shadow-sm);
+
+    transition:transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+
+}
+
+.ticket-card:hover{
+
+    transform:translateY(-4px);
+
+    box-shadow:0 14px 32px rgba(12,59,46,0.16);
+
+    border-color:var(--gold);
+
+}
+
+.ticket-hole{
+
+    position:absolute;
+
+    top:50%;
+
+    width:16px;
+
+    height:16px;
+
+    background:var(--cream);
+
+    border:1.5px solid var(--gold-pale);
+
+    border-radius:50%;
+
+    transform:translateY(-50%);
+
+    z-index:1;
+
+}
+
+.ticket-hole.left{ left:-9px; }
+
+.ticket-hole.right{ right:-9px; }
+
+.ticket-top{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:4px;
+
+}
+
+.ticket-type{
+
+    display:inline-block;
+
+    width:fit-content;
+
+    font-size:11px;
+
+    font-weight:600;
+
+    letter-spacing:.04em;
+
+    text-transform:uppercase;
+
+    color:var(--gold);
+
+    background:var(--gold-pale);
+
+    padding:2px 8px;
+
+    border-radius:4px;
+
+}
+
+.ticket-top h5{
+
+    font-size:16px;
+
+    font-weight:700;
+
+    color:var(--ink);
+
+    margin:0;
+
+    line-height:1.3;
+
+}
+
+.ticket-divider{
+
+    border-top:1px dashed var(--gold-pale);
+
+    margin:2px 0;
+
+}
+
+.ticket-info p{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    font-size:13px;
+
+    color:var(--ink-soft);
+
+    margin:0;
+
+}
+
+.ticket-info strong{
+
+    color:var(--ink);
+
+    font-weight:600;
+
+}
+
+.ticket-price{
+
+    font-size:22px;
+
+    font-weight:800;
+
+    color:#e0201f;
+
+    line-height:1;
+
+}
+
+.ticket-footer{
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:space-between;
+
+    margin-top:4px;
+
+}
+
+.ticket-footer span{
+
+    font-size:12px;
+
+    color:var(--ink-soft);
+
+}
+
+.ticket-btn{
+
+    font-size:13px;
+
+    font-weight:600;
+
+    color:var(--white);
+
+    background:#e0201f;
+
+    border:none;
+
+    padding:7px 14px;
+
+    border-radius:6px;
+
+    cursor:pointer;
+
+    white-space:nowrap;
+
+    transition:background .2s ease, transform .2s ease;
+
+}
+
+.ticket-btn:hover{
+
+    background:#b81816;
+
+    transform:scale(1.03);
+
+}
+
+@media (prefers-reduced-motion: reduce){
+
+    .ticket-section h2,
+
+    .ticket-eyebrow{
+
+        animation:none;
+
+    }
+
+}
+
+/* =======================================================
+   RESPONSIVE
+======================================================= */
+
+@media(max-width:992px){
+
+    .login-section{
+
+        margin-top:0;
+
+    }
+
+    .login-wrapper{
+
+        grid-template-columns:1fr;
+
+    }
+
+    .login-left, .login-right{
+
+        padding:30px 26px;
+
+    }
+
+    .login-right{
+
+        border-left:none;
+
+        border-top:1px solid var(--line);
+
+    }
+
+    .footer-grid{
+
+        grid-template-columns:1fr;
+
+        gap:34px;
+
+    }
+
+}
+
+@media(max-width:768px){
+
+    .menu{
+
+        display:none;
+
+    }
+
+    .login-left h2,
+    .login-right h2{
+
+        font-size:24px;
+
+    }
+
+    .ticket-section{
+
+        padding:50px 15px;
+
+    }
+
+    .ticket-section h2{
+
+        font-size:28px;
+
+    }
+
+    .ticket-card{
+
+        flex:1 1 100%;
+
+        max-width:100%;
+
+    }
+}

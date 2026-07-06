@@ -1,20 +1,29 @@
 <?php
 
 namespace App\Models;
-
+ 
 use Illuminate\Database\Eloquent\Model;
-
+ 
 class LichSuGiaoDichDiem extends Model
 {
-    protected $table = 'tenbang';
+    protected $table = 'lichsugiaodichdiem';
 
-protected $primaryKey = 'Ma...';
+    protected $primaryKey = 'MaGiaoDichDiem';
 
-public $incrementing = false;
+    public $incrementing = false;
 
-protected $keyType = 'string';
+    protected $keyType = 'string';
 
-public $timestamps = false;
+    public $timestamps = false;
 
-protected $guarded = [];
+    protected $guarded = [];
+
+    public function khachHang()
+    {
+        return $this->belongsTo(
+            KhachHang::class,
+            'MaKhachHang',
+            'MaKhachHang'
+        );
+    }
 }

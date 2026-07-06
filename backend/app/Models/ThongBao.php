@@ -1,20 +1,16 @@
 <?php
 
 namespace App\Models;
-
+ 
 use Illuminate\Database\Eloquent\Model;
-
-class ThongBao extends Model
+ 
+class Thongbao extends Model
 {
-    protected $table = 'thongbao';
+    protected $table      = 'thongbao';
     protected $primaryKey = 'MaThongBao';
-    public $incrementing = false;
-    protected $keyType = 'string';
-    public $timestamps = false;
-    protected $guarded = [];
-
-    public function khachHang()
-    {
-        return $this->belongsTo(KhachHang::class, 'MaKhachHang', 'MaKhachHang');
-    }
+    public    $incrementing = false;
+    protected $keyType    = 'string';
+    public    $timestamps = false;
+ 
+    protected $fillable = ['MaThongBao','TieuDe','NoiDung','ThoiGian','TrangThai','MaKhachHang'];
 }

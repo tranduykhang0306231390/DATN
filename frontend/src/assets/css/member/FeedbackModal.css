@@ -1,0 +1,67 @@
+.feedback-star {
+
+    font-size: 42px;
+
+    color: #d6d6d6;
+
+    cursor: pointer;
+
+    transition: .25s;
+
+    margin: 0 6px;
+
+}
+
+.feedback-star:hover {
+
+    transform: scale(1.15);
+
+}
+
+.feedback-star.active {
+
+    color: #ffc107;
+
+}
+
+.modal-header h5 {
+
+    font-weight: 700;
+
+    color: #0B5D3B;
+
+}
+
+.modal-body textarea {
+
+    resize: none;
+
+    border-radius: 10px;
+
+    padding: 15px;
+
+    font-size: 15px;
+
+}
+
+.modal-body textarea:focus {
+
+    border-color: #198754;
+
+    box-shadow: 0 0 0 .15rem rgba(25,135,84,.25);
+
+}
+
+.modal-footer {
+
+    border-top: none;
+
+    padding: 18px;
+
+}
+
+.modal-footer .btn {
+
+    min-width: 120px;
+
+}

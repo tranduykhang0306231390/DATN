@@ -6,15 +6,15 @@ use Illuminate\Database\Eloquent\Model;
 
 class PhanHoiKhachHang extends Model
 {
-    protected $table = 'tenbang';
+    protected $table = 'phanhoikhachhang';
 
-protected $primaryKey = 'Ma...';
+    protected $primaryKey = 'MaPhanHoi';
 
-public $incrementing = false;
+    public $incrementing = false;
 
-protected $keyType = 'string';
+    protected $keyType = 'string';
 
-public $timestamps = false;
+    public $timestamps = false;
 
-protected $guarded = [];
+    protected $guarded = [];
 }
