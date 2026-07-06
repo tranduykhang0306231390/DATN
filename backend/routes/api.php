@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\TraCuuKhachHangController;
 use App\Http\Controllers\Api\QuanLyHoaDonController;
 use App\Http\Controllers\Api\Admin\UuDaiController;
 
+
 /*
 |--------------------------------------------------------------------------
 | Public API
@@ -99,24 +100,17 @@ Route::middleware('auth:nhanvien')->group(function () {
         Route::post('/uu-dai',                      [UuDaiController::class, 'store']);
         Route::put('/uu-dai/{ma}',                  [UuDaiController::class, 'update']);
         Route::patch('/uu-dai/{ma}/trang-thai',     [UuDaiController::class, 'toggleTrangThai']);
+
+
+        Route::get('/loai-ve',                      [LoaiVeController::class, 'adminIndex']);
+        Route::post('/loai-ve',                     [LoaiVeController::class, 'store']);
+        Route::put('/loai-ve/{ma}',                 [LoaiVeController::class, 'update']);
+        Route::patch('/loai-ve/{ma}/trang-thai',    [LoaiVeController::class, 'toggleTrangThai']);
+
+        
     });
    
 });
 
-/*
-|--------------------------------------------------------------------------
-| ADMIN
-|--------------------------------------------------------------------------
-*/
 
-Route::middleware('staff:Admin')->prefix('admin')->group(function () {
 
-    Route::get('/test', function () {
-        return response()->json([
-            'success' => true,
-            'message' => 'Chỉ Admin mới truy cập được.'
-        ]);
-    });
-
-    // API admin...
-}); 

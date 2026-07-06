@@ -20,12 +20,13 @@ import StaffDashboard from "./pages/staff/StaffDashboard";
 import TaoHoaDon from "./pages/staff/TaoHoaDon";
 
 
-import AdminLayout from './layouts/AdminLayout';
+
 
 // ================= ADMIN =================
-
+import AdminLayout from './layouts/AdminLayout';
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import QuanLyUuDai from './pages/admin/QuanLyUuDai';
+import QuanLyLoaiVe from './pages/admin/QuanLyLoaiVe';
 
 // ================= PROTECTED ROUTES =================
 import {
@@ -108,6 +109,14 @@ function App() {
                             <QuanLyUuDai />
                         </AdminRoute>
                     }
+                />
+                <Route
+                    path="/admin/loai-ve"
+                     element={
+                        <AdminRoute>
+                            <QuanLyLoaiVe />
+                         </AdminRoute>
+                     }
                 />
                 </Route>
             </Routes>
