@@ -1,23 +1,37 @@
-import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 
-// --- IMPORT PAGES ---
+// ================= PUBLIC PAGES =================
 import Home from "./pages/Home";
 import LoginMember from "./pages/auth/LoginMember";
 import LoginStaff from "./pages/auth/LoginStaff";
 import Register from "./pages/auth/Register";
-import MemberHome from "./pages/member/MemberHome"
+
+// ================= MEMBER =================
+import MemberLayout from "./layouts/MemberLayout";
+import MemberHome from "./pages/member/MemberHome";
+import MemberRank from "./pages/member/MemberRank";
+import Ticket from "./pages/member/Ticket";
+import Voucher from "./pages/member/Voucher";
+import Invoice from "./pages/member/Invoice";
+
+// ================= STAFF =================
+import StaffLayout from "./layouts/StaffLayout";
 import StaffDashboard from "./pages/staff/StaffDashboard";
 import TaoHoaDon from "./pages/staff/TaoHoaDon";
 
+
 import AdminLayout from './layouts/AdminLayout';
+
+// ================= ADMIN =================
+
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import QuanLyUuDai from './pages/admin/QuanLyUuDai';
 
-import StaffLayout from "./layouts/StaffLayout";
-import { 
-    MemberRoute, 
-    StaffRoute, 
-    AdminRoute 
+// ================= PROTECTED ROUTES =================
+import {
+    MemberRoute,
+    StaffRoute,
+    AdminRoute,
 } from "./routes/ProtectedRoute";
 import QuanLyHoaDon from "./pages/staff/QuanLyHoaDon";
 
@@ -25,6 +39,7 @@ function App() {
     return (
         <BrowserRouter>
             <Routes>
+
                 {/* ---------------- PUBLIC ROUTES ---------------- */}
                 <Route path="/" element={<Home />} />
                 <Route path="/login" element={<LoginMember />} />
@@ -37,10 +52,17 @@ function App() {
                     path="/member"
                     element={
                         <MemberRoute>
-                            <MemberHome />
+                            <MemberLayout />
                         </MemberRoute>
                     }
-                />
+                >
+                    <Route index element={<MemberHome />} />
+                    <Route path="home" element={<MemberHome />} />
+                    <Route path="rank" element={<MemberRank />} />
+                    <Route path="ticket" element={<Ticket />} />
+                    <Route path="voucher" element={<Voucher />} />
+                    <Route path="invoice" element={<Invoice />} />
+                </Route>
 
                 {/* ---------------- STAFF ROUTES ---------------- */}
                 <Route

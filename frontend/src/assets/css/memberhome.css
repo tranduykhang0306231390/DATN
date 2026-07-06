@@ -1,0 +1,223 @@
+/* ===========================================
+   MEMBER HOME
+=========================================== */
+
+.member-home{
+
+    padding:10px 0 60px;
+
+}
+
+/* ===========================================
+   CONTAINER
+=========================================== */
+
+.member-home .container{
+
+    max-width:1320px;
+
+}
+
+/* ===========================================
+   BANNER
+=========================================== */
+
+.banner-wrapper{
+
+    margin-bottom:50px;
+
+}
+
+/* ===========================================
+   HOT SECTION
+=========================================== */
+
+.hot-section{
+
+    margin-top:20px;
+
+}
+
+/* ===========================================
+   CARD SPACING
+=========================================== */
+
+.ticket-card:last-child{
+
+    margin-bottom:0;
+
+}
+
+.voucher-card:last-child{
+
+    margin-bottom:0;
+
+}
+
+/* ===========================================
+   SECTION TITLE
+=========================================== */
+
+.section-title{
+
+    position:relative;
+
+    display:inline-block;
+
+    margin-bottom:30px;
+
+}
+
+.section-title::after{
+
+    content:"";
+
+    position:absolute;
+
+    left:0;
+
+    bottom:-10px;
+
+    width:80px;
+
+    height:4px;
+
+    background:#E8C76A;
+
+    border-radius:20px;
+
+}
+
+/* ===========================================
+   BUTTON
+=========================================== */
+
+.ticket-btn,
+.voucher-btn{
+
+    font-weight:600;
+
+    transition:.3s;
+
+}
+
+.ticket-btn:hover,
+.voucher-btn:hover{
+
+    transform:translateY(-2px);
+
+}
+
+/* ===========================================
+   CARD
+=========================================== */
+
+.ticket-card,
+.voucher-card{
+
+    border:1px solid rgba(0,0,0,.05);
+
+}
+
+/* ===========================================
+   RESPONSIVE
+=========================================== */
+
+@media(max-width:992px){
+
+    .banner-wrapper{
+
+        margin-bottom:35px;
+
+    }
+
+    .section-title{
+
+        font-size:26px;
+
+    }
+
+}
+
+@media(max-width:768px){
+
+    .row{
+
+        row-gap:35px;
+
+    }
+
+}
+
+@media(max-width:576px){
+
+    .section-title{
+
+        font-size:22px;
+
+    }
+
+}
+/* =========================================
+   HOME HOT CARD
+=========================================*/
+
+.ticket-hot-card,
+.voucher-hot-card{
+
+    background:#fff;
+
+    border-radius:18px;
+
+    padding:22px;
+
+    box-shadow:0 8px 25px rgba(0,0,0,.08);
+
+    transition:.3s;
+
+    border:1px solid #eee;
+
+    height:100%;
+
+}
+
+.ticket-hot-card:hover,
+.voucher-hot-card:hover{
+
+    transform:translateY(-6px);
+
+    box-shadow:0 18px 40px rgba(0,0,0,.12);
+
+}
+
+.ticket-hot-header{
+
+    display:flex;
+
+    justify-content:space-between;
+
+}
+
+.ticket-hot-price{
+
+    color:#0d6b47;
+
+    font-size:28px;
+
+    font-weight:700;
+
+    margin-top:15px;
+
+}
+
+.voucher-hot-point{
+
+    font-size:18px;
+
+    color:#d4a017;
+
+    font-weight:600;
+
+    margin-top:10px;
+
+}

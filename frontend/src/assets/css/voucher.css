@@ -1,0 +1,183 @@
+/* ==================================================
+   VOUCHER CARD
+================================================== */
+
+.voucher-card{
+
+    background:#ffffff;
+
+    border-radius:18px;
+
+    overflow:hidden;
+
+    margin-bottom:25px;
+
+    box-shadow:0 10px 25px rgba(0,0,0,.08);
+
+    transition:.35s;
+
+}
+
+.voucher-card:hover{
+
+    transform:translateY(-8px);
+
+    box-shadow:0 18px 40px rgba(0,0,0,.15);
+
+}
+
+/* ==================================================
+   TOP
+================================================== */
+
+.voucher-top{
+
+    background:#0B5D3B;
+
+    color:white;
+
+    text-align:center;
+
+    padding:28px 20px;
+
+}
+
+.voucher-top h3{
+
+    margin:0;
+
+    font-size:34px;
+
+    font-weight:700;
+
+    color:#E8C76A;
+
+}
+
+.voucher-top span{
+
+    display:block;
+
+    margin-top:8px;
+
+    font-size:15px;
+
+    letter-spacing:1px;
+
+}
+
+/* ==================================================
+   BODY
+================================================== */
+
+.voucher-body{
+
+    padding:25px;
+
+}
+
+.voucher-body h5{
+
+    color:#0B5D3B;
+
+    font-size:22px;
+
+    font-weight:700;
+
+    margin-bottom:15px;
+
+}
+
+.voucher-body p{
+
+    color:#666;
+
+    line-height:28px;
+
+    min-height:56px;
+
+    margin-bottom:18px;
+
+}
+
+.voucher-body small{
+
+    display:block;
+
+    color:#999;
+
+    margin-bottom:22px;
+
+}
+
+/* ==================================================
+   BUTTON
+================================================== */
+
+.voucher-btn{
+
+    width:100%;
+
+    background:#E8C76A;
+
+    color:#222;
+
+    font-weight:600;
+
+    border-radius:30px;
+
+    padding:11px;
+
+    transition:.3s;
+
+}
+
+.voucher-btn:hover{
+
+    background:#0B5D3B;
+
+    color:white;
+
+}
+
+/* ==================================================
+   RESPONSIVE
+================================================== */
+
+@media(max-width:992px){
+
+    .voucher-top{
+
+        padding:24px 18px;
+
+    }
+
+    .voucher-top h3{
+
+        font-size:30px;
+
+    }
+
+}
+
+@media(max-width:576px){
+
+    .voucher-body{
+
+        padding:18px;
+
+    }
+
+    .voucher-body h5{
+
+        font-size:20px;
+
+    }
+
+    .voucher-top h3{
+
+        font-size:26px;
+
+    }
+
+}

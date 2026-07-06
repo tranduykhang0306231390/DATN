@@ -1,0 +1,197 @@
+/* ==================================================
+   SECTION
+================================================== */
+
+.section-title{
+
+    font-size:30px;
+
+    font-weight:700;
+
+    color:#0B5D3B;
+
+    margin-bottom:30px;
+
+    padding-bottom:10px;
+
+    border-bottom:3px solid #E8C76A;
+
+}
+
+/* ==================================================
+   CARD
+================================================== */
+
+.ticket-card{
+
+    background:#fff;
+
+    border-radius:18px;
+
+    overflow:hidden;
+
+    margin-bottom:25px;
+
+    box-shadow:0 10px 25px rgba(0,0,0,.08);
+
+    transition:.35s;
+
+}
+
+.ticket-card:hover{
+
+    transform:translateY(-8px);
+
+    box-shadow:0 18px 40px rgba(0,0,0,.15);
+
+}
+
+/* ==================================================
+   IMAGE
+================================================== */
+
+.ticket-image{
+
+    width:100%;
+
+    height:220px;
+
+    object-fit:cover;
+
+}
+
+/* ==================================================
+   BODY
+================================================== */
+
+.ticket-body{
+
+    padding:25px;
+
+}
+
+.ticket-body h5{
+
+    font-size:23px;
+
+    font-weight:700;
+
+    color:#0B5D3B;
+
+    margin-bottom:15px;
+
+}
+
+.ticket-desc{
+
+    color:#666;
+
+    line-height:28px;
+
+    margin-bottom:20px;
+
+    min-height:60px;
+
+}
+
+/* ==================================================
+   PRICE
+================================================== */
+
+.ticket-price{
+
+    color:#B8860B;
+
+    font-size:28px;
+
+    font-weight:bold;
+
+    margin-bottom:20px;
+
+}
+
+/* ==================================================
+   BUTTON
+================================================== */
+
+.ticket-btn{
+
+    background:#0B5D3B;
+
+    color:white;
+
+    padding:10px 28px;
+
+    border-radius:30px;
+
+    transition:.3s;
+
+}
+
+.ticket-btn:hover{
+
+    background:#E8C76A;
+
+    color:#222;
+
+}
+
+/* ==================================================
+   RESPONSIVE
+================================================== */
+
+@media(max-width:992px){
+
+.ticket-image{
+
+    height:190px;
+
+}
+
+.ticket-body h5{
+
+    font-size:20px;
+
+}
+
+.ticket-price{
+
+    font-size:24px;
+
+}
+
+}
+
+@media(max-width:576px){
+
+.ticket-image{
+
+    height:170px;
+
+}
+
+.ticket-body{
+
+    padding:18px;
+
+}
+
+.ticket-body h5{
+
+    font-size:18px;
+
+}
+
+.ticket-price{
+
+    font-size:22px;
+
+}
+
+.ticket-btn{
+
+    width:100%;
+
+}
+
+}

@@ -2,17 +2,76 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\MemberPointController;
+use App\Http\Controllers\Api\MemberHistoryController;
 use App\Http\Controllers\Api\HoaDonController;
+use App\Http\Controllers\Api\BannerController;
+use App\Http\Controllers\Api\TicketController;
+use App\Http\Controllers\Api\VoucherController;
+use App\Http\Controllers\Api\MemberVoucherController;
+use App\Http\Controllers\Api\HoaDonKhachHangController;
 use App\Http\Controllers\Api\LoaiVeController;
 use App\Http\Controllers\Api\TraCuuKhachHangController;
 use App\Http\Controllers\Api\QuanLyHoaDonController;
 use App\Http\Controllers\Api\Admin\UuDaiController;
 
+/*
+|--------------------------------------------------------------------------
+| Public API
+|--------------------------------------------------------------------------
+*/
+
 Route::post('/member/login', [AuthController::class, 'memberLogin']);
-Route::post('/staff/login', [AuthController::class, 'staffLogin']);
 Route::post('/member/register', [AuthController::class, 'register']);
+Route::post('/staff/login', [AuthController::class, 'staffLogin']);
+Route::post('/logout', [AuthController::class, 'logout']);
+Route::get('/banner', [BannerController::class, 'index']);
+/*
+|--------------------------------------------------------------------------
+| MEMBER
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware('member')->prefix('member')->group(function () {
+
+    // ===== Thông tin khách hàng =====
+    Route::get('/profile', [AuthController::class, 'memberProfile']);
+    Route::get('/points', [MemberPointController::class, 'index']);
+    Route::get('/history', [MemberHistoryController::class, 'index']);
+    Route::put('/profile', [AuthController::class, 'updateMemberProfile']);
+    // ===== Vé đã mua =====
+    Route::get('/tickets', [TicketController::class, 'index']);
+    Route::get('/tickets/hot', [TicketController::class, 'hot']);
 
 
+    // ===== Voucher =====
+
+    // Voucher của khách
+    Route::get('/my-vouchers', [VoucherController::class, 'myVoucher']);
+
+    // Kho voucher
+    Route::get('/voucher-store', [VoucherController::class, 'voucherStore']);
+
+    // Voucher nổi bật Home
+    Route::get('/voucher-hot', [VoucherController::class, 'hot']);
+
+    // Đổi voucher
+    Route::post('/exchange-voucher', [VoucherController::class, 'exchangeVoucher']);
+
+    // ===== Hóa đơn =====
+    Route::get('/invoices', [HoaDonKhachHangController::class, 'index']);
+    Route::get('/invoices/{id}', [HoaDonKhachHangController::class, 'show']);
+});
+
+/*
+|--------------------------------------------------------------------------
+| STAFF
+|--------------------------------------------------------------------------
+*/
+
+
+
+    // Các API nhân viên khác...
 
 Route::middleware('auth:nhanvien')->group(function () {
 
@@ -44,15 +103,20 @@ Route::middleware('auth:nhanvien')->group(function () {
    
 });
 
+/*
+|--------------------------------------------------------------------------
+| ADMIN
+|--------------------------------------------------------------------------
+*/
 
+Route::middleware('staff:Admin')->prefix('admin')->group(function () {
 
-Route::middleware('auth:khachhang')->group(function () {
+    Route::get('/test', function () {
+        return response()->json([
+            'success' => true,
+            'message' => 'Chỉ Admin mới truy cập được.'
+        ]);
+    });
 
-    Route::get('/member/profile', [AuthController::class, 'memberProfile']);
-
-    Route::post('/member/logout',  [AuthController::class, 'logout']);
-    
-
-});
-Route::post('/logout', [AuthController::class, 'logout']);
-
+    // API admin...
+}); 

@@ -3,6 +3,7 @@ import axiosClient from "./axiosClient";
 
 const hoaDonApi = {
     /** Lấy danh sách loại vé */
+
     getLoaiVe: () => axiosClient.get("/loai-ve"),
 
     /** Tra cứu KH + voucher theo số điện thoại */
@@ -12,6 +13,7 @@ const hoaDonApi = {
         }),
 
     /** Tạo hóa đơn */
+
     taoHoaDon: (payload) => axiosClient.post("/hoa-don", payload),
 
     /** Xem chi tiết hóa đơn */

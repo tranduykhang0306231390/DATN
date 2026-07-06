@@ -1,0 +1,177 @@
+/* ===========================
+   GENERAL
+=========================== */
+
+body{
+    background:#F8F6F1;
+    font-family: "Segoe UI", sans-serif;
+    color:#2d2d2d;
+}
+
+a{
+    text-decoration:none;
+}
+
+/* ===========================
+   HEADER (COMPACT + LEFT ALIGN)
+=========================== */
+
+.member-header{
+    background:#0B5D3B;
+    color:white;
+    padding:10px 0;   /* giảm size */
+    box-shadow:0 4px 12px rgba(0,0,0,.08);
+}
+
+.member-header-content{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    text-align:left;
+}
+
+.member-logo{
+    font-size:22px;   /* nhỏ lại */
+    font-weight:700;
+    letter-spacing:1px;
+    color:#E8C76A;
+}
+
+.member-user{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-size:13px;   /* nhỏ lại */
+    text-align:left;
+}
+
+.member-user strong{
+    color:#E8C76A;
+}
+
+/* ===========================
+   MENU
+=========================== */
+
+.member-menu{
+    background:white;
+    border-bottom:1px solid #ececec;
+    position:sticky;
+    top:0;
+    z-index:999;
+}
+
+.member-menu .container{
+    display:flex;
+    justify-content:flex-start;  /* căn trái */
+    gap:25px;
+    padding:0 15px;
+    text-align:left;
+}
+
+.member-menu a{
+    color:#333;
+    font-weight:600;
+    padding:14px 0;
+    position:relative;
+    transition:.3s;
+    font-size:14px;
+    text-align:left;
+}
+
+.member-menu a:hover{
+    color:#0B5D3B;
+}
+
+.member-menu a.active{
+    color:#0B5D3B;
+}
+
+.member-menu a.active::after{
+    content:"";
+    position:absolute;
+    left:0;
+    bottom:0;
+    width:100%;
+    height:3px;
+    background:#E8C76A;
+    border-radius:20px;
+}
+
+/* ===========================
+   CONTENT
+=========================== */
+
+.member-content{
+    min-height:70vh;
+    padding:35px 0 50px;
+    text-align:left;
+}
+
+/* ===========================
+   BUTTON
+=========================== */
+
+.btn-outline-light{
+    border:1px solid #fff;
+    transition:.3s;
+}
+
+.btn-outline-light:hover{
+    background:#E8C76A;
+    color:#222;
+    border-color:#E8C76A;
+}
+
+/* ===========================
+   FOOTER (COMPACT + LEFT)
+=========================== */
+
+.member-footer{
+    background:#6B4226;
+    color:white;
+    margin-top:40px;
+    padding:25px 0;   /* giảm mạnh */
+    text-align:left;
+}
+
+.member-footer .container{
+    text-align:left;
+}
+
+.member-footer h5{
+    color:#E8C76A;
+    margin-bottom:10px;
+    font-size:16px;
+}
+
+.member-footer p{
+    margin-bottom:6px;
+    color:#f4f4f4;
+    font-size:13px;
+}
+
+/* ===========================
+   RESPONSIVE
+=========================== */
+
+@media(max-width:992px){
+
+.member-header-content{
+    flex-direction:column;
+    gap:10px;
+    align-items:flex-start;
+    text-align:left;
+}
+
+.member-menu .container{
+    flex-wrap:wrap;
+    gap:15px;
+    justify-content:flex-start;
+}
+
+.member-footer{
+    text-align:left;
+}
+
+}
