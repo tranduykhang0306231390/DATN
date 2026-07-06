@@ -1,5 +1,6 @@
 // src/pages/admin/QuanLyUuDai.jsx
 import { useEffect, useState, useCallback } from 'react';
+import Swal from 'sweetalert2';
 import '../../assets/css/admin.css';
 import uuDaiApi from '../../api/uuDaiApi';
 import Modal from '../../components/admin/Modal';
@@ -174,13 +175,28 @@ export default function QuanLyUuDai() {
     };
 
     const handleToggle = async (ud) => {
-        const action = ud.TrangThai === 'HoatDong' ? 'ngừng' : 'kích hoạt';
-        if (!window.confirm(`Bạn muốn ${action} ưu đãi "${ud.TenUuDai}"?`)) return;
+        const dangHoatDong = ud.TrangThai === 'HoatDong';
+        const confirm = await Swal.fire({
+            title: `${dangHoatDong ? 'Ngừng' : 'Kích hoạt'} ưu đãi ${ud.MaUuDai}?`,
+            text: `Ưu đãi "${ud.TenUuDai}" sẽ được ${dangHoatDong ? 'ngừng áp dụng' : 'kích hoạt lại'}.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Xác nhận',
+            cancelButtonText: 'Không',
+            confirmButtonColor: dangHoatDong ? '#dc2626' : '#4f46e5',
+        });
+        if (!confirm.isConfirmed) return;
         try {
             await uuDaiApi.toggleTrangThai(ud.MaUuDai);
+            Swal.fire({
+                icon: 'success',
+                title: dangHoatDong ? 'Đã ngừng ưu đãi' : 'Đã kích hoạt ưu đãi',
+                timer: 1500,
+                showConfirmButton: false,
+            });
             loadList();
-        } catch {
-            alert('Không thể đổi trạng thái ưu đãi');
+        } catch (e) {
+            Swal.fire('Lỗi', e.response?.data?.message || 'Không thể đổi trạng thái', 'error');
         }
     };
 

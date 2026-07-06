@@ -1,5 +1,6 @@
 // src/pages/admin/QuanLyLoaiVe.jsx
 import { useEffect, useState, useCallback } from 'react';
+import Swal from 'sweetalert2';
 import '../../assets/css/admin.css';
 import loaiVeApi from '../../api/loaiVeApi';
 import Modal from '../../components/admin/Modal';
@@ -115,13 +116,28 @@ export default function QuanLyLoaiVe() {
     };
 
     const handleToggle = async (lv) => {
-        const action = lv.TrangThai === 'HoatDong' ? 'ngừng bán' : 'mở bán';
-        if (!window.confirm(`Bạn muốn ${action} loại vé "${lv.TenLoaiVe}"?`)) return;
+        const dangBan = lv.TrangThai === 'HoatDong';
+        const confirm = await Swal.fire({
+            title: `${dangBan ? 'Ngừng bán' : 'Mở bán'} loại vé ${lv.MaLoaiVe}?`,
+            text: `Loại vé "${lv.TenLoaiVe}" sẽ được ${dangBan ? 'ngừng bán' : 'mở bán lại'}.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Xác nhận',
+            cancelButtonText: 'Không',
+            confirmButtonColor: dangBan ? '#dc2626' : '#4f46e5',
+        });
+        if (!confirm.isConfirmed) return;
         try {
             await loaiVeApi.toggleTrangThai(lv.MaLoaiVe);
+            Swal.fire({
+                icon: 'success',
+                title: dangBan ? 'Đã ngừng bán' : 'Đã mở bán',
+                timer: 1500,
+                showConfirmButton: false,
+            });
             loadList();
-        } catch {
-            alert('Không thể đổi trạng thái loại vé');
+        } catch (e) {
+            Swal.fire('Lỗi', e.response?.data?.message || 'Không thể đổi trạng thái', 'error');
         }
     };
 
