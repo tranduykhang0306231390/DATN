@@ -2,6 +2,7 @@ import { Outlet, Link, useNavigate, useLocation } from "react-router-dom";
 import Swal from "sweetalert2";
 import "../assets/css/memberLayout.css";
 import Footer from "../components/public/Footer";
+import NotificationBell from "../components/member/NotificationBell";
 function MemberLayout() {
 
     const navigate = useNavigate();
@@ -51,19 +52,17 @@ function MemberLayout() {
 
                     <div className="member-user">
 
+                        <NotificationBell />
+
                         <span>
-
                             Xin chào, <strong>{user?.HoTen}</strong>
-
                         </span>
 
                         <button
                             className="btn btn-outline-light btn-sm ms-3"
                             onClick={handleLogout}
                         >
-
                             Đăng xuất
-
                         </button>
 
                     </div>
@@ -125,7 +124,7 @@ function MemberLayout() {
 
             </main>
 
-           <Footer />
+            <Footer />
 
         </>
 
