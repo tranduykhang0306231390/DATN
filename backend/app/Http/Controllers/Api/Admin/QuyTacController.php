@@ -1,11 +1,10 @@
 <?php
-// app/Http/Controllers/Api/Admin/QuyTacController.php
-
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\QuyTacTichDiem;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class QuyTacController extends Controller
@@ -82,6 +81,7 @@ class QuyTacController extends Controller
 
     /**
      * Cập nhật quy tắc (không đổi trạng thái ở đây, dùng nút bật/tắt riêng).
+     * Nếu mức quy đổi thay đổi thì tự ghi vào lichsuthaydoiquytac.
      */
     public function update(Request $request, string $ma)
     {
@@ -93,11 +93,46 @@ class QuyTacController extends Controller
 
         $data = $this->validateData($request);
 
-        $qt->SoTienQuyDoi = $data['SoTienQuyDoi'];
-        $qt->SoDiemNhan   = $data['SoDiemNhan'];
-        $qt->NgayApDung   = $data['NgayApDung'];
-        $qt->NgayHetHan   = $data['NgayHetHan'] ?: null;
-        $qt->save();
+        $oldTien = $qt->SoTienQuyDoi;
+        $oldDiem = $qt->SoDiemNhan;
+        $newTien = $data['SoTienQuyDoi'];
+        $newDiem = $data['SoDiemNhan'];
+
+        DB::beginTransaction();
+        try {
+            $qt->SoTienQuyDoi = $newTien;
+            $qt->SoDiemNhan   = $newDiem;
+            $qt->NgayApDung   = $data['NgayApDung'];
+            $qt->NgayHetHan   = $data['NgayHetHan'] ?: null;
+            $qt->save();
+
+            // Chỉ ghi lịch sử khi mức quy đổi 
+            if ((float) $oldTien != (float) $newTien || (int) $oldDiem != (int) $newDiem) {
+                $lastLS = DB::table('lichsuthaydoiquytac')->orderBy('MaLichSuQuyTac', 'desc')->first();
+                $soLS   = $lastLS ? ((int) substr($lastLS->MaLichSuQuyTac, 4)) + 1 : 1;
+                $maLS   = 'LSQT' . str_pad($soLS, 3, '0', STR_PAD_LEFT);
+
+                DB::table('lichsuthaydoiquytac')->insert([
+                    'MaLichSuQuyTac'  => $maLS,
+                    'MaQuyTac'        => $ma,
+                    'SoTienQuyDoiCu'  => $oldTien,
+                    'SoDiemNhanCu'    => $oldDiem,
+                    'SoTienQuyDoiMoi' => $newTien,
+                    'SoDiemNhanMoi'   => $newDiem,
+                    'MaNhanVien'      => auth('nhanvien')->user()->MaNhanVien,
+                    'GhiChu'          => $request->input('GhiChu') ?: null,
+                    'ThoiGian'        => now()->toDateString(),
+                ]);
+            }
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Có lỗi khi cập nhật: ' . $e->getMessage(),
+            ], 500);
+        }
 
         return response()->json([
             'success' => true,

@@ -31,6 +31,7 @@ import QuanLyQuyTac from './pages/admin/QuanLyQuyTac';
 import QuanLyHangThanhVien from './pages/admin/QuanLyHangThanhVien';
 import QuanLyNhanVien from './pages/admin/QuanLyNhanVien';
 import QuanLyKhachHang from './pages/admin/QuanLyKhachHang';
+import LichSuQuyTac from './pages/admin/LichSuQuyTac';
 
 
 
@@ -162,6 +163,14 @@ function App() {
                      element={
                         <AdminRoute>
                             <QuanLyKhachHang />
+                         </AdminRoute>
+                     }
+                />
+                <Route
+                    path="/admin/lich-su-quy-tac"
+                     element={
+                        <AdminRoute>
+                            <LichSuQuyTac />
                          </AdminRoute>
                      }
                 />

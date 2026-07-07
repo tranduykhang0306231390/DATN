@@ -10,6 +10,7 @@ const EMPTY_FORM = {
     SoDiemNhan: 1,
     NgayApDung: '',
     NgayHetHan: '',
+    GhiChu: '',
 };
 
 const fmtMoney = (n) =>
@@ -67,6 +68,7 @@ export default function QuanLyQuyTac() {
             SoDiemNhan: Number(qt.SoDiemNhan) || 0,
             NgayApDung: (qt.NgayApDung || '').slice(0, 10),
             NgayHetHan: (qt.NgayHetHan || '').slice(0, 10),
+            GhiChu: '',
         });
         setFormError('');
         setModalOpen(true);
@@ -82,6 +84,7 @@ export default function QuanLyQuyTac() {
             SoDiemNhan: Number(form.SoDiemNhan),
             NgayApDung: form.NgayApDung,
             NgayHetHan: form.NgayHetHan || null,
+            GhiChu: form.GhiChu || null,
         };
         try {
             if (editing) {
@@ -333,6 +336,23 @@ export default function QuanLyQuyTac() {
                             onChange={(e) => setField('NgayHetHan', e.target.value)}
                         />
                     </div>
+
+                    {editing && (
+                        <div className="admin-field admin-field--full">
+                            <label>
+                                Ghi chú thay đổi{' '}
+                                <span style={{ color: '#94a3b8', fontWeight: 400 }}>
+                                    
+                                </span>
+                            </label>
+                            <input
+                                className="admin-input"
+                                value={form.GhiChu}
+                                onChange={(e) => setField('GhiChu', e.target.value)}
+                                placeholder="VD: Tăng ưu đãi tích điểm dịp lễ"
+                            />
+                        </div>
+                    )}
 
                     <div className="admin-field admin-field--full">
                         <div style={{ fontSize: 13, color: '#64748b' }}>
