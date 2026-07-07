@@ -53,7 +53,7 @@ function Ticket() {
 
                 <div>
 
-                    <h2>🍽 Thực đơn vé Buffet</h2>
+                    <h2>Thực đơn vé Buffet</h2>
 
                     <p>
 

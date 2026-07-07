@@ -8,7 +8,7 @@ function VoucherStoreList({ vouchers, reloadData }) {
 
             <div className="section-header">
 
-                <h3>🏪 Kho Voucher</h3>
+                <h3>Kho Voucher</h3>
 
                 <span>{vouchers.length} voucher</span>
 

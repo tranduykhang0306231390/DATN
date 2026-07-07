@@ -3,55 +3,64 @@ import "../../assets/css/member/ticket.css";
 function TicketCard({ ticket }) {
 
     return (
-        <div className="ticket-card">
 
-            <div className="ticket-top">
+        <div className="vip-ticket">
 
-                <div className="ticket-title">
+            <div className="ticket-watermark">
+                BUFFET VIP
+            </div>
 
-                    {ticket.TenLoaiVe}
+            <div className="ticket-header">
 
-                </div>
+                <span className="ticket-brand">
 
-                <div className="ticket-badge">
+                    BUFFET VIP
 
-                    {ticket.BuoiAn === "Trua" ? "Buổi trưa" : "Buổi tối"}
+                </span>
 
-                </div>
+                <span className="ticket-session">
+
+                    {ticket.BuoiAn === "Trua" ? "☀ Buổi trưa" : "🌙 Buổi tối"}
+
+                </span>
 
             </div>
 
-            <div className="ticket-body">
+            <h3 className="ticket-name">
 
-                <div className="ticket-info">
+                {ticket.TenLoaiVe}
 
-                    <p>
-                        <span>Loại ngày:</span> {ticket.LoaiNgay}
-                    </p>
+            </h3>
 
-                </div>
+            <div className="ticket-detail">
+
+                <span>
+
+                    {ticket.LoaiNgay}
+
+                </span>
+
+                <span>
+
+                    Vé Buffet
+
+                </span>
+
+            </div>
+
+            <div className="ticket-bottom">
 
                 <div className="ticket-price">
 
-                    {Number(ticket.GiaVe).toLocaleString("vi-VN")} đ
+                    {Number(ticket.GiaVe).toLocaleString("vi-VN")}đ
 
                 </div>
 
-            </div>
-
-            <div className="ticket-footer">
-
-                <button className="btn-view">
-                    Chi tiết
-                </button>
-
-                <button className="btn-buy">
-                    Mua vé
-                </button>
-
+                
             </div>
 
         </div>
+
     );
 
 }

@@ -15,7 +15,7 @@ use App\Http\Controllers\Api\TraCuuKhachHangController;
 use App\Http\Controllers\Api\QuanLyHoaDonController;
 use App\Http\Controllers\Api\PhanHoiKhachHangController;
 use App\Http\Controllers\Api\Admin\UuDaiController;
-
+use App\Http\Controllers\Api\MemberRankHistoryController;
 
 /*
 |--------------------------------------------------------------------------
@@ -68,6 +68,12 @@ Route::middleware('member')->prefix('member')->group(function () {
     // ====== Phản hồi =====
     Route::post('/invoices/{id}/feedback', [PhanHoiKhachHangController::class, 'store']);
     Route::get('/invoices/{id}/feedback', [PhanHoiKhachHangController::class, 'show']);
+    Route::get(
+        '/rank-history',
+        [MemberRankHistoryController::class, 'index']
+    );
+
+
 });
 
 /*
@@ -99,32 +105,24 @@ Route::middleware('auth:nhanvien')->group(function () {
     Route::get('/quan-ly-hoa-don/{maHD}', [QuanLyHoaDonController::class, 'show']);
     Route::patch('/quan-ly-hoa-don/{maHD}/huy', [QuanLyHoaDonController::class, 'huy']);
 
-   
+
 });
 
 
-
-Route::get('/test', function () {
-        return response()->json([
-            'success' => true,
-            'message' => 'Chỉ Admin mới truy cập được.'
-        ]);
-    });
+// ------- ADMIN --------
 Route::middleware('staff:Admin')->prefix('admin')->group(function () {
-        Route::get('/uu-dai/tuy-chon',              [UuDaiController::class, 'tuyChon']);
-        Route::get('/uu-dai',                       [UuDaiController::class, 'index']);
-        Route::get('/uu-dai/{ma}',                  [UuDaiController::class, 'show']);
-        Route::post('/uu-dai',                      [UuDaiController::class, 'store']);
-        Route::put('/uu-dai/{ma}',                  [UuDaiController::class, 'update']);
-        Route::patch('/uu-dai/{ma}/trang-thai',     [UuDaiController::class, 'toggleTrangThai']);
+    Route::get('/uu-dai/tuy-chon', [UuDaiController::class, 'tuyChon']);
+    Route::get('/uu-dai', [UuDaiController::class, 'index']);
+    Route::get('/uu-dai/{ma}', [UuDaiController::class, 'show']);
+    Route::post('/uu-dai', [UuDaiController::class, 'store']);
+    Route::put('/uu-dai/{ma}', [UuDaiController::class, 'update']);
+    Route::patch('/uu-dai/{ma}/trang-thai', [UuDaiController::class, 'toggleTrangThai']);
 
 
-        Route::get('/loai-ve',                      [LoaiVeController::class, 'adminIndex']);
-        Route::post('/loai-ve',                     [LoaiVeController::class, 'store']);
-        Route::put('/loai-ve/{ma}',                 [LoaiVeController::class, 'update']);
-        Route::patch('/loai-ve/{ma}/trang-thai',    [LoaiVeController::class, 'toggleTrangThai']);
+    Route::get('/loai-ve', [LoaiVeController::class, 'adminIndex']);
+    Route::post('/loai-ve', [LoaiVeController::class, 'store']);
+    Route::put('/loai-ve/{ma}', [LoaiVeController::class, 'update']);
+    Route::patch('/loai-ve/{ma}/trang-thai', [LoaiVeController::class, 'toggleTrangThai']);
 
-        
-    });
+});
 
-    // API admin...
