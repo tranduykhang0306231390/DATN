@@ -1,0 +1,82 @@
+
+export const ADMIN_MENU = [
+    {
+        key: 'van-hanh',
+        title: 'Vận hành',
+        items: [
+            {
+                icon: '🧾',
+                label: 'Quản lý hóa đơn',
+                path: '/admin/quan-ly-hoa-don',
+                color: '#3b82f6',
+            },
+            {
+                icon: '🎫',
+                label: 'Loại vé',
+                path: '/admin/loai-ve',
+                color: '#0ea5e9',
+            },
+        ],
+    },
+    {
+        key: 'khach-hang',
+        title: 'Khách hàng & thành viên',
+        items: [
+            {
+                icon: '👥',
+                label: 'Tra cứu khách hàng',
+                path: '/admin/khach-hang',
+                color: '#8b5cf6',
+            },
+            {
+                icon: '🏆',
+                label: 'Hạng thành viên',
+                path: '/admin/hang-thanh-vien',
+                color: '#f59e0b',
+            },
+            {
+                icon: '💬',
+                label: 'Phản hồi khách hàng',
+                path: '/admin/phan-hoi',
+                color: '#ec4899',
+            },
+        ],
+    },
+    {
+        key: 'uu-dai',
+        title: 'Ưu đãi & tích điểm',
+        items: [
+            {
+                icon: '🎁',
+                label: 'Ưu đãi & Voucher',
+                path: '/admin/uu-dai',
+                color: '#10b981',
+            },
+            {
+                icon: '⚙️',
+                label: 'Quy tắc tích điểm',
+                path: '/admin/quy-tac',
+                color: '#14b8a6',
+            },
+        ],
+    },
+    {
+        key: 'he-thong',
+        title: 'Hệ thống',
+        items: [
+            {
+                icon: '👷',
+                label: 'Quản lý nhân viên',
+                path: '/admin/nhan-vien',
+                color: '#6366f1',
+            },
+            {
+                icon: '📊',
+                label: 'Thống kê & báo cáo',
+                path: '/admin/thong-ke',
+                color: '#f43f5e',
+            },
+        ],
+    },
+];
+
