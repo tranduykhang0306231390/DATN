@@ -16,7 +16,7 @@ use App\Http\Controllers\Api\QuanLyHoaDonController;
 use App\Http\Controllers\Api\PhanHoiKhachHangController;
 use App\Http\Controllers\Api\Admin\UuDaiController;
 use App\Http\Controllers\Api\MemberRankHistoryController;
-
+use App\Http\Controllers\Api\WebSettingController;
 /*
 |--------------------------------------------------------------------------
 | Public API
@@ -30,6 +30,7 @@ Route::post('/logout', [AuthController::class, 'logout']);
 Route::get('/banner', [BannerController::class, 'index']);
 Route::get('/tickets', [TicketController::class, 'index']);
 Route::get('/tickets/hot', [TicketController::class, 'hot']);
+Route::get('/web-setting', [WebSettingController::class, 'index']);
 /*
 |--------------------------------------------------------------------------
 | MEMBER

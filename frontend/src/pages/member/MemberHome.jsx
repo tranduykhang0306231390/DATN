@@ -5,7 +5,7 @@ import HomeBanner from "../../components/member/HomeBanner";
 import TicketHot from "../../components/member/TicketHot";
 import VoucherHot from "../../components/member/VoucherHot";
 
-import "../../assets/css/memberHome.css";
+import "../../assets/css/memberhome.css";
 
 function MemberHome() {
 

@@ -1,7 +1,7 @@
 import { Outlet, Link, useNavigate, useLocation } from "react-router-dom";
 import Swal from "sweetalert2";
 import "../assets/css/memberLayout.css";
-
+import Footer from "../components/public/Footer";
 function MemberLayout() {
 
     const navigate = useNavigate();
@@ -125,41 +125,7 @@ function MemberLayout() {
 
             </main>
 
-            {/* FOOTER */}
-
-            <footer className="member-footer">
-
-                <div className="container">
-
-                    <div className="row">
-
-                        <div className="col-md-6">
-
-                            <h5>BUFFET VIP</h5>
-
-                            <p>
-
-                                Chương trình khách hàng thân thiết dành cho những khách hàng yêu thích Buffet VIP.
-
-                            </p>
-
-                        </div>
-
-                        <div className="col-md-6 text-md-end">
-
-                            <p>Email: buffetvip@gmail.com</p>
-
-                            <p>Hotline: 1900 9999</p>
-
-                            <p>© 2026 Buffet VIP. All Rights Reserved.</p>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </footer>
+           <Footer />
 
         </>
 

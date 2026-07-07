@@ -1,350 +1,229 @@
-/* ===========================
-   MEMBER VOUCHER
-=========================== */
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap');
 
-.voucher-page {
-    max-width: 1300px;
-    margin: 0 auto;
+/* =====================================================
+   MEMBER VOUCHER - PREMIUM BUFFET STYLE
+===================================================== */
+
+:root{
+    --primary:#0B5D3B;
+    --primary-dark:#083E28;
+    --gold:#C8A14A;
+    --gold-light:#F7EFD8;
+    --bg:#FFFCF7;
+    --card:#FFFFFF;
+    --border:#ECE6D8;
+    --text:#1E2A24;
+    --muted:#707070;
+    --shadow:0 12px 32px rgba(0,0,0,.08);
 }
 
-/* ===========================
-   SECTION
-=========================== */
-
-.voucher-section {
-    margin-bottom: 45px;
+.voucher-page{
+    max-width:1320px;
+    margin:0 auto;
+    padding:24px 12px 40px;
+    font-family:"Be Vietnam Pro",sans-serif;
 }
 
-.section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 25px;
-    padding-bottom: 12px;
-    border-bottom: 2px solid #198754;
+.voucher-section{
+    margin-bottom:42px;
 }
 
-.section-header h3 {
-    margin: 0;
-    font-size: 28px;
-    font-weight: 700;
-    color: #198754;
-}
-
-.section-header span {
-    background: #198754;
-    color: white;
-    padding: 6px 18px;
-    border-radius: 50px;
-    font-size: 14px;
-    font-weight: 600;
-}
-
-/* ===========================
-   GRID
-=========================== */
-
-.voucher-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px,1fr));
-    gap: 22px;
-}
-
-/* ===========================
-   EMPTY
-=========================== */
-
-.empty-voucher {
-    background: #fff;
-    border: 2px dashed #ccc;
-    border-radius: 15px;
-    padding: 50px;
-    text-align: center;
-    color: #777;
-    font-size: 18px;
-}
-
-/* ===========================
-   MY VOUCHER CARD
-=========================== */
-
-.my-voucher-card {
-
-    background: white;
-
-    border-radius: 18px;
-
-    padding: 22px;
-
-    box-shadow: 0 8px 22px rgba(0,0,0,.08);
-
-    transition: .3s;
-
-    border-left: 8px solid #198754;
-
-}
-
-.my-voucher-card:hover{
-
-    transform: translateY(-5px);
-
-    box-shadow:0 15px 30px rgba(0,0,0,.12);
-
-}
-
-.voucher-top{
-
+.section-header{
     display:flex;
-
     justify-content:space-between;
-
     align-items:center;
-
-    margin-bottom:15px;
-
+    margin-bottom:24px;
+    padding-bottom:14px;
+    border-bottom:2px solid var(--gold-light);
 }
 
-.voucher-top h4{
-
+.section-header h3{
     margin:0;
+    font-family:"Nunito",sans-serif;
+    font-size:30px;
+    font-weight:800;
+    color:var(--primary-dark);
+}
 
-    font-size:20px;
-
+.section-header span{
+    background:linear-gradient(135deg,var(--gold),#B58B2F);
+    color:#fff;
+    padding:8px 18px;
+    border-radius:999px;
+    font-size:13px;
     font-weight:700;
+    box-shadow:0 6px 18px rgba(200,161,74,.25);
+}
 
-    color:#222;
+.voucher-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(320px,1fr));
+    gap:24px;
+}
 
+.empty-voucher{
+    background:#fff;
+    border:2px dashed #d8d8d8;
+    border-radius:18px;
+    padding:60px 20px;
+    text-align:center;
+    color:var(--muted);
+}
+
+.my-voucher-card,
+.store-voucher-card{
+    position:relative;
+    background:linear-gradient(145deg,#fff,#fcfbf7);
+    border:1px solid var(--border);
+    border-radius:22px;
+    padding:24px;
+    overflow:hidden;
+    box-shadow:var(--shadow);
+    transition:.35s ease;
+}
+
+.my-voucher-card::before{
+    content:"";
+    position:absolute;
+    left:0;
+    top:0;
+    width:6px;
+    height:100%;
+    background:linear-gradient(var(--gold),var(--primary));
+}
+
+.store-voucher-card::before{
+    content:"";
+    position:absolute;
+    left:0;
+    top:0;
+    width:100%;
+    height:5px;
+    background:linear-gradient(90deg,var(--gold),var(--primary));
+}
+
+.my-voucher-card:hover,
+.store-voucher-card:hover{
+    transform:translateY(-8px);
+    box-shadow:0 22px 48px rgba(0,0,0,.13);
+}
+
+.voucher-top,
+.voucher-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:16px;
+    margin-bottom:18px;
+}
+
+.voucher-top h4,
+.voucher-header h4{
+    margin:0;
+    color:var(--text);
+    font-size:22px;
+    font-weight:800;
+    font-family:"Nunito",sans-serif;
 }
 
 .status{
-
-    padding:6px 14px;
-
-    border-radius:30px;
-
-    color:white;
-
-    font-size:13px;
-
-    font-weight:600;
-
-}
-
-.status.active{
-
-    background:#198754;
-
-}
-
-.status.used{
-
-    background:#6c757d;
-
-}
-
-.status.expired{
-
-    background:#dc3545;
-
-}
-
-.voucher-money{
-
-    font-size:32px;
-
-    font-weight:bold;
-
-    color:#198754;
-
-    margin-bottom:12px;
-
-}
-
-.voucher-desc{
-
-    color:#666;
-
-    line-height:1.7;
-
-    min-height:60px;
-
-    margin-bottom:20px;
-
-}
-
-.voucher-info{
-
-    display:flex;
-
-    justify-content:space-between;
-
-    border-top:1px solid #eee;
-
-    padding-top:15px;
-
-}
-
-.voucher-info strong{
-
-    color:#333;
-
-}
-/* ===========================
-   STORE CARD
-=========================== */
-
-.store-voucher-card{
-
-    background:white;
-
-    border-radius:18px;
-
-    padding:22px;
-
-    box-shadow:0 8px 22px rgba(0,0,0,.08);
-
-    transition:.3s;
-
-    border-top:6px solid #198754;
-
-}
-
-.store-voucher-card:hover{
-
-    transform:translateY(-6px);
-
-    box-shadow:0 15px 35px rgba(0,0,0,.12);
-
-}
-
-.voucher-header{
-
-    margin-bottom:15px;
-
-}
-
-.voucher-header h4{
-
-    margin:0;
-
-    font-size:22px;
-
-    color:#222;
-
+    padding:6px 15px;
+    border-radius:999px;
+    font-size:12px;
     font-weight:700;
-
 }
 
+.status.active{background:#EAF7EF;color:var(--primary);}
+.status.used{background:#EFEFEF;color:#666;}
+.status.expired{background:#FFF0F0;color:#D63E3E;}
+
+.voucher-money,
 .discount{
-
-    color:#198754;
-
-    font-size:28px;
-
-    font-weight:bold;
-
-    margin-top:10px;
-
+    font-family:"Nunito",sans-serif;
+    font-size:38px;
+    font-weight:900;
+    color:var(--gold);
+    margin:14px 0;
 }
 
+.voucher-desc,
 .voucher-description{
-
-    color:#666;
-
+    color:var(--muted);
     line-height:1.8;
-
-    min-height:70px;
-
     margin-bottom:18px;
-
 }
 
+.voucher-info,
 .voucher-detail{
-
     display:flex;
-
     justify-content:space-between;
+    gap:16px;
+    border-top:1px solid #ededed;
+    padding-top:18px;
+    color:var(--muted);
+    font-size:14px;
+}
 
-    margin-bottom:20px;
-
-    font-size:15px;
-
-    color:#555;
-
+.voucher-info strong,
+.voucher-detail strong{
+    display:block;
+    color:var(--primary-dark);
+    margin-bottom:4px;
 }
 
 .exchange-btn{
-
     width:100%;
-
-    border-radius:30px;
-
-    padding:12px;
-
-    font-size:16px;
-
-    font-weight:600;
-
+    border:none;
+    border-radius:999px;
+    padding:14px;
+    background:linear-gradient(90deg,var(--primary),#14754B);
+    color:#fff;
+    font-size:15px;
+    font-weight:700;
+    cursor:pointer;
+    transition:.3s;
 }
 
-/* ===========================
-   LOADING
-=========================== */
+.exchange-btn:hover{
+    transform:translateY(-3px);
+    box-shadow:0 14px 28px rgba(11,93,59,.28);
+}
+
+.exchange-btn:disabled{
+    opacity:.6;
+    cursor:not-allowed;
+    transform:none;
+    box-shadow:none;
+}
 
 .voucher-loading{
-
     display:flex;
-
     justify-content:center;
-
     align-items:center;
-
-    min-height:400px;
-
+    min-height:350px;
+    color:var(--primary);
     font-size:24px;
-
-    color:#198754;
-
-    font-weight:bold;
-
+    font-weight:800;
 }
 
-/* ===========================
-   RESPONSIVE
-=========================== */
-
 @media(max-width:768px){
-
     .voucher-grid{
-
         grid-template-columns:1fr;
-
     }
 
     .section-header{
-
         flex-direction:column;
-
-        gap:12px;
-
         align-items:flex-start;
-
+        gap:12px;
     }
 
-    .voucher-info{
-
-        flex-direction:column;
-
-        gap:15px;
-
-    }
-
+    .voucher-info,
     .voucher-detail{
-
         flex-direction:column;
-
-        gap:10px;
-
     }
 
+    .voucher-money,
+    .discount{
+        font-size:32px;
+    }
 }
