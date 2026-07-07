@@ -27,6 +27,7 @@ import AdminLayout from './layouts/AdminLayout';
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import QuanLyUuDai from './pages/admin/QuanLyUuDai';
 import QuanLyLoaiVe from './pages/admin/QuanLyLoaiVe';
+import QuanLyQuyTac from './pages/admin/QuanLyQuyTac';
 
 // ================= PROTECTED ROUTES =================
 import {
@@ -115,6 +116,14 @@ function App() {
                      element={
                         <AdminRoute>
                             <QuanLyLoaiVe />
+                         </AdminRoute>
+                     }
+                />
+                <Route
+                    path="/admin/quy-tac"
+                     element={
+                        <AdminRoute>
+                            <QuanLyQuyTac />
                          </AdminRoute>
                      }
                 />

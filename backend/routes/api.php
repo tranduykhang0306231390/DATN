@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\LoaiVeController;
 use App\Http\Controllers\Api\TraCuuKhachHangController;
 use App\Http\Controllers\Api\QuanLyHoaDonController;
 use App\Http\Controllers\Api\Admin\UuDaiController;
+use App\Http\Controllers\Api\Admin\QuyTacController;
 
 
 /*
@@ -107,6 +108,12 @@ Route::middleware('auth:nhanvien')->group(function () {
         Route::put('/loai-ve/{ma}',                 [LoaiVeController::class, 'update']);
         Route::patch('/loai-ve/{ma}/trang-thai',    [LoaiVeController::class, 'toggleTrangThai']);
 
+
+        Route::get('/quy-tac',                      [QuyTacController::class, 'index']);
+        Route::get('/quy-tac/{ma}',                 [QuyTacController::class, 'show']);
+        Route::post('/quy-tac',                     [QuyTacController::class, 'store']);
+        Route::put('/quy-tac/{ma}',                 [QuyTacController::class, 'update']);
+        Route::patch('/quy-tac/{ma}/trang-thai',    [QuyTacController::class, 'toggleTrangThai']);
         
     });
    

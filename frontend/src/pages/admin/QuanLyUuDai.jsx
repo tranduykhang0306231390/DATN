@@ -215,9 +215,6 @@ export default function QuanLyUuDai() {
                 <div className="admin-hero-text">
                     <span className="admin-hero-eyebrow">Ưu đãi &amp; Voucher</span>
                     <h2 className="admin-hero-title">Quản lý ưu đãi</h2>
-                    <p className="admin-hero-sub">
-                        Tạo và điều chỉnh các ưu đãi để khách đổi điểm lấy voucher.
-                    </p>
                 </div>
                 <div className="admin-hero-actions">
                     <button type="button" className="admin-btn admin-btn--light" onClick={openCreate}>

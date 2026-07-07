@@ -55,7 +55,7 @@ export const ADMIN_MENU = [
             {
                 icon: '⚙️',
                 label: 'Quy tắc tích điểm',
-                path: '/admin/quy-tac-tich-diem',
+                path: '/admin/quy-tac',
                 color: '#14b8a6',
             },
         ],
