@@ -1,44 +1,45 @@
-// src/pages/admin/QuanLyQuyTac.jsx
+// src/pages/admin/QuanLyKhachHang.jsx
 import { useEffect, useState, useCallback } from 'react';
 import Swal from 'sweetalert2';
 import '../../assets/css/admin.css';
-import quyTacApi from '../../api/quyTacApi';
+import khachHangApi from '../../api/khachHangApi';
 import Modal from '../../components/admin/Modal';
 
+const gioiTinhLabel = (g) => (g === 'Nam' ? 'Nam' : g === 'Nu' ? 'Nữ' : '—');
+
 const EMPTY_FORM = {
-    SoTienQuyDoi: 10000,
-    SoDiemNhan: 1,
-    NgayApDung: '',
-    NgayHetHan: '',
+    HoTen: '',
+    SoDienThoai: '',
+    Email: '',
+    NgaySinh: '',
+    GioiTinh: '',
+    MaHangThanhVien: '',
 };
 
-const fmtMoney = (n) =>
-    new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(n || 0);
-
-const trangThaiLabel = (tt) =>
-    tt === 'HoatDong' ? 'Đang áp dụng' : tt === 'HetHan' ? 'Hết hạn' : 'Đã ngừng';
-
-export default function QuanLyQuyTac() {
+export default function QuanLyKhachHang() {
     const [list, setList] = useState([]);
     const [pagination, setPagination] = useState({ current_page: 1, last_page: 1, total: 0 });
+    const [hangOptions, setHangOptions] = useState([]);
     const [loading, setLoading] = useState(true);
 
     // Bộ lọc
     const [search, setSearch] = useState('');
+    const [hang, setHang] = useState('');
     const [trangThai, setTrangThai] = useState('');
     const [page, setPage] = useState(1);
 
     // Modal
     const [modalOpen, setModalOpen] = useState(false);
-    const [editing, setEditing] = useState(null); // MaQuyTac đang sửa, null = thêm mới
+    const [editing, setEditing] = useState(null);
+    const [editingInfo, setEditingInfo] = useState({ TongDiem: 0, NgayDangKy: '' });
     const [form, setForm] = useState(EMPTY_FORM);
     const [saving, setSaving] = useState(false);
     const [formError, setFormError] = useState('');
 
     const loadList = useCallback(() => {
         setLoading(true);
-        quyTacApi
-            .getAll({ search, trang_thai: trangThai, page, per_page: 10 })
+        khachHangApi
+            .getAll({ search, hang, trang_thai: trangThai, page, per_page: 10 })
             .then((res) => {
                 if (res.data?.success) {
                     setList(res.data.data);
@@ -47,26 +48,34 @@ export default function QuanLyQuyTac() {
             })
             .catch(() => setList([]))
             .finally(() => setLoading(false));
-    }, [search, trangThai, page]);
+    }, [search, hang, trangThai, page]);
+
+    useEffect(() => {
+        khachHangApi
+            .getOptions()
+            .then((res) => {
+                if (res.data?.success) setHangOptions(res.data.data.hangThanhVien || []);
+            })
+            .catch(() => {});
+    }, []);
 
     useEffect(() => {
         loadList();
     }, [loadList]);
 
-    const openCreate = () => {
-        setEditing(null);
-        setForm(EMPTY_FORM);
-        setFormError('');
-        setModalOpen(true);
-    };
-
-    const openEdit = (qt) => {
-        setEditing(qt.MaQuyTac);
+    const openEdit = (kh) => {
+        setEditing(kh.MaKhachHang);
+        setEditingInfo({
+            TongDiem: kh.TongDiem ?? 0,
+            NgayDangKy: (kh.NgayDangKy || '').slice(0, 10),
+        });
         setForm({
-            SoTienQuyDoi: Number(qt.SoTienQuyDoi) || 0,
-            SoDiemNhan: Number(qt.SoDiemNhan) || 0,
-            NgayApDung: (qt.NgayApDung || '').slice(0, 10),
-            NgayHetHan: (qt.NgayHetHan || '').slice(0, 10),
+            HoTen: kh.HoTen ?? '',
+            SoDienThoai: kh.SoDienThoai ?? '',
+            Email: kh.Email ?? '',
+            NgaySinh: (kh.NgaySinh || '').slice(0, 10),
+            GioiTinh: kh.GioiTinh ?? '',
+            MaHangThanhVien: kh.MaHangThanhVien ?? '',
         });
         setFormError('');
         setModalOpen(true);
@@ -78,20 +87,18 @@ export default function QuanLyQuyTac() {
         setSaving(true);
         setFormError('');
         const payload = {
-            SoTienQuyDoi: Number(form.SoTienQuyDoi),
-            SoDiemNhan: Number(form.SoDiemNhan),
-            NgayApDung: form.NgayApDung,
-            NgayHetHan: form.NgayHetHan || null,
+            HoTen: form.HoTen,
+            SoDienThoai: form.SoDienThoai,
+            Email: form.Email || null,
+            NgaySinh: form.NgaySinh || null,
+            GioiTinh: form.GioiTinh || null,
+            MaHangThanhVien: form.MaHangThanhVien,
         };
         try {
-            if (editing) {
-                await quyTacApi.update(editing, payload);
-            } else {
-                await quyTacApi.create(payload);
-                setPage(1);
-            }
+            await khachHangApi.update(editing, payload);
             setModalOpen(false);
             loadList();
+            Swal.fire({ icon: 'success', title: 'Đã cập nhật khách hàng', timer: 1500, showConfirmButton: false });
         } catch (err) {
             const res = err.response?.data;
             const firstErr = res?.errors ? Object.values(res.errors)[0]?.[0] : null;
@@ -101,13 +108,13 @@ export default function QuanLyQuyTac() {
         }
     };
 
-    const handleToggle = async (qt) => {
-        const dangHoatDong = qt.TrangThai === 'HoatDong';
+    const handleToggle = async (kh) => {
+        const dangHoatDong = kh.TrangThai === 'HoatDong';
         const confirm = await Swal.fire({
-            title: `${dangHoatDong ? 'Ngừng' : 'Kích hoạt'} quy tắc ${qt.MaQuyTac}?`,
+            title: `${dangHoatDong ? 'Khóa' : 'Mở khóa'} tài khoản ${kh.HoTen}?`,
             text: dangHoatDong
-                ? 'Quy tắc sẽ ngừng áp dụng cho các giao dịch mới.'
-                : 'Quy tắc sẽ được kích hoạt lại.',
+                ? 'Khách hàng sẽ không đăng nhập được cho tới khi mở lại.'
+                : 'Khách hàng sẽ đăng nhập lại được bình thường.',
             icon: 'warning',
             showCancelButton: true,
             confirmButtonText: 'Xác nhận',
@@ -116,10 +123,10 @@ export default function QuanLyQuyTac() {
         });
         if (!confirm.isConfirmed) return;
         try {
-            await quyTacApi.toggleTrangThai(qt.MaQuyTac);
+            await khachHangApi.toggleTrangThai(kh.MaKhachHang);
             Swal.fire({
                 icon: 'success',
-                title: dangHoatDong ? 'Đã ngừng quy tắc' : 'Đã kích hoạt quy tắc',
+                title: dangHoatDong ? 'Đã khóa tài khoản' : 'Đã mở khóa',
                 timer: 1500,
                 showConfirmButton: false,
             });
@@ -138,13 +145,8 @@ export default function QuanLyQuyTac() {
         <div className="admin-page">
             <header className="admin-hero admin-hero--compact">
                 <div className="admin-hero-text">
-                    <span className="admin-hero-eyebrow">Ưu đãi &amp; tích điểm</span>
-                    <h2 className="admin-hero-title">Quản lý quy tắc tích điểm</h2>
-                </div>
-                <div className="admin-hero-actions">
-                    <button type="button" className="admin-btn admin-btn--light" onClick={openCreate}>
-                        + Thêm quy tắc
-                    </button>
+                    <span className="admin-hero-eyebrow">Khách hàng &amp; thành viên</span>
+                    <h2 className="admin-hero-title">Quản lý khách hàng</h2>
                 </div>
             </header>
 
@@ -152,20 +154,27 @@ export default function QuanLyQuyTac() {
             <div className="admin-toolbar">
                 <input
                     className="admin-input"
-                    placeholder="Tìm theo mã…"
+                    placeholder="Tìm theo tên, SĐT, email hoặc mã…"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && applyFilter()}
                 />
+                <select className="admin-select" value={hang} onChange={(e) => setHang(e.target.value)}>
+                    <option value="">Tất cả hạng</option>
+                    {hangOptions.map((h) => (
+                        <option key={h.MaHangThanhVien} value={h.MaHangThanhVien}>
+                            {h.TenHang}
+                        </option>
+                    ))}
+                </select>
                 <select
                     className="admin-select"
                     value={trangThai}
                     onChange={(e) => setTrangThai(e.target.value)}
                 >
                     <option value="">Mọi trạng thái</option>
-                    <option value="HoatDong">Đang áp dụng</option>
-                    <option value="NgungApDung">Đã ngừng</option>
-                    <option value="HetHan">Hết hạn</option>
+                    <option value="HoatDong">Đang hoạt động</option>
+                    <option value="TamKhoa">Đã khóa</option>
                 </select>
                 <button type="button" className="admin-btn admin-btn--primary" onClick={applyFilter}>
                     Lọc
@@ -178,9 +187,11 @@ export default function QuanLyQuyTac() {
                     <thead>
                         <tr>
                             <th>Mã</th>
-                            <th>Quy đổi</th>
-                            <th>Ngày áp dụng</th>
-                            <th>Ngày hết hạn</th>
+                            <th>Họ tên</th>
+                            <th>SĐT</th>
+                            <th>Email</th>
+                            <th>Hạng</th>
+                            <th>Điểm</th>
                             <th>Trạng thái</th>
                             <th className="admin-th-action">Thao tác</th>
                         </tr>
@@ -188,28 +199,26 @@ export default function QuanLyQuyTac() {
                     <tbody>
                         {loading ? (
                             <tr>
-                                <td colSpan={6} className="admin-state">Đang tải…</td>
+                                <td colSpan={8} className="admin-state">Đang tải…</td>
                             </tr>
                         ) : list.length === 0 ? (
                             <tr>
-                                <td colSpan={6} className="admin-state">Chưa có quy tắc nào.</td>
+                                <td colSpan={8} className="admin-state">Chưa có khách hàng nào.</td>
                             </tr>
                         ) : (
-                            list.map((qt) => (
-                                <tr key={qt.MaQuyTac}>
-                                    <td className="admin-mono">{qt.MaQuyTac}</td>
-                                    <td>
-                                        {fmtMoney(qt.SoTienQuyDoi)} = <b>{qt.SoDiemNhan}</b> điểm
-                                    </td>
-                                    <td className="admin-nowrap">{(qt.NgayApDung || '').slice(0, 10)}</td>
-                                    <td className="admin-nowrap">
-                                        {qt.NgayHetHan ? qt.NgayHetHan.slice(0, 10) : 'Không giới hạn'}
-                                    </td>
+                            list.map((kh) => (
+                                <tr key={kh.MaKhachHang}>
+                                    <td className="admin-mono">{kh.MaKhachHang}</td>
+                                    <td>{kh.HoTen}</td>
+                                    <td className="admin-nowrap">{kh.SoDienThoai}</td>
+                                    <td>{kh.Email || '—'}</td>
+                                    <td>{kh.hangThanhVien?.TenHang || kh.MaHangThanhVien}</td>
+                                    <td>{Number(kh.TongDiem).toLocaleString('vi-VN')}</td>
                                     <td>
                                         <span
-                                            className={`admin-badge ${qt.TrangThai === 'HoatDong' ? 'admin-badge--on' : 'admin-badge--off'}`}
+                                            className={`admin-badge ${kh.TrangThai === 'HoatDong' ? 'admin-badge--on' : 'admin-badge--off'}`}
                                         >
-                                            {trangThaiLabel(qt.TrangThai)}
+                                            {kh.TrangThai === 'HoatDong' ? 'Hoạt động' : 'Đã khóa'}
                                         </span>
                                     </td>
                                     <td className="admin-th-action">
@@ -217,16 +226,16 @@ export default function QuanLyQuyTac() {
                                             <button
                                                 type="button"
                                                 className="admin-btn admin-btn--ghost admin-btn--sm"
-                                                onClick={() => openEdit(qt)}
+                                                onClick={() => openEdit(kh)}
                                             >
                                                 Sửa
                                             </button>
                                             <button
                                                 type="button"
-                                                className={`admin-btn admin-btn--sm ${qt.TrangThai === 'HoatDong' ? 'admin-btn--danger' : 'admin-btn--primary'}`}
-                                                onClick={() => handleToggle(qt)}
+                                                className={`admin-btn admin-btn--sm ${kh.TrangThai === 'HoatDong' ? 'admin-btn--danger' : 'admin-btn--primary'}`}
+                                                onClick={() => handleToggle(kh)}
                                             >
-                                                {qt.TrangThai === 'HoatDong' ? 'Ngừng' : 'Mở'}
+                                                {kh.TrangThai === 'HoatDong' ? 'Khóa' : 'Mở'}
                                             </button>
                                         </div>
                                     </td>
@@ -248,7 +257,7 @@ export default function QuanLyQuyTac() {
                         ← Trước
                     </button>
                     <span className="admin-page-info">
-                        Trang {pagination.current_page} / {pagination.last_page} · {pagination.total} quy tắc
+                        Trang {pagination.current_page} / {pagination.last_page} · {pagination.total} khách
                     </span>
                     <button
                         className="admin-btn admin-btn--ghost admin-btn--sm"
@@ -260,12 +269,12 @@ export default function QuanLyQuyTac() {
                 </div>
             )}
 
-            {/* Modal thêm / sửa */}
+            {/* Modal sửa */}
             <Modal
                 open={modalOpen}
-                title={editing ? `Sửa quy tắc ${editing}` : 'Thêm quy tắc mới'}
+                title={`Sửa khách hàng ${editing || ''}`}
                 onClose={() => setModalOpen(false)}
-                width={520}
+                width={580}
                 footer={
                     <>
                         <button
@@ -289,56 +298,96 @@ export default function QuanLyQuyTac() {
             >
                 {formError && <div className="admin-form-error">{formError}</div>}
 
+                {/* Thông tin chỉ đọc */}
+                <div
+                    style={{
+                        display: 'flex',
+                        gap: 20,
+                        padding: '10px 14px',
+                        marginBottom: 16,
+                        background: '#f5f6fb',
+                        borderRadius: 10,
+                        fontSize: 13,
+                    }}
+                >
+                    <div>
+                        <div style={{ color: '#64748b' }}>Điểm tích lũy</div>
+                        <div style={{ fontWeight: 700 }}>
+                            {Number(editingInfo.TongDiem).toLocaleString('vi-VN')}
+                        </div>
+                    </div>
+                    <div>
+                        <div style={{ color: '#64748b' }}>Ngày đăng ký</div>
+                        <div style={{ fontWeight: 600 }}>{editingInfo.NgayDangKy || '—'}</div>
+                    </div>
+                </div>
+
                 <div className="admin-form">
-                    <div className="admin-field">
-                        <label>Số tiền quy đổi (đ)</label>
+                    <div className="admin-field admin-field--full">
+                        <label>Họ tên</label>
                         <input
-                            type="number"
-                            min="1"
                             className="admin-input"
-                            value={form.SoTienQuyDoi}
-                            onChange={(e) => setField('SoTienQuyDoi', e.target.value)}
+                            value={form.HoTen}
+                            onChange={(e) => setField('HoTen', e.target.value)}
                         />
                     </div>
 
                     <div className="admin-field">
-                        <label>Số điểm nhận</label>
+                        <label>Số điện thoại</label>
                         <input
-                            type="number"
-                            min="0"
                             className="admin-input"
-                            value={form.SoDiemNhan}
-                            onChange={(e) => setField('SoDiemNhan', e.target.value)}
+                            value={form.SoDienThoai}
+                            onChange={(e) => setField('SoDienThoai', e.target.value)}
                         />
                     </div>
 
                     <div className="admin-field">
-                        <label>Ngày áp dụng</label>
+                        <label>Email</label>
+                        <input
+                            type="email"
+                            className="admin-input"
+                            value={form.Email}
+                            onChange={(e) => setField('Email', e.target.value)}
+                        />
+                    </div>
+
+                    <div className="admin-field">
+                        <label>Ngày sinh</label>
                         <input
                             type="date"
                             className="admin-input"
-                            value={form.NgayApDung}
-                            max={form.NgayHetHan || undefined}
-                            onChange={(e) => setField('NgayApDung', e.target.value)}
+                            value={form.NgaySinh}
+                            onChange={(e) => setField('NgaySinh', e.target.value)}
                         />
                     </div>
 
                     <div className="admin-field">
-                        <label>Ngày hết hạn (tùy chọn)</label>
-                        <input
-                            type="date"
-                            className="admin-input"
-                            value={form.NgayHetHan}
-                            min={form.NgayApDung || undefined}
-                            onChange={(e) => setField('NgayHetHan', e.target.value)}
-                        />
+                        <label>Giới tính</label>
+                        <select
+                            className="admin-select"
+                            value={form.GioiTinh}
+                            onChange={(e) => setField('GioiTinh', e.target.value)}
+                        >
+                            <option value="">—</option>
+                            <option value="Nam">Nam</option>
+                            <option value="Nu">Nữ</option>
+                        </select>
                     </div>
 
                     <div className="admin-field admin-field--full">
-                        <div style={{ fontSize: 13, color: '#64748b' }}>
-                            Nghĩa là: cứ <b>{fmtMoney(form.SoTienQuyDoi)}</b> khách chi tiêu thì
-                            nhận <b>{form.SoDiemNhan || 0}</b> điểm.
-                        </div>
+                        <label>Hạng thành viên</label>
+                        <select
+                            className="admin-select"
+                            value={form.MaHangThanhVien}
+                            onChange={(e) => setField('MaHangThanhVien', e.target.value)}
+                        >
+                            <option value="">-- Chọn hạng --</option>
+                            {hangOptions.map((h) => (
+                                <option key={h.MaHangThanhVien} value={h.MaHangThanhVien}>
+                                    {h.TenHang}
+                                </option>
+                            ))}
+                        </select>
                     </div>
                 </div>
             </Modal>

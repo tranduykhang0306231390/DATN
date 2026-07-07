@@ -24,7 +24,7 @@ export const ADMIN_MENU = [
         items: [
             {
                 icon: '👥',
-                label: 'Tra cứu khách hàng',
+                label: 'QUản lỹ khách hàng',
                 path: '/admin/khach-hang',
                 color: '#8b5cf6',
             },

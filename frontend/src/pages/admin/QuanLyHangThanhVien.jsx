@@ -147,9 +147,6 @@ export default function QuanLyHangThanhVien() {
                 <div className="admin-hero-text">
                     <span className="admin-hero-eyebrow">Khách hàng &amp; thành viên</span>
                     <h2 className="admin-hero-title">Quản lý hạng thành viên</h2>
-                    <p className="admin-hero-sub">
-                        Cấu hình các hạng, điều kiện lên hạng và quy tắc tích điểm đi kèm.
-                    </p>
                 </div>
                 <div className="admin-hero-actions">
                     <button type="button" className="admin-btn admin-btn--light" onClick={openCreate}>
