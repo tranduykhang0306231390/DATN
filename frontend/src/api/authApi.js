@@ -49,40 +49,37 @@ export const getHotTickets = () => {
 };
 
 /* VOUCHER */
-
-// Voucher khách hàng đang sở hữu
 export const getMyVoucher = () => {
     return axiosClient.get("/member/my-vouchers");
 };
 
-// Kho voucher có thể đổi
 export const getVoucherStore = () => {
     return axiosClient.get("/member/voucher-store");
 };
 
-// Đổi voucher
 export const exchangeVoucher = (MaUuDai) => {
-    return axiosClient.post("/member/exchange-voucher", {
-        MaUuDai,
-    });
+    return axiosClient.post("/member/exchange-voucher", { MaUuDai });
 };
 
-// Voucher nổi bật (nếu còn dùng ở trang Home)
 export const getHotVoucher = () => {
     return axiosClient.get("/member/voucher-hot");
 };
-// Cập nhật thông tin cá nhân KH
+
+/* PROFILE UPDATE */
 export const updateMemberProfile = (data) => {
     return axiosClient.put("/member/profile", data);
 };
+
+/* FEEDBACK */
 export const getInvoiceFeedback = (maHoaDon) => {
     return axiosClient.get(`/member/invoices/${maHoaDon}/feedback`);
 };
 
-// Gửi phản hồi
 export const sendInvoiceFeedback = (maHoaDon, data) => {
-    return axiosClient.post(
-        `/member/invoices/${maHoaDon}/feedback`,
-        data
-    );
+    return axiosClient.post(`/member/invoices/${maHoaDon}/feedback`, data);
+};
+
+/* RANK HISTORY - lịch sử thăng hạng thành viên */
+export const getRankHistory = () => {
+    return axiosClient.get("/member/rank-history");
 };

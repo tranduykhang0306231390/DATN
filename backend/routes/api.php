@@ -14,6 +14,9 @@ use App\Http\Controllers\Api\LoaiVeController;
 use App\Http\Controllers\Api\TraCuuKhachHangController;
 use App\Http\Controllers\Api\QuanLyHoaDonController;
 use App\Http\Controllers\Api\PhanHoiKhachHangController;
+use App\Http\Controllers\Api\Admin\UuDaiController;
+use App\Http\Controllers\Api\MemberRankHistoryController;
+use App\Http\Controllers\Api\WebSettingController;
 /*
 |--------------------------------------------------------------------------
 | Public API
@@ -27,6 +30,7 @@ Route::post('/logout', [AuthController::class, 'logout']);
 Route::get('/banner', [BannerController::class, 'index']);
 Route::get('/tickets', [TicketController::class, 'index']);
 Route::get('/tickets/hot', [TicketController::class, 'hot']);
+Route::get('/web-setting', [WebSettingController::class, 'index']);
 /*
 |--------------------------------------------------------------------------
 | MEMBER
@@ -65,6 +69,12 @@ Route::middleware('member')->prefix('member')->group(function () {
     // ====== Phản hồi =====
     Route::post('/invoices/{id}/feedback', [PhanHoiKhachHangController::class, 'store']);
     Route::get('/invoices/{id}/feedback', [PhanHoiKhachHangController::class, 'show']);
+    Route::get(
+        '/rank-history',
+        [MemberRankHistoryController::class, 'index']
+    );
+
+
 });
 
 /*
@@ -73,20 +83,7 @@ Route::middleware('member')->prefix('member')->group(function () {
 |--------------------------------------------------------------------------
 */
 
-Route::middleware('staff:Admin,NhanVien')->prefix('staff')->group(function () {
 
-    Route::get('/profile', [AuthController::class, 'staffProfile']);
-
-    Route::post('/logout', [AuthController::class, 'logout']);
-
-    Route::get('/loai-ve', [HoaDonController::class, 'getLoaiVe']);
-
-    Route::post('/khach-hang/lookup', [HoaDonController::class, 'lookupKhachHang']);
-
-    Route::post('/hoa-don', [HoaDonController::class, 'taoHoaDon']);
-
-    Route::get('/hoa-don/{maHoaDon}', [HoaDonController::class, 'chiTietHoaDon']);
-});
 
 // Các API nhân viên khác...
 
@@ -109,22 +106,24 @@ Route::middleware('auth:nhanvien')->group(function () {
     Route::get('/quan-ly-hoa-don/{maHD}', [QuanLyHoaDonController::class, 'show']);
     Route::patch('/quan-ly-hoa-don/{maHD}/huy', [QuanLyHoaDonController::class, 'huy']);
 
+
 });
 
-/*
-|--------------------------------------------------------------------------
-| ADMIN
-|--------------------------------------------------------------------------
-*/
 
+// ------- ADMIN --------
 Route::middleware('staff:Admin')->prefix('admin')->group(function () {
+    Route::get('/uu-dai/tuy-chon', [UuDaiController::class, 'tuyChon']);
+    Route::get('/uu-dai', [UuDaiController::class, 'index']);
+    Route::get('/uu-dai/{ma}', [UuDaiController::class, 'show']);
+    Route::post('/uu-dai', [UuDaiController::class, 'store']);
+    Route::put('/uu-dai/{ma}', [UuDaiController::class, 'update']);
+    Route::patch('/uu-dai/{ma}/trang-thai', [UuDaiController::class, 'toggleTrangThai']);
 
-    Route::get('/test', function () {
-        return response()->json([
-            'success' => true,
-            'message' => 'Chỉ Admin mới truy cập được.'
-        ]);
-    });
 
-    // API admin...
+    Route::get('/loai-ve', [LoaiVeController::class, 'adminIndex']);
+    Route::post('/loai-ve', [LoaiVeController::class, 'store']);
+    Route::put('/loai-ve/{ma}', [LoaiVeController::class, 'update']);
+    Route::patch('/loai-ve/{ma}/trang-thai', [LoaiVeController::class, 'toggleTrangThai']);
+
 });
+

@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { getHotVoucher } from "../../api/authApi";
 import VoucherHotCard from "./VoucherHotCard";
+import "../../assets/css/voucherhot.css";
+
 function VoucherHot() {
 
     const [vouchers, setVouchers] = useState([]);
@@ -32,7 +34,7 @@ function VoucherHot() {
             <div className="section-header d-flex justify-content-between align-items-center mb-3">
 
                 <h2 className="section-title">
-                    🎁 Voucher nổi bật
+                    Voucher hot đang chờ bạn !
                 </h2>
 
             </div>

@@ -32,7 +32,7 @@ function TicketHot() {
             <div className="section-header d-flex justify-content-between align-items-center mb-3">
 
                 <h2 className="section-title">
-                    🔥 Vé nổi bật
+                    Vé nổi bật
                 </h2>
 
             </div>

@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-
+import "../../assets/css/voucherhotcard.css";
 function VoucherHotCard({ voucher }) {
 
     return (
@@ -30,7 +30,7 @@ function VoucherHotCard({ voucher }) {
 
             <div className="voucher-hot-point">
 
-                🎁 {Number(voucher.SoDiemCanDoi).toLocaleString("vi-VN")} điểm
+                 {Number(voucher.SoDiemCanDoi).toLocaleString("vi-VN")} điểm
 
             </div>
 

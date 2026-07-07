@@ -1,0 +1,113 @@
+/* ==========================================
+   HOT VOUCHER SECTION
+========================================== */
+
+.home-section {
+    margin: 48px 0;
+}
+
+/* Header */
+
+.section-header {
+    margin-bottom: 28px;
+    padding-bottom: 14px;
+    border-bottom: 2px solid #E8DFC8;
+}
+
+/* Title */
+
+.section-title {
+    position: relative;
+    margin: 0;
+    padding-left: 18px;
+
+    font-family: "Nunito", sans-serif;
+    font-size: 32px;
+    font-weight: 900;
+    color: #0A2E1C;
+    line-height: 1.2;
+}
+
+.section-title::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 4px;
+
+    width: 6px;
+    height: calc(100% - 8px);
+
+    border-radius: 10px;
+
+    background: linear-gradient(
+        180deg,
+        #B38E36,
+        #E2C676
+    );
+}
+
+/* Row */
+
+.home-section .row {
+    row-gap: 8px;
+}
+
+/* Card spacing */
+
+.home-section .col-md-6 {
+    display: flex;
+}
+
+.home-section .col-md-6 .voucher-hot-card {
+    width: 100%;
+}
+
+/* Empty */
+
+.home-section-empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: #a80707;
+    font-size: 16px;
+}
+
+/* ============================
+   Responsive
+============================ */
+
+@media (max-width:992px) {
+
+    .section-title {
+        font-size: 28px;
+    }
+
+}
+
+@media (max-width:768px) {
+
+    .home-section {
+        margin: 36px 0;
+    }
+
+    .section-header {
+        margin-bottom: 22px;
+    }
+
+    .section-title {
+        font-size: 24px;
+        padding-left: 15px;
+    }
+
+}
+
+@media (max-width:576px) {
+
+    .home-section {
+        margin: 28px 0;
+    }
+
+    .section-title {
+        font-size: 22px;
+    }
+
+}

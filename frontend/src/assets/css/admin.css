@@ -1,0 +1,630 @@
+/* src/assets/css/admin.css
+   Toàn bộ style của khu vực Admin.
+   Mọi selector đều nằm trong .admin-page để không ảnh hưởng staff.css. */
+
+.admin-page {
+    --admin-bg: #f5f6fb;
+    --admin-surface: #ffffff;
+    --admin-ink: #1e293b;
+    --admin-muted: #64748b;
+    --admin-line: #e6e9f2;
+    --admin-primary: #4f46e5;
+    --admin-radius: 16px;
+    --admin-shadow: 0 1px 2px rgba(15, 23, 42, 0.04),
+        0 8px 24px rgba(15, 23, 42, 0.05);
+
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 28px 24px 56px;
+    color: var(--admin-ink);
+    font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* ---------- HERO / LỜI CHÀO ---------- */
+.admin-page .admin-hero {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 28px 30px;
+    border-radius: 20px;
+    background: linear-gradient(120deg, #4f46e5 0%, #6366f1 45%, #7c3aed 100%);
+    color: #fff;
+    box-shadow: 0 12px 30px rgba(79, 70, 229, 0.28);
+}
+
+.admin-page .admin-hero-eyebrow {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.75);
+    margin-bottom: 6px;
+}
+
+.admin-page .admin-hero-title {
+    margin: 0;
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.admin-page .admin-hero-sub {
+    margin: 8px 0 0;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.admin-page .admin-hero-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+}
+
+.admin-page .admin-hero-badge {
+    padding: 6px 14px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    font-size: 13px;
+    font-weight: 600;
+    backdrop-filter: blur(4px);
+}
+
+.admin-page .admin-logout-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 16px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.38);
+    background: rgba(255, 255, 255, 0.14);
+    color: #fff;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    backdrop-filter: blur(4px);
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.admin-page .admin-logout-btn:hover {
+    background: rgba(255, 255, 255, 0.26);
+    border-color: rgba(255, 255, 255, 0.6);
+}
+
+.admin-page .admin-logout-btn:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+}
+
+.admin-page .admin-logout-btn:disabled {
+    opacity: 0.6;
+    cursor: default;
+}
+
+.admin-page .admin-logout-btn svg {
+    display: block;
+}
+
+/* ---------- SỐ LIỆU TỔNG QUAN ---------- */
+.admin-page .admin-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin: 24px 0 8px;
+}
+
+.admin-page .admin-stat {
+    background: var(--admin-surface);
+    border: 1px solid var(--admin-line);
+    border-radius: var(--admin-radius);
+    padding: 18px 20px;
+    box-shadow: var(--admin-shadow);
+    position: relative;
+    overflow: hidden;
+}
+
+.admin-page .admin-stat::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: var(--stat-accent, var(--admin-primary));
+}
+
+.admin-page .admin-stat-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--admin-muted);
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.admin-page .admin-stat-icon {
+    font-size: 16px;
+    line-height: 1;
+}
+
+.admin-page .admin-stat-value {
+    margin-top: 10px;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--admin-ink);
+    letter-spacing: -0.01em;
+}
+
+.admin-page .admin-stat-hint {
+    margin-top: 4px;
+    font-size: 12px;
+    color: var(--admin-muted);
+}
+
+/* ---------- NHÓM CHỨC NĂNG ---------- */
+.admin-page .admin-section {
+    margin-top: 32px;
+}
+
+.admin-page .admin-section-head {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.admin-page .admin-section-eyebrow {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--admin-primary);
+    background: #eef2ff;
+    padding: 3px 8px;
+    border-radius: 6px;
+}
+
+.admin-page .admin-section-title {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--admin-ink);
+}
+
+.admin-page .admin-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+}
+
+/* ---------- Ô CHỨC NĂNG ---------- */
+.admin-page .admin-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+    text-align: left;
+    padding: 18px;
+    background: var(--admin-surface);
+    border: 1px solid var(--admin-line);
+    border-radius: var(--admin-radius);
+    box-shadow: var(--admin-shadow);
+    cursor: pointer;
+    font: inherit;
+    color: inherit;
+    transition: transform 0.15s ease, box-shadow 0.15s ease,
+        border-color 0.15s ease;
+}
+
+.admin-page .admin-card:hover {
+    transform: translateY(-3px);
+    border-color: color-mix(in srgb, var(--card-accent) 45%, var(--admin-line));
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.1);
+}
+
+.admin-page .admin-card:focus-visible {
+    outline: 2px solid var(--card-accent, var(--admin-primary));
+    outline-offset: 2px;
+}
+
+.admin-page .admin-card-icon {
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    font-size: 22px;
+    background: color-mix(in srgb, var(--card-accent) 15%, #fff);
+    transition: background 0.15s ease;
+}
+
+.admin-page .admin-card:hover .admin-card-icon {
+    background: color-mix(in srgb, var(--card-accent) 24%, #fff);
+}
+
+.admin-page .admin-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+
+.admin-page .admin-card-label {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--admin-ink);
+}
+
+.admin-page .admin-card-desc {
+    font-size: 13px;
+    color: var(--admin-muted);
+    line-height: 1.35;
+}
+
+.admin-page .admin-card-arrow {
+    margin-left: auto;
+    flex-shrink: 0;
+    color: var(--card-accent, var(--admin-primary));
+    font-size: 18px;
+    opacity: 0;
+    transform: translateX(-4px);
+    transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.admin-page .admin-card:hover .admin-card-arrow {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+/* ---------- RESPONSIVE ---------- */
+@media (max-width: 900px) {
+    .admin-page .admin-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 560px) {
+    .admin-page {
+        padding: 20px 16px 40px;
+    }
+    .admin-page .admin-hero {
+        flex-direction: column;
+        padding: 22px;
+    }
+    .admin-page .admin-stats {
+        grid-template-columns: 1fr;
+    }
+    .admin-page .admin-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ---------- GIẢM CHUYỂN ĐỘNG ---------- */
+@media (prefers-reduced-motion: reduce) {
+    .admin-page .admin-card,
+    .admin-page .admin-card-icon,
+    .admin-page .admin-card-arrow {
+        transition: none;
+    }
+    .admin-page .admin-card:hover {
+        transform: none;
+    }
+}
+
+/* =====================================================================
+   THÀNH PHẦN DÙNG CHUNG CHO CÁC TRANG QUẢN LÝ (bảng, nút, modal, form)
+   ===================================================================== */
+
+/* Hero gọn cho trang con */
+.admin-page .admin-hero--compact {
+    padding: 22px 26px;
+}
+
+/* ---------- NÚT ---------- */
+.admin-page .admin-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 9px 16px;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+}
+.admin-page .admin-btn:disabled {
+    opacity: 0.55;
+    cursor: default;
+}
+.admin-page .admin-btn--sm {
+    padding: 6px 12px;
+    font-size: 13px;
+    border-radius: 8px;
+}
+.admin-page .admin-btn--primary {
+    background: var(--admin-primary);
+    color: #fff;
+}
+.admin-page .admin-btn--primary:hover:not(:disabled) {
+    background: #4338ca;
+}
+.admin-page .admin-btn--ghost {
+    background: #fff;
+    border-color: var(--admin-line);
+    color: var(--admin-ink);
+}
+.admin-page .admin-btn--ghost:hover:not(:disabled) {
+    border-color: #c7cbe0;
+    background: #f8f9fd;
+}
+.admin-page .admin-btn--danger {
+    background: #fef2f2;
+    border-color: #fecaca;
+    color: #dc2626;
+}
+.admin-page .admin-btn--danger:hover:not(:disabled) {
+    background: #fee2e2;
+}
+.admin-page .admin-btn--light {
+    background: rgba(255, 255, 255, 0.16);
+    border-color: rgba(255, 255, 255, 0.4);
+    color: #fff;
+    backdrop-filter: blur(4px);
+}
+.admin-page .admin-btn--light:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.28);
+}
+
+/* ---------- THANH CÔNG CỤ ---------- */
+.admin-page .admin-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 22px 0 16px;
+}
+
+/* ---------- Ô NHẬP ---------- */
+.admin-page .admin-input,
+.admin-page .admin-select {
+    padding: 9px 12px;
+    border: 1px solid var(--admin-line);
+    border-radius: 10px;
+    font: inherit;
+    font-size: 14px;
+    color: var(--admin-ink);
+    background: #fff;
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.admin-page .admin-input:focus,
+.admin-page .admin-select:focus {
+    border-color: var(--admin-primary);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
+}
+.admin-page .admin-toolbar .admin-input {
+    flex: 1 1 220px;
+    min-width: 160px;
+}
+.admin-page textarea.admin-input {
+    resize: vertical;
+}
+
+/* ---------- BẢNG ---------- */
+.admin-page .admin-table-wrap {
+    background: var(--admin-surface);
+    border: 1px solid var(--admin-line);
+    border-radius: var(--admin-radius);
+    box-shadow: var(--admin-shadow);
+    overflow-x: auto;
+}
+.admin-page .admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    min-width: 900px;
+}
+.admin-page .admin-table thead th {
+    text-align: left;
+    padding: 13px 16px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--admin-muted);
+    background: #fafbff;
+    border-bottom: 1px solid var(--admin-line);
+    white-space: nowrap;
+}
+.admin-page .admin-table tbody td {
+    padding: 13px 16px;
+    border-bottom: 1px solid #f1f3fa;
+    color: var(--admin-ink);
+    vertical-align: middle;
+}
+.admin-page .admin-table tbody tr:last-child td {
+    border-bottom: none;
+}
+.admin-page .admin-table tbody tr:hover {
+    background: #fafbff;
+}
+.admin-page .admin-mono {
+    font-family: ui-monospace, 'SFMono-Regular', Menlo, monospace;
+    font-size: 13px;
+    color: var(--admin-muted);
+}
+.admin-page .admin-nowrap {
+    white-space: nowrap;
+    font-size: 13px;
+    color: var(--admin-muted);
+}
+.admin-page .admin-th-action {
+    text-align: right;
+}
+.admin-page .admin-row-actions {
+    display: inline-flex;
+    gap: 8px;
+    justify-content: flex-end;
+}
+.admin-page .admin-state {
+    text-align: center;
+    padding: 40px 16px;
+    color: var(--admin-muted);
+}
+
+/* ---------- BADGE TRẠNG THÁI ---------- */
+.admin-page .admin-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.admin-page .admin-badge--on {
+    background: #dcfce7;
+    color: #15803d;
+}
+.admin-page .admin-badge--off {
+    background: #f1f5f9;
+    color: #64748b;
+}
+
+/* ---------- PHÂN TRANG ---------- */
+.admin-page .admin-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 18px;
+}
+.admin-page .admin-page-info {
+    font-size: 13px;
+    color: var(--admin-muted);
+}
+
+/* ---------- MODAL ---------- */
+.admin-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.45);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 40px 16px;
+    z-index: 1000;
+    overflow-y: auto;
+}
+.admin-modal {
+    width: 100%;
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 20px 60px rgba(15, 23, 42, 0.25);
+    overflow: hidden;
+    animation: adminModalIn 0.16s ease-out;
+    font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    color: #1e293b;
+}
+@keyframes adminModalIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+.admin-modal-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 22px;
+    border-bottom: 1px solid #e6e9f2;
+}
+.admin-modal-title {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 700;
+}
+.admin-modal-close {
+    border: none;
+    background: transparent;
+    font-size: 24px;
+    line-height: 1;
+    color: #94a3b8;
+    cursor: pointer;
+    padding: 0 4px;
+}
+.admin-modal-close:hover {
+    color: #475569;
+}
+.admin-modal-body {
+    padding: 20px 22px;
+}
+.admin-modal-foot {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 16px 22px;
+    border-top: 1px solid #e6e9f2;
+    background: #fafbff;
+}
+
+/* ---------- FORM TRONG MODAL ---------- */
+.admin-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+.admin-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.admin-field--full {
+    grid-column: 1 / -1;
+}
+.admin-field > label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #475569;
+}
+.admin-field .admin-input,
+.admin-field .admin-select {
+    width: 100%;
+}
+.admin-checkbox {
+    flex-direction: row !important;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    color: #334155 !important;
+    cursor: pointer;
+}
+.admin-checkbox input {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--admin-primary);
+}
+.admin-form-error {
+    margin-bottom: 14px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #dc2626;
+    font-size: 13px;
+}
+
+@media (max-width: 560px) {
+    .admin-form {
+        grid-template-columns: 1fr;
+    }
+    .admin-page .admin-toolbar .admin-input {
+        flex-basis: 100%;
+    }
+}

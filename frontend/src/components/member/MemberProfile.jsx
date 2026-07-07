@@ -1,55 +1,37 @@
 import { useEffect, useState } from "react";
-import "../../assets/css/memberRank.css";
 import Swal from "sweetalert2";
+
 import { updateMemberProfile } from "../../api/authApi";
+
+import "../../assets/css/memberRank.css";
+
 function MemberProfile({ user }) {
 
     const [formData, setFormData] = useState({
-
         HoTen: "",
-
         Email: "",
-
         SoDienThoai: "",
-
         NgaySinh: "",
-
         GioiTinh: ""
-
     });
 
     useEffect(() => {
-
         if (user) {
-
             setFormData({
-
                 HoTen: user.HoTen || "",
-
                 Email: user.Email || "",
-
                 SoDienThoai: user.SoDienThoai || "",
-
                 NgaySinh: user.NgaySinh || "",
-
                 GioiTinh: user.GioiTinh || ""
-
             });
-
         }
-
     }, [user]);
 
     const handleChange = (e) => {
-
         setFormData({
-
             ...formData,
-
             [e.target.name]: e.target.value
-
         });
-
     };
 
     const handleSubmit = async (e) => {
@@ -103,188 +85,85 @@ function MemberProfile({ user }) {
     };
 
     return (
-
         <div className="profile-section">
 
             <h3 className="section-title">
-
                 Thông tin cá nhân
-
             </h3>
 
-            <form
-                className="profile-form"
-                onSubmit={handleSubmit}
-            >
+            <form className="profile-form" onSubmit={handleSubmit}>
 
                 <div className="row">
-
                     <div className="col-md-6">
-
-                        <label>
-
-                            Họ và tên
-
-                        </label>
-
+                        <label>Họ và tên</label>
                         <input
-
                             type="text"
-
                             name="HoTen"
-
                             value={formData.HoTen}
-
                             onChange={handleChange}
-
                         />
-
                     </div>
 
                     <div className="col-md-6">
-
-                        <label>
-
-                            Email
-
-                        </label>
-
+                        <label>Email</label>
                         <input
-
                             type="email"
-
                             name="Email"
-
                             value={formData.Email}
-
                             onChange={handleChange}
-
                         />
-
                     </div>
-
                 </div>
 
                 <div className="row">
-
                     <div className="col-md-6">
-
-                        <label>
-
-                            Số điện thoại
-
-                        </label>
-
+                        <label>Số điện thoại</label>
                         <input
-
                             type="text"
-
                             name="SoDienThoai"
-
                             value={formData.SoDienThoai}
-
                             onChange={handleChange}
-
                         />
-
                     </div>
 
                     <div className="col-md-6">
-
-                        <label>
-
-                            Ngày sinh
-
-                        </label>
-
+                        <label>Ngày sinh</label>
                         <input
-
                             type="date"
-
                             name="NgaySinh"
-
                             value={formData.NgaySinh}
-
                             onChange={handleChange}
-
                         />
-
                     </div>
-
                 </div>
 
                 <div className="row">
-
                     <div className="col-md-6">
-
-                        <label>
-
-                            Giới tính
-
-                        </label>
-
+                        <label>Giới tính</label>
                         <select
-
                             name="GioiTinh"
-
                             value={formData.GioiTinh}
-
                             onChange={handleChange}
-
                         >
-
-                            <option value="Nam">
-
-                                Nam
-
-                            </option>
-
-                            <option value="Nữ">
-
-                                Nữ
-
-                            </option>
-
+                            <option value="Nam">Nam</option>
+                            <option value="Nữ">Nữ</option>
                         </select>
-
                     </div>
-
-                    <div className="col-md-6">
-
-                        <label>
-
-                            Mã khách hàng
-
-                        </label>
-
-                        <input value={user?.MaKhachHang || ""} disabled />
-
-                    </div>
-
                 </div>
 
+                {/* Nút Lưu tách ra khỏi row/col, nằm ở cuối form
+                    để căn phải theo đúng toàn bộ chiều rộng form,
+                    không còn bị kẹt trong cột Giới tính nữa */}
                 <div className="text-end mt-4">
-
-                    <button
-
-                        className="save-btn"
-
-                        type="submit"
-
-                    >
-
-                        Lưu thay đổi
-
+                    <button className="save-btn" type="submit">
+                        Lưu
                     </button>
-
                 </div>
 
             </form>
 
         </div>
-
     );
-
 }
 
 export default MemberProfile;

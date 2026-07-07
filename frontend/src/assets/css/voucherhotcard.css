@@ -1,0 +1,165 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&display=swap');
+
+.voucher-hot-card {
+    position: relative;
+    background: linear-gradient(135deg, #0A2E1C 0%, #145436 100%);
+    border: 2px solid rgba(179, 142, 54, 0.45);
+    border-radius: 22px;
+    padding: 10px;
+    overflow: hidden;
+    color: #fff;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    transition: all .3s ease;
+}
+
+.voucher-hot-card::before {
+    content: "";
+    position: absolute;
+    top: -70px;
+    right: -70px;
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    background: rgba(179, 142, 54, .12);
+}
+
+.voucher-hot-card::after {
+    content: "VOUCHER";
+    position: absolute;
+    bottom: 12px;
+    right: 18px;
+    font-family: "Nunito", sans-serif;
+    font-size: 40px;
+    font-weight: 900;
+    color: rgba(255,255,255,.04);
+    pointer-events: none;
+}
+
+.voucher-hot-card:hover {
+    transform: translateY(-6px);
+    border-color: #d7b55c;
+    box-shadow: 0 18px 35px rgba(10,46,28,.25);
+}
+
+/* =========================
+   TOP
+========================= */
+
+.voucher-hot-top {
+    display: flex;
+    justify-content: flex-start;
+}
+
+.voucher-hot-top .badge {
+    padding: 8px 16px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: .3px;
+}
+
+.voucher-hot-top .bg-danger {
+    background: #D64545 !important;
+    color: #fff;
+}
+
+/* =========================
+   TITLE
+========================= */
+
+.voucher-hot-card h5 {
+    margin: 22px 0 14px;
+    font-family: "Nunito", sans-serif;
+    font-size: 24px;
+    font-weight: 800;
+    line-height: 1.35;
+    color: #fff;
+}
+
+/* =========================
+   DESCRIPTION
+========================= */
+
+.voucher-hot-card p {
+    color: rgba(255,255,255,.72) !important;
+    line-height: 1.7;
+    font-size: 14px;
+    margin-bottom: 24px;
+    flex: 1;
+}
+
+/* =========================
+   POINT
+========================= */
+
+.voucher-hot-point {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    align-self: flex-start;
+
+    padding: 10px 15px;
+
+    border-radius: 999px;
+
+    background: rgba(255,255,255,.08);
+
+    border: 1px solid rgba(255,255,255,.08);
+
+    color: #FFD34D;
+
+    font-family: "Nunito", sans-serif;
+    font-size: 24px;
+    font-weight: 900;
+}
+
+.voucher-hot-point::after {
+    content: " để đổi";
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(255,255,255,.7);
+    margin-left: 6px;
+}
+
+/* =========================
+   BUTTON
+========================= */
+
+.voucher-hot-card .btn {
+    margin-top: 24px;
+    border: none;
+    border-radius: 999px;
+    padding: 12px 18px;
+    font-size: 15px;
+    font-weight: 700;
+    background: #B38E36;
+    transition: all .25s ease;
+}
+
+.voucher-hot-card .btn:hover {
+    background: #9F7C2D;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 18px rgba(179,142,54,.35);
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width:768px){
+
+    .voucher-hot-card{
+        padding:20px;
+    }
+
+    .voucher-hot-card h5{
+        font-size:22px;
+    }
+
+    .voucher-hot-point{
+        font-size:20px;
+    }
+
+}

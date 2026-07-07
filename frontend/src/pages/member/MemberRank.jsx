@@ -11,6 +11,7 @@ import MemberProgress from "../../components/member/MemberProgress";
 import MemberPointSummary from "../../components/member/MemberPointSummary";
 import MemberProfile from "../../components/member/MemberProfile";
 import PointHistory from "../../components/member/PointHistory";
+import RankHistoryModal from "../../components/member/RankHistoryModal";
 
 import "../../assets/css/memberRank.css";
 
@@ -19,6 +20,7 @@ function MemberRank() {
     const [user, setUser] = useState(null);
     const [points, setPoints] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [showRankHistory, setShowRankHistory] = useState(false);
 
     useEffect(() => {
         loadData();
@@ -73,32 +75,31 @@ function MemberRank() {
                     <MemberCard
                         user={user}
                         points={points}
+                        onShowHistory={() => setShowRankHistory(true)}
                     />
 
-                    <MemberProgress
-                        points={points}
-                    />
+                    <MemberProgress points={points} />
 
                 </div>
 
                 {/* RIGHT SIDE */}
                 <div style={{ width: "320px" }}>
-
-                    <MemberProfile
-                        user={user}
-                    />
-
+                    <MemberProfile user={user} />
                 </div>
 
             </div>
 
             {/* SUMMARY */}
-            <MemberPointSummary
-                points={points}
-            />
+            <MemberPointSummary points={points} />
 
             {/* HISTORY */}
             <PointHistory />
+
+            {/* MODAL LỊCH SỬ HẠNG */}
+            <RankHistoryModal
+                show={showRankHistory}
+                onClose={() => setShowRankHistory(false)}
+            />
 
         </div>
     );
