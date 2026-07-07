@@ -10,17 +10,16 @@ function Navbar() {
 
                 <div className="navbar-wrapper">
 
-                    {/* Logo */}
 
-                    <div className="logo">
 
-                        <Link to="/">
-
-                            BUFFET VIP
-
-                        </Link>
-
-                    </div>
+                    <img
+                        src="http://127.0.0.1:8000/logo/logo.png"
+                        alt="BUFFET VIP"
+                        style={{
+                            width: "80px",
+                            height: "80px",
+                        }}
+                    />
 
                     {/* Menu */}
 
