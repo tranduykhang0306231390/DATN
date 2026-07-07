@@ -15,7 +15,7 @@
     --border-soft: #ECE7DC;
     --danger: #D64545;
 
-    padding: 20px 0 44px;
+    padding: 0px 0 0px;
     font-family: "Be Vietnam Pro", Inter, sans-serif;
 }
 
@@ -24,7 +24,7 @@
 }
 
 .mh-section + .mh-section {
-    margin-top: 32px;
+    margin-top: 0px;
 }
 
 /* ===========================================
@@ -33,7 +33,7 @@
 
 .home-banner {
     position: relative;
-    border-radius: 10px;
+    border-radius: 1px;
     padding: 44px 40px;
     background: linear-gradient(120deg, var(--ink) 0%, #12432A 100%);
     color: #FFFFFF;
@@ -50,7 +50,7 @@
     right: -60px;
     top: -60px;
     width: 240px;
-    height: 240px;
+    height: 200px;
     border-radius: 50%;
     background: rgba(179, 142, 54, 0.18);
 }
@@ -212,7 +212,7 @@
     background: var(--card-bg);
     border: 1px solid var(--border-soft);
     border-radius: 16px;
-    padding: 18px 20px;
+    padding: 180px 20px;
     transition: 0.25s ease;
 }
 
@@ -435,7 +435,7 @@
 
 @media (max-width: 576px) {
     .member-home {
-        padding: 14px 0 30px;
+        padding: 0px 0 0px;
     }
 
     .hb-divider {
@@ -445,4 +445,5 @@
     .home-banner-card {
         flex-wrap: wrap;
     }
+    
 }

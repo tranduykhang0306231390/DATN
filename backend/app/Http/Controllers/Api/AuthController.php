@@ -28,7 +28,12 @@ class AuthController extends Controller
         );
 
         $khachHang = KhachHang::where('Email', $request->email)->first();
-
+        if ($khachHang->TrangThai !== 'HoatDong') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tài khoản đã bị khóa.'
+            ], 403);
+        }
         if (!$khachHang) {
             return response()->json([
                 'success' => false,
@@ -77,7 +82,12 @@ class AuthController extends Controller
         );
 
         $nhanVien = NhanVien::where('TenDangNhap', $request->username)->first();
-
+        if ($nhanVien->TrangThai !== 'HoatDong') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tài khoản đã bị khóa.'
+            ], 403);
+        }
         if (!$nhanVien) {
             return response()->json([
                 'success' => false,

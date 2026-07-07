@@ -1,4 +1,32 @@
+import { useEffect, useState } from "react";
+import { getWebSetting } from "../../api/webSettingApi";
+
 function Footer() {
+
+    const [setting, setSetting] = useState(null);
+
+    useEffect(() => {
+        loadSetting();
+    }, []);
+
+    const loadSetting = async () => {
+        try {
+
+            const res = await getWebSetting();
+
+            // nếu API trả về {data: {...}}
+            setSetting(res.data.data || res.data);
+
+        } catch (error) {
+
+            console.log(error);
+
+        }
+    };
+
+    if (!setting) {
+        return null;
+    }
 
     return (
 
@@ -10,19 +38,15 @@ function Footer() {
 
                     <div className="footer-item">
 
-                        <h5>VỀ BUFFET VIP</h5>
+                        <h5>VỀ {setting.TenWebsite}</h5>
 
                         <p>
 
-                            Buffet VIP mang đến trải nghiệm ẩm thực chất lượng
-                            cùng chương trình khách hàng thân thiết với nhiều
-                            ưu đãi hấp dẫn.
+                            {setting.NoiDungWebsite}
 
                         </p>
 
                     </div>
-
-                   
 
                     <div className="footer-item">
 
@@ -30,11 +54,11 @@ function Footer() {
 
                         <ul>
 
-                            <li>Email: buffetvip@gmail.com</li>
+                            <li>Email: {setting.EmailLienHe}</li>
 
-                            <li>Hotline: 1900 9999</li>
+                            <li>Hotline: {setting.SoDienThoai}</li>
 
-                            <li>Hồ Chí Minh - Việt Nam</li>
+                            <li>{setting.DiaChi}</li>
 
                         </ul>
 
@@ -44,7 +68,7 @@ function Footer() {
 
                 <div className="footer-bottom">
 
-                    © 2026 Buffet VIP. All Rights Reserved.
+                    © {new Date().getFullYear()} {setting.TenWebsite}. All Rights Reserved.
 
                 </div>
 

@@ -113,7 +113,7 @@ a{
 =========================== */
 
 .btn-outline-light{
-    border:1px solid #fff;
+    border:1px solid #362b2b;
     transition:.3s;
 }
 
@@ -128,10 +128,10 @@ a{
 =========================== */
 
 .member-footer{
-    background:#6B4226;
+    background:#214726;
     color:white;
-    margin-top:40px;
-    padding:25px 0;   /* giảm mạnh */
+    margin-top:0px;
+    padding:5px 0;   /* giảm mạnh */
     text-align:left;
 }
 
@@ -142,7 +142,7 @@ a{
 .member-footer h5{
     color:#E8C76A;
     margin-bottom:10px;
-    font-size:16px;
+    font-size:20px;
 }
 
 .member-footer p{

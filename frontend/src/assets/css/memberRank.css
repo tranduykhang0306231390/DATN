@@ -1,63 +1,104 @@
 /* =====================================================
-   MEMBER RANK PAGE (COMPACT UI)
+   MEMBER RANK PAGE — MODERN GREEN/GOLD/BROWN THEME
+   Phong cách hiện đại, tối giản kiểu Apple
+===================================================== */
+
+:root{
+    /* -- Màu sắc (color tokens) -- */
+    --green-900:#0B5D3B;       /* xanh lá đậm, màu thương hiệu */
+    --green-700:#146C43;       /* xanh lá phụ, dùng cho gradient */
+    --gold-500:#E8C76A;        /* vàng nhấn chính */
+    --gold-300:#F2D88A;        /* vàng sáng, highlight */
+    --brown-600:#7B4F2B;       /* nâu đất, điểm nhấn phụ */
+    --ink:#1D1D1F;             /* chữ chính, gần đen kiểu Apple */
+    --gray-600:#6E6E73;        /* chữ phụ, xám Apple */
+    --gray-300:#D2D2D7;        /* viền nhạt */
+    --bg:#F5F5F7;              /* nền trang, xám sáng Apple */
+    --white:#FFFFFF;
+
+    /* -- Typography kiểu Apple (SF Pro trên máy Apple, Inter dự phòng) -- */
+    --font-sans:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text",
+                "Inter","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+
+    /* -- Bo góc / bóng đổ dùng chung, mềm mại kiểu Apple -- */
+    --radius-lg:22px;
+    --radius-md:16px;
+    --shadow-soft:0 8px 24px rgba(0,0,0,.06);
+    --shadow-card:0 20px 40px rgba(11,93,59,.14);
+}
+
+*{
+    box-sizing:border-box;
+}
+
+/* =====================================================
+   TRANG TỔNG (PAGE WRAPPER)
 ===================================================== */
 
 .member-rank-page{
-    padding:18px 0 25px;
+    padding:32px 0 44px;
+    background:var(--bg);
+    font-family:var(--font-sans);
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
 }
 
 /* =====================================================
-   PAGE TITLE (SMALL)
+   TIÊU ĐỀ TRANG (PAGE TITLE)
 ===================================================== */
 
 .page-title{
-    margin-bottom:20px;
+    margin-bottom:28px;
 }
 
 .page-title h2{
-    color:#0B5D3B;
-    font-size:26px;
+    color:var(--ink);
+    font-size:32px;
     font-weight:700;
-    margin-bottom:5px;
+    letter-spacing:-.02em;
+    margin:0 0 6px;
 }
 
 .page-title p{
-    color:#777;
-    font-size:13px;
+    color:var(--gray-600);
+    font-size:15px;
+    font-weight:400;
+    letter-spacing:-.01em;
 }
 
 /* =====================================================
-   MEMBER CARD (COMPACT)
+   THẺ THÀNH VIÊN (MEMBER CARD — SIGNATURE ELEMENT)
 ===================================================== */
 
 .member-card{
     position:relative;
-    margin-bottom:20px;
-    border-radius:18px;
+    margin-bottom:22px;
+    border-radius:var(--radius-lg);
     overflow:hidden;
-    background:linear-gradient(135deg,#0B5D3B,#146C43,#7B4F2B);
-    min-height:180px;
-    box-shadow:0 12px 30px rgba(0,0,0,.15);
+    background:linear-gradient(160deg,var(--green-900) 0%,var(--green-700) 55%,var(--brown-600) 130%);
+    min-height:188px;
+    box-shadow:var(--shadow-card);
 }
 
+/* Vòng sáng mềm, góc trên phải — chi tiết ánh sáng kiểu Apple */
 .member-card::before{
     content:"";
     position:absolute;
-    width:250px;
-    height:250px;
+    width:260px;
+    height:260px;
     border-radius:50%;
-    background:rgba(255,255,255,.05);
-    right:-100px;
-    top:-100px;
+    background:radial-gradient(circle,rgba(242,216,138,.16),transparent 70%);
+    right:-110px;
+    top:-110px;
 }
 
 .member-card::after{
     content:"";
     position:absolute;
-    width:160px;
-    height:160px;
+    width:170px;
+    height:170px;
     border-radius:50%;
-    background:rgba(255,255,255,.04);
+    background:radial-gradient(circle,rgba(255,255,255,.06),transparent 70%);
     left:-60px;
     bottom:-70px;
 }
@@ -65,17 +106,22 @@
 .member-card-overlay{
     position:relative;
     z-index:2;
-    padding:18px 20px;
-    color:white;
+    padding:24px 26px;
+    color:var(--white);
 
     display:flex;
+    flex-wrap:wrap;
     justify-content:space-between;
     align-items:center;
     gap:20px;
 }
 
+.member-card:hover{
+    box-shadow:0 26px 48px rgba(11,93,59,.2);
+}
+
 /* =====================================================
-   CARD HEADER
+   HEADER CỦA THẺ
 ===================================================== */
 
 .member-card-header{
@@ -84,19 +130,21 @@
 
 .member-card-header h4{
     margin:0;
-    font-size:20px;
-    font-weight:700;
-    letter-spacing:1px;
+    font-size:19px;
+    font-weight:600;
+    letter-spacing:-.01em;
 }
 
 .member-card-header span{
-    color:#F2D88A;
+    color:var(--gold-300);
     font-size:11px;
-    letter-spacing:2px;
+    font-weight:600;
+    letter-spacing:1.6px;
+    text-transform:uppercase;
 }
 
 /* =====================================================
-   CARD BODY
+   THÂN THẺ
 ===================================================== */
 
 .member-card-body{
@@ -105,236 +153,540 @@
 
 .member-card-body h2{
     margin:0;
-    font-size:24px;
+    font-size:30px;
     font-weight:700;
+    letter-spacing:-.02em;
 }
 
 .member-card-body p{
     margin-top:5px;
-    color:#F3F3F3;
-    font-size:13px;
+    color:rgba(255,255,255,.78);
+    font-size:13.5px;
+    font-weight:400;
 }
 
 /* =====================================================
-   CARD FOOTER
+   CHÂN THẺ
 ===================================================== */
 
 .member-card-footer{
     display:flex;
     justify-content:flex-start;
-    gap:25px;
+    gap:28px;
     flex-wrap:wrap;
 }
 
 .member-card-footer small{
     display:block;
-    color:#E8C76A;
+    color:var(--gold-300);
     font-size:11px;
+    font-weight:500;
     margin-bottom:5px;
 }
 
 .member-card-footer h5{
     margin:0;
     font-size:18px;
-    font-weight:700;
+    font-weight:600;
+    letter-spacing:-.01em;
 }
 
 /* =====================================================
-   PROGRESS (COMPACT)
+   NÚT XEM LỊCH SỬ HẠNG (CARD ACTIONS)
+===================================================== */
+
+.member-card-actions{
+    display:flex;
+    align-items:center;
+    flex-shrink:0;
+}
+
+.history-btn{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:11px 22px;
+    border:1px solid rgba(255,255,255,.4);
+    border-radius:999px;
+    background:rgba(255,255,255,.12);
+    backdrop-filter:blur(10px);
+    color:var(--white);
+    font-family:var(--font-sans);
+    font-size:13.5px;
+    font-weight:600;
+    letter-spacing:-.01em;
+    white-space:nowrap;
+    cursor:pointer;
+    transition:all .2s ease;
+}
+
+.history-btn:hover{
+    background:var(--white);
+    color:var(--green-900);
+    border-color:var(--white);
+    transform:translateY(-1px);
+    box-shadow:0 10px 20px rgba(0,0,0,.18);
+}
+
+.history-btn:active{
+    transform:translateY(0);
+}
+
+.history-btn:focus-visible{
+    outline:2px solid var(--gold-300);
+    outline-offset:3px;
+}
+
+@media(max-width:576px){
+    .member-card-overlay{
+        flex-direction:column;
+        align-items:flex-start;
+    }
+
+    .member-card-actions{
+        width:100%;
+    }
+
+    .history-btn{
+        width:100%;
+        justify-content:center;
+    }
+}
+
+/* =====================================================
+   TIẾN ĐỘ HẠNG (PROGRESS)
 ===================================================== */
 
 .member-progress{
-    background:white;
-    padding:18px;
-    border-radius:16px;
-    margin-bottom:18px;
-    box-shadow:0 6px 18px rgba(0,0,0,.08);
+    background:var(--white);
+    padding:22px;
+    border-radius:var(--radius-lg);
+    margin-bottom:20px;
+    box-shadow:var(--shadow-soft);
+    border:1px solid var(--gray-300);
 }
 
 .progress-header{
     display:flex;
     justify-content:space-between;
     align-items:center;
-    margin-bottom:12px;
+    flex-wrap:wrap;
+    gap:10px;
+    margin-bottom:14px;
 }
 
 .progress-header h4{
     margin:0;
-    font-size:16px;
-    color:#0B5D3B;
+    font-size:17px;
+    font-weight:600;
+    letter-spacing:-.01em;
+    color:var(--ink);
 }
 
 .progress-header p{
-    margin-top:5px;
-    font-size:12px;
-    color:#666;
+    margin-top:4px;
+    font-size:12.5px;
+    color:var(--gray-600);
 }
 
 .progress-point{
-    background:#0B5D3B;
-    color:white;
-    padding:6px 14px;
+    background:var(--green-900);
+    color:var(--white);
+    padding:7px 16px;
     border-radius:20px;
     font-weight:600;
-    font-size:12px;
+    font-size:12.5px;
+    letter-spacing:-.01em;
 }
 
 /* =====================================================
-   BAR
+   THANH TIẾN ĐỘ (BAR)
 ===================================================== */
 
 .progress-bar-wrapper{
     width:100%;
-    height:12px;
+    height:10px;
     border-radius:20px;
-    background:#E8E8E8;
+    background:var(--bg);
     overflow:hidden;
-    margin-bottom:10px;
+    margin-bottom:12px;
 }
 
 .progress-bar-fill{
     height:100%;
     border-radius:20px;
-    background:linear-gradient(90deg,#0B5D3B,#E8C76A);
-    transition:.5s;
+    background:linear-gradient(90deg,var(--green-900),var(--gold-500));
+    transition:width .5s ease;
 }
 
 .progress-text{
-    font-size:12px;
-    color:#555;
+    font-size:12.5px;
+    color:var(--gray-600);
 }
 
 .progress-text strong{
-    color:#0B5D3B;
+    color:var(--green-900);
+    font-weight:600;
 }
 
 /* =====================================================
-   SUMMARY (COMPACT GRID)
+   THANH TIẾN TRÌNH THĂNG HẠNG (RANK-UP PROGRESS)
+   Hiển thị các mốc hạng (Đồng → Bạc → Vàng → Kim Cương)
+   và vị trí hiện tại của thành viên trên hành trình đó
+===================================================== */
+
+.rank-progress{
+    background:var(--white);
+    padding:26px 24px 22px;
+    border-radius:var(--radius-lg);
+    margin-bottom:20px;
+    box-shadow:var(--shadow-soft);
+    border:1px solid var(--gray-300);
+}
+
+.rank-progress-header{
+    margin-bottom:30px;
+}
+
+.rank-progress-header h4{
+    margin:0 0 4px;
+    font-size:17px;
+    font-weight:600;
+    letter-spacing:-.01em;
+    color:var(--ink);
+}
+
+.rank-progress-header p{
+    margin:0;
+    font-size:12.5px;
+    color:var(--gray-600);
+}
+
+.rank-progress-header p strong{
+    color:var(--green-900);
+    font-weight:600;
+}
+
+/* Khu vực chứa các mốc hạng + đường nối */
+.rank-progress-body{
+    position:relative;
+    padding-top:4px;
+}
+
+/* Đường nối nền, chạy qua tâm các vòng tròn mốc hạng */
+.rank-line-track{
+    position:absolute;
+    top:23px;
+    left:24px;
+    right:24px;
+    height:4px;
+    border-radius:4px;
+    background:var(--bg);
+}
+
+/* Đường nối đã hoàn thành, tô màu theo % tiến trình */
+.rank-line-fill{
+    position:absolute;
+    top:23px;
+    left:24px;
+    height:4px;
+    border-radius:4px;
+    background:linear-gradient(90deg,var(--green-900),var(--gold-500));
+    transition:width .6s ease;
+}
+
+.rank-steps{
+    position:relative;
+    z-index:2;
+    display:flex;
+    justify-content:space-between;
+}
+
+.rank-step{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:9px;
+    flex:1;
+}
+
+.rank-step-icon{
+    width:48px;
+    height:48px;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:19px;
+    background:var(--white);
+    border:2px solid var(--gray-300);
+    color:var(--gray-600);
+    transition:all .3s ease;
+}
+
+.rank-step-label{
+    font-size:12px;
+    font-weight:600;
+    color:var(--gray-600);
+    letter-spacing:-.01em;
+}
+
+/* Mốc hạng đã đạt được */
+.rank-step.completed .rank-step-icon{
+    background:var(--green-900);
+    border-color:var(--green-900);
+    color:var(--white);
+}
+
+.rank-step.completed .rank-step-label{
+    color:var(--ink);
+}
+
+/* Mốc hạng hiện tại — nổi bật bằng vàng và hiệu ứng "hào quang" */
+.rank-step.active .rank-step-icon{
+    background:linear-gradient(135deg,var(--gold-300),var(--gold-500));
+    border-color:var(--gold-500);
+    color:var(--ink);
+    transform:scale(1.1);
+    box-shadow:0 0 0 6px rgba(232,199,106,.22);
+}
+
+.rank-step.active .rank-step-label{
+    color:var(--green-900);
+    font-weight:700;
+}
+
+/* Mốc hạng chưa đạt tới */
+.rank-step.upcoming .rank-step-icon{
+    background:var(--white);
+    border-color:var(--gray-300);
+    color:var(--gray-300);
+}
+
+@media(max-width:576px){
+    .rank-step-label{
+        font-size:10.5px;
+    }
+
+    .rank-step-icon{
+        width:40px;
+        height:40px;
+        font-size:16px;
+    }
+
+    .rank-line-track,
+    .rank-line-fill{
+        top:19px;
+    }
+}
+
+/* =====================================================
+   TỔNG QUAN (SUMMARY GRID)
 ===================================================== */
 
 .summary-section{
-    margin-top:20px;
-    margin-bottom:20px;
+    margin-top:24px;
+    margin-bottom:24px;
 }
 
 .summary-grid{
     display:grid;
     grid-template-columns:repeat(2,1fr);
-    gap:12px;
+    gap:14px;
 }
 
 /* =====================================================
-   SUMMARY CARD
+   THẺ TỔNG QUAN
 ===================================================== */
 
 .summary-card{
-    background:white;
-    border-radius:14px;
-    padding:18px;
-    border:1px solid rgba(0,0,0,.05);
-    box-shadow:0 6px 15px rgba(0,0,0,.05);
-    transition:.25s;
+    background:var(--white);
+    border-radius:var(--radius-md);
+    padding:20px;
+    border:1px solid var(--gray-300);
+    box-shadow:var(--shadow-soft);
+    transition:transform .25s ease, box-shadow .25s ease;
 }
 
 .summary-card:hover{
     transform:translateY(-4px);
+    box-shadow:0 16px 30px rgba(11,93,59,.12);
 }
 
 .summary-card span{
     display:block;
-    color:#777;
-    font-size:12px;
+    color:var(--gray-600);
+    font-size:12.5px;
+    font-weight:500;
     margin-bottom:8px;
 }
 
 .summary-card h4{
-    color:#0B5D3B;
-    font-size:20px;
+    color:var(--green-900);
+    font-size:22px;
     font-weight:700;
+    letter-spacing:-.02em;
     margin:0;
 }
 
 /* =====================================================
-   POINT HISTORY (LIMIT HEIGHT)
+   LỊCH SỬ ĐIỂM (POINT HISTORY — GIỚI HẠN CHIỀU CAO)
 ===================================================== */
 
 .point-history{
-    background:white;
-    padding:18px;
-    border-radius:16px;
-    box-shadow:0 6px 18px rgba(0,0,0,.08);
-    margin-bottom:20px;
+    background:var(--white);
+    padding:20px;
+    border-radius:var(--radius-lg);
+    box-shadow:var(--shadow-soft);
+    border:1px solid var(--gray-300);
+    margin-bottom:24px;
 
-    max-height:260px;
+    max-height:270px;
     overflow-y:auto;
 }
 
-/* TABLE */
+.point-history table{
+    width:100%;
+    border-collapse:collapse;
+}
+
 .point-history thead th{
-    padding:10px;
-    font-size:12px;
+    padding:11px 10px;
+    font-size:11.5px;
+    font-weight:600;
+    letter-spacing:.3px;
+    text-transform:uppercase;
+    color:var(--gray-600);
+    text-align:left;
+    border-bottom:1px solid var(--gray-300);
+    position:sticky;
+    top:0;
+    background:var(--white);
 }
 
 .point-history tbody td{
-    padding:10px;
-    font-size:12px;
+    padding:11px 10px;
+    font-size:13px;
+    color:var(--ink);
+    border-bottom:1px solid var(--bg);
+}
+
+.point-history tbody tr:hover{
+    background:var(--bg);
 }
 
 /* =====================================================
-   PROFILE (COMPACT)
+   HỒ SƠ CÁ NHÂN (PROFILE)
 ===================================================== */
 
 .profile-section{
-    background:#fff;
-    padding:18px;
-    border-radius:16px;
-    box-shadow:0 6px 18px rgba(0,0,0,.08);
-    margin-top:20px;
+    background:var(--white);
+    padding:22px;
+    border-radius:var(--radius-lg);
+    box-shadow:var(--shadow-soft);
+    border:1px solid var(--gray-300);
+    margin-top:0px;
+}
+
+.profile-section h4,
+.profile-section .section-title{
+    color:var(--ink);
+    font-size:17px;
+    font-weight:600;
+    letter-spacing:-.01em;
+    margin:0 0 4px;
+}
+
+.profile-form .row + .row{
+    margin-top:6px;
 }
 
 .profile-form label{
-    font-size:12px;
-    margin-top:10px;
-    margin-bottom:5px;
+    display:block;
+    font-size:12.5px;
+    font-weight:500;
+    color:var(--gray-600);
+    margin-top:14px;
+    margin-bottom:6px;
 }
 
 .profile-form input,
 .profile-form select{
-    height:40px;
-    border-radius:10px;
-    font-size:13px;
+    width:100%;
+    height:42px;
+    padding:0 14px;
+    border-radius:12px;
+    border:1px solid var(--gray-300);
+    background:var(--bg);
+    font-family:var(--font-sans);
+    font-size:13.5px;
+    color:var(--ink);
+    transition:border-color .2s ease, box-shadow .2s ease, background .2s ease;
+}
+
+.profile-form input:focus,
+.profile-form select:focus{
+    outline:none;
+    border-color:var(--green-900);
+    box-shadow:0 0 0 3px rgba(11,93,59,.14);
+    background:var(--white);
 }
 
 /* =====================================================
-   SAVE BUTTON
+   NÚT LƯU (SAVE BUTTON)
 ===================================================== */
 
 .save-btn{
-    margin-top:15px;
-    padding:10px 25px;
+    margin-top:0px;
+    padding:10px 30px;
+    font-family:var(--font-sans);
     font-size:14px;
-    border-radius:25px;
+    font-weight:600;
+    letter-spacing:-.01em;
+    border:none;
+    border-radius:999px;
+    color:var(--white);
+    background:var(--green-900);
+    cursor:pointer;
+    box-shadow:0 10px 20px rgba(11,93,59,.25);
+    transition:transform .2s ease, box-shadow .2s ease, background .2s ease;
+}
+
+.save-btn:hover{
+    background:var(--green-700);
+    transform:translateY(-1px);
+    box-shadow:0 14px 26px rgba(11,93,59,.32);
+}
+
+.save-btn:active{
+    transform:translateY(0);
+}
+
+.save-btn:focus-visible{
+    outline:2px solid var(--gold-500);
+    outline-offset:3px;
 }
 
 /* =====================================================
-   LAYOUT HELPERS
+   BỐ CỤC HỖ TRỢ (LAYOUT HELPERS)
 ===================================================== */
 
 .member-top-layout{
     display:flex;
-    gap:15px;
+    gap:18px;
     align-items:flex-start;
 }
 
-/* LEFT / RIGHT */
+/* TRÁI / PHẢI */
 .member-card-left{
     text-align:left;
     flex:1;
 }
 
 .member-card-right{
-    text-align:right;
-    min-width:200px;
+    min-width:210px;
+    flex-basis:320px;
+    flex-shrink:0;
 }
 
 /* =====================================================
@@ -354,10 +706,24 @@
 
 @media(max-width:576px){
     .page-title h2{
-        font-size:22px;
+        font-size:26px;
     }
 
     .summary-grid{
         grid-template-columns:1fr;
+    }
+}
+
+/* =====================================================
+   TÔN TRỌNG NGƯỜI DÙNG GIẢM CHUYỂN ĐỘNG
+===================================================== */
+
+@media (prefers-reduced-motion: reduce){
+    .member-card,
+    .summary-card,
+    .history-btn,
+    .save-btn,
+    .progress-bar-fill{
+        transition:none;
     }
 }

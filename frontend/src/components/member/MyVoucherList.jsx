@@ -6,7 +6,7 @@ function MyVoucherList({ vouchers }) {
         <div className="voucher-section">
 
             <div className="section-header">
-                <h3>🎁 Voucher của tôi</h3>
+                <h3>Voucher của tôi</h3>
                 <span>{vouchers.length} voucher</span>
             </div>
 

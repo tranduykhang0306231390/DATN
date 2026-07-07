@@ -1,0 +1,249 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@700;800&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap');
+
+/* =====================================================
+   PAGE
+===================================================== */
+
+.invoice-page{
+    padding:25px 0 40px;
+    font-family:"Be Vietnam Pro",sans-serif;
+}
+
+.invoice-page .container{
+    max-width:1320px;
+}
+
+/* =====================================================
+   TITLE
+===================================================== */
+
+.invoice-title{
+    text-align:center;
+    margin-bottom:50px;
+}
+
+.invoice-title h2{
+    font-family:"Nunito",sans-serif;
+    font-size:34px;
+    font-weight:800;
+    color:#000000;
+    margin-bottom:8px;
+}
+
+.invoice-title p{
+    color:#817614;
+    margin:0;
+    font-size:15px;
+}
+
+/* =====================================================
+   TABLE
+===================================================== */
+
+.invoice-table{
+    background:#b32626;
+    border-radius:18px;
+    overflow:hidden;
+    box-shadow:0 12px 35px rgba(0,0,0,.08);
+}
+
+.invoice-table table{
+    margin-bottom:0;
+}
+
+.invoice-table thead{
+    background:#379173;
+}
+
+.invoice-table thead th{
+    color:#000000;
+    border:none;
+    padding:15px;
+    font-size:15px;
+    font-weight:700;
+    white-space:nowrap;
+}
+
+.invoice-table tbody td{
+    padding:18px 16px;
+    vertical-align:middle;
+    border-color:#f1f1f1;
+    font-size:14px;
+}
+
+.invoice-table tbody tr{
+    transition:.25s;
+}
+
+.invoice-table tbody tr:hover{
+    background:#F8FCFA;
+}
+
+.invoice-table tbody tr:hover td{
+    color:#0B5D3B;
+}
+
+/* =====================================================
+   PRICE
+===================================================== */
+
+.invoice-price{
+    color:#D32F2F;
+    font-weight:700;
+    font-size:15px;
+}
+
+/* =====================================================
+   POINT
+===================================================== */
+
+.invoice-point{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    padding:5px 12px;
+    border-radius:30px;
+    background:#FFF7DD;
+    color:#B8860B;
+    font-weight:700;
+    font-size:13px;
+}
+
+/* =====================================================
+   BUTTON
+===================================================== */
+
+.invoice-btn{
+    border:none;
+    border-radius:30px;
+    background:#0B5D3B;
+    color:#fff;
+    padding:8px 18px;
+    font-size:13px;
+    font-weight:700;
+    transition:.25s;
+}
+
+.invoice-btn:hover{
+    background:#138A56;
+    transform:translateY(-2px);
+    box-shadow:0 8px 18px rgba(11,93,59,.25);
+}
+
+/* =====================================================
+   EMPTY / LOADING
+===================================================== */
+
+.invoice-empty{
+    padding:45px;
+    color:#777;
+    text-align:center;
+    font-size:15px;
+}
+
+.invoice-loading{
+    padding:45px;
+    text-align:center;
+    color:#0B5D3B;
+    font-weight:600;
+}
+
+/* =====================================================
+   FOOTER
+===================================================== */
+
+.invoice-footer{
+    margin-top:22px;
+}
+
+.invoice-total{
+    color:#666;
+    font-size:14px;
+    font-weight:500;
+}
+
+/* =====================================================
+   PAGINATION
+===================================================== */
+
+.pagination{
+    gap:6px;
+}
+
+.pagination .page-link{
+    border:none;
+    min-width:42px;
+    height:42px;
+    border-radius:12px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:#0B5D3B;
+    font-weight:700;
+    transition:.25s;
+    box-shadow:0 2px 8px rgba(0,0,0,.06);
+}
+
+.pagination .page-link:hover{
+    background:#0B5D3B;
+    color:#fff;
+}
+
+.pagination .page-item.active .page-link{
+    background:#0B5D3B;
+    color:#fff;
+}
+
+.pagination .page-item.disabled .page-link{
+    background:#eee;
+    color:#999;
+}
+
+/* =====================================================
+   RESPONSIVE
+===================================================== */
+
+@media(max-width:992px){
+
+.invoice-title h2{
+    font-size:30px;
+}
+
+}
+
+@media(max-width:768px){
+
+.invoice-page{
+    padding:20px 0;
+}
+
+.invoice-table{
+    overflow-x:auto;
+}
+
+.invoice-table table{
+    min-width:760px;
+}
+
+.invoice-footer{
+    flex-direction:column;
+    gap:15px;
+}
+
+}
+
+@media(max-width:576px){
+
+.invoice-title h2{
+    font-size:26px;
+}
+
+.invoice-title p{
+    font-size:14px;
+}
+
+.invoice-btn{
+    width:100%;
+}
+
+}
