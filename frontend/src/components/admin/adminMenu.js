@@ -78,5 +78,23 @@ export const ADMIN_MENU = [
             },
         ],
     },
+    {
+        key: 'lich-su',
+        title: 'Lịch sử',
+        items: [
+            {
+                icon: '🧾',
+                label: 'lịch sử thây đổi quy tắc',
+                path: '/admin/nhan-vien',
+                color: '#6366f1',
+            },
+            {
+                icon: '🧾',
+                label: 'LỊCH SỬ THAY ĐỔI HẠNG THÀNH VIÊN',
+                path: '/admin/nhan-vien',
+                color: '#6366f1',
+            },
+        ],
+    },
 ];
 

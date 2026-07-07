@@ -29,6 +29,7 @@ import QuanLyUuDai from './pages/admin/QuanLyUuDai';
 import QuanLyLoaiVe from './pages/admin/QuanLyLoaiVe';
 import QuanLyQuyTac from './pages/admin/QuanLyQuyTac';
 import QuanLyHangThanhVien from './pages/admin/QuanLyHangThanhVien';
+import QuanLyNhanVien from './pages/admin/QuanLyNhanVien';
 
 // ================= PROTECTED ROUTES =================
 import {
@@ -141,6 +142,14 @@ function App() {
                      element={
                         <AdminRoute>
                             <QuanLyHangThanhVien />
+                         </AdminRoute>
+                     }
+                />
+                <Route
+                    path="/admin/nhan-vien"
+                     element={
+                        <AdminRoute>
+                            <QuanLyNhanVien />
                          </AdminRoute>
                      }
                 />

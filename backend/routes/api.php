@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\PhanHoiKhachHangController;
 use App\Http\Controllers\Api\Admin\UuDaiController;
 use App\Http\Controllers\Api\Admin\QuyTacController;
 use App\Http\Controllers\Api\Admin\HangThanhVienController;
+use App\Http\Controllers\Api\Admin\NhanVienController;
 
 
 /*
@@ -130,6 +131,11 @@ Route::middleware('auth:nhanvien')->group(function () {
         Route::put('/hang-thanh-vien/{ma}',         [HangThanhVienController::class, 'update']);
         Route::delete('/hang-thanh-vien/{ma}',      [HangThanhVienController::class, 'destroy']);
         
+        Route::get('/nhan-vien',                    [NhanVienController::class, 'index']);
+        Route::get('/nhan-vien/{ma}',               [NhanVienController::class, 'show']);
+        Route::post('/nhan-vien',                   [NhanVienController::class, 'store']);
+        Route::put('/nhan-vien/{ma}',               [NhanVienController::class, 'update']);
+        Route::patch('/nhan-vien/{ma}/trang-thai',  [NhanVienController::class, 'toggleTrangThai']);
     });
    
 });

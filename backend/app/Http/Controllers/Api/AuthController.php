@@ -43,6 +43,14 @@ class AuthController extends Controller
             ], 401);
         }
 
+        // Kiểm tra trạng thái tài khoản
+        if ($khachHang->TrangThai !== 'HoatDong') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tài khoản đã bị khóa.'
+            ], 403);
+        }
+
         $token = JWTAuth::fromUser($khachHang);
 
         return response()->json([
@@ -82,6 +90,12 @@ class AuthController extends Controller
                 'success' => false,
                 'message' => 'Mật khẩu không đúng'
             ], 401);
+        }
+        if ($nhanVien->TrangThai !== 'HoatDong') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tài khoản đã bị khóa.'
+            ], 403);
         }
 
         $token = JWTAuth::fromUser($nhanVien);
