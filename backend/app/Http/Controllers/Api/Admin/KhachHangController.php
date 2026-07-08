@@ -138,4 +138,38 @@ class KhachHangController extends Controller
             'data'    => $kh->makeHidden('MatKhau'),
         ]);
     }
+
+    public function lichSuHang(Request $request)
+    {
+        $query = DB::table('lichsuhangthanhvien as ls')
+            ->leftJoin('khachhang as kh', 'ls.MaKhachHang', '=', 'kh.MaKhachHang')
+            ->leftJoin('hangthanhvien as hc', 'ls.MaHangThanhVienCu', '=', 'hc.MaHangThanhVien')
+            ->leftJoin('hangthanhvien as hm', 'ls.MaHangThanhVienMoi', '=', 'hm.MaHangThanhVien')
+            ->select(
+                'ls.*',
+                'kh.HoTen as TenKhachHang',
+                'hc.TenHang as TenHangCu',
+                'hm.TenHang as TenHangMoi'
+            );
+ 
+        if ($ma = trim((string) $request->query('ma_khach_hang'))) {
+            $query->where('ls.MaKhachHang', 'like', "%{$ma}%");
+        }
+ 
+        $query->orderBy('ls.MaLichSuHang', 'desc');
+ 
+        $perPage   = max(1, min(100, (int) $request->query('per_page', 10)));
+        $paginator = $query->paginate($perPage);
+ 
+        return response()->json([
+            'success'    => true,
+            'data'       => $paginator->items(),
+            'pagination' => [
+                'current_page' => $paginator->currentPage(),
+                'last_page'    => $paginator->lastPage(),
+                'per_page'     => $paginator->perPage(),
+                'total'        => $paginator->total(),
+            ],
+        ]);
+    }
 }

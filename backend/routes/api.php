@@ -157,6 +157,8 @@ Route::middleware('auth:nhanvien')->group(function () {
         Route::patch('/khach-hang/{ma}/trang-thai', [KhachHangController::class, 'toggleTrangThai']);
 
         Route::get('/lich-su-quy-tac',              [QuyTacController::class, 'lichSu']);
+
+        Route::get('/lich-su-hang',                 [KhachHangController::class, 'lichSuHang']);
     });
    
 

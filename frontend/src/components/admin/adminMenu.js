@@ -90,16 +90,11 @@ export const ADMIN_MENU = [
             },
             {
                 icon: '🧾',
-                label: 'LỊCH SỬ THAY ĐỔI HẠNG THÀNH VIÊN',
-                path: '/admin/nhan-vien',
+                label: 'Lịch sử thăng hạng',
+                path: '/admin/lich-su-hang',
                 color: '#6366f1',
             },
         ],
     },
 ];
-export const ADMIN_STATS = [
-    { key: 'doanhThuHomNay', icon: '💰', label: 'Doanh thu hôm nay', hint: 'Hóa đơn đã thanh toán', color: '#10b981' },
-    { key: 'hoaDonHomNay', icon: '🧾', label: 'Hóa đơn hôm nay', hint: 'Số hóa đơn được lập', color: '#3b82f6' },
-    { key: 'tongKhachHang', icon: '👥', label: 'Khách hàng', hint: 'Đang hoạt động', color: '#8b5cf6' },
-    { key: 'uuDaiDangChay', icon: '🎁', label: 'Ưu đãi đang chạy', hint: 'Còn hiệu lực', color: '#f59e0b' },
-];
+
