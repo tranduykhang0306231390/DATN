@@ -19,7 +19,6 @@ use App\Http\Controllers\Api\Admin\QuyTacController;
 use App\Http\Controllers\Api\Admin\HangThanhVienController;
 use App\Http\Controllers\Api\Admin\NhanVienController;
 use App\Http\Controllers\Api\Admin\KhachHangController;
-use App\Http\Controllers\Api\Admin\LichSuQuyTacController;
 
 
 
@@ -157,7 +156,7 @@ Route::middleware('auth:nhanvien')->group(function () {
         Route::put('/khach-hang/{ma}',              [KhachHangController::class, 'update']);
         Route::patch('/khach-hang/{ma}/trang-thai', [KhachHangController::class, 'toggleTrangThai']);
 
-        Route::get('/lich-su-quy-tac',              [LichSuQuyTacController::class, 'index']);
+        Route::get('/lich-su-quy-tac',              [QuyTacController::class, 'lichSu']);
     });
    
 
