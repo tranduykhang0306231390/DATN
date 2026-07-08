@@ -25,6 +25,9 @@ use App\Http\Controllers\Api\Admin\KhachHangController;
 use App\Http\Controllers\Api\MemberRankHistoryController;
 use App\Http\Controllers\Api\WebSettingController;
 
+use App\Http\Controllers\Api\NotificationController;
+
+
 /*
 |--------------------------------------------------------------------------
 | Public API
@@ -80,8 +83,14 @@ Route::middleware('member')->prefix('member')->group(function () {
     Route::get(
         '/rank-history',
         [MemberRankHistoryController::class, 'index']
-    );
 
+    );
+    // thông báo 
+    Route::get('/notifications', [NotificationController::class, 'index']);
+
+    Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
+
+    Route::patch('/notifications/read-all', [NotificationController::class, 'readAll']);
 
 });
 

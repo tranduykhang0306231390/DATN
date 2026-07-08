@@ -2,6 +2,7 @@ import { Outlet, Link, useNavigate, useLocation } from "react-router-dom";
 import Swal from "sweetalert2";
 import "../assets/css/memberLayout.css";
 import Footer from "../components/public/Footer";
+import NotificationBell from "../components/member/NotificationBell";
 function MemberLayout() {
 
     const navigate = useNavigate();
@@ -42,28 +43,33 @@ function MemberLayout() {
             <header className="member-header">
 
                 <div className="container member-header-content">
-
+                    
                     <div className="member-logo">
-
+                     <img
+                        src="http://127.0.0.1:8000/logo/logo.png"
+                        alt="BUFFET VIP"
+                        style={{
+                            width: "70px",
+                            height: "70px",
+                        }}
+                    />
                         BUFFET VIP
 
                     </div>
 
                     <div className="member-user">
 
+                        <NotificationBell />
+
                         <span>
-
                             Xin chào, <strong>{user?.HoTen}</strong>
-
                         </span>
 
                         <button
                             className="btn btn-outline-light btn-sm ms-3"
                             onClick={handleLogout}
                         >
-
                             Đăng xuất
-
                         </button>
 
                     </div>
@@ -125,7 +131,7 @@ function MemberLayout() {
 
             </main>
 
-           <Footer />
+            <Footer />
 
         </>
 

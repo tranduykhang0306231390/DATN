@@ -14,6 +14,8 @@ class QuyTacTichDiem extends Model
     protected $fillable = [
         'MaQuyTac', 'SoTienQuyDoi', 'SoDiemNhan',
         'NgayApDung', 'NgayHetHan', 'TrangThai',
+        'GiaTriHoaDonToiThieu', 
+        'HeSoNhanDiem', 'NhanDoiSinhNhat'
     ];
 
 }
