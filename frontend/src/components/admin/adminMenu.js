@@ -94,6 +94,12 @@ export const ADMIN_MENU = [
                 path: '/admin/lich-su-hang',
                 color: '#6366f1',
             },
+            {
+                icon: '🧾',
+                label: 'Lịch sử tích điểm',
+                path: '/admin/lich-su-diem',
+                color: '#6366f1',
+            },
         ],
     },
 ];

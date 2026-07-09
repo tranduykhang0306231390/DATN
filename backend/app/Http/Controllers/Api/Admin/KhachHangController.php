@@ -83,8 +83,7 @@ class KhachHangController extends Controller
 
     /**
      * Cập nhật thông tin khách hàng.
-     * Không đổi TongDiem (điểm phải qua giao dịch) và không đổi TrangThai ở đây
-     * (dùng nút khóa/mở riêng).
+     * Nếu đổi hạng thì tự ghi vào lichsuhangthanhvien.
      */
     public function update(Request $request, string $ma)
     {
@@ -103,13 +102,50 @@ class KhachHangController extends Controller
             'MaHangThanhVien' => ['required', 'exists:hangthanhvien,MaHangThanhVien'],
         ]);
 
-        $kh->HoTen           = $data['HoTen'];
-        $kh->NgaySinh        = $data['NgaySinh'] ?: null;
-        $kh->GioiTinh        = $data['GioiTinh'] ?: null;
-        $kh->Email           = $data['Email'] ?: null;
-        $kh->SoDienThoai     = $data['SoDienThoai'];
-        $kh->MaHangThanhVien = $data['MaHangThanhVien'];
-        $kh->save();
+        $oldHang = $kh->MaHangThanhVien;
+        $newHang = $data['MaHangThanhVien'];
+
+        DB::beginTransaction();
+        try {
+            $kh->HoTen           = $data['HoTen'];
+            $kh->NgaySinh        = $data['NgaySinh'] ?: null;
+            $kh->GioiTinh        = $data['GioiTinh'] ?: null;
+            $kh->Email           = $data['Email'] ?: null;
+            $kh->SoDienThoai     = $data['SoDienThoai'];
+            $kh->MaHangThanhVien = $newHang;
+            $kh->save();
+
+            // Ghi lịch sử nếu hạng thực sự thay đổi
+            if ($newHang !== $oldHang) {
+                $tongChiTieu = (float) DB::table('hoadon')
+                    ->where('MaKhachHang', $ma)
+                    ->where('TrangThai', 'DaThanhToan')
+                    ->sum('TongTien');
+
+                $lastLS = DB::table('lichsuhangthanhvien')->orderBy('MaLichSuHang', 'desc')->first();
+                $soLS   = $lastLS ? ((int) substr($lastLS->MaLichSuHang, 3)) + 1 : 1;
+                $maLS   = 'LSH' . str_pad($soLS, 3, '0', STR_PAD_LEFT);
+
+                DB::table('lichsuhangthanhvien')->insert([
+                    'MaLichSuHang'           => $maLS,
+                    'MaKhachHang'            => $ma,
+                    'MaHangThanhVienCu'      => $oldHang,
+                    'MaHangThanhVienMoi'     => $newHang,
+                    'ThoiGianThayDoi'        => now(),
+                    'LyDoThayDoi'            => $request->input('LyDoThayDoi') ?: 'Điều chỉnh thủ công bởi quản trị viên',
+                    'DiemTaiThoiDiemTH'      => (string) $kh->TongDiem,
+                    'TongChiTieuTaiThoiDiem' => $tongChiTieu,
+                ]);
+            }
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Có lỗi khi cập nhật: ' . $e->getMessage(),
+            ], 500);
+        }
 
         return response()->json([
             'success' => true,
@@ -139,6 +175,9 @@ class KhachHangController extends Controller
         ]);
     }
 
+    /**
+     * Lịch sử thay đổi hạng thành viên (chỉ đọc).
+     */
     public function lichSuHang(Request $request)
     {
         $query = DB::table('lichsuhangthanhvien as ls')
@@ -151,16 +190,49 @@ class KhachHangController extends Controller
                 'hc.TenHang as TenHangCu',
                 'hm.TenHang as TenHangMoi'
             );
- 
+
         if ($ma = trim((string) $request->query('ma_khach_hang'))) {
             $query->where('ls.MaKhachHang', 'like', "%{$ma}%");
         }
- 
+
         $query->orderBy('ls.MaLichSuHang', 'desc');
- 
+
         $perPage   = max(1, min(100, (int) $request->query('per_page', 10)));
         $paginator = $query->paginate($perPage);
- 
+
+        return response()->json([
+            'success'    => true,
+            'data'       => $paginator->items(),
+            'pagination' => [
+                'current_page' => $paginator->currentPage(),
+                'last_page'    => $paginator->lastPage(),
+                'per_page'     => $paginator->perPage(),
+                'total'        => $paginator->total(),
+            ],
+        ]);
+    }
+
+    /**
+     * Lịch sử giao dịch điểm (chỉ đọc).
+     */
+    public function lichSuDiem(Request $request)
+    {
+        $query = DB::table('lichsugiaodichdiem as ls')
+            ->leftJoin('khachhang as kh', 'ls.MaKhachHang', '=', 'kh.MaKhachHang')
+            ->select('ls.*', 'kh.HoTen as TenKhachHang');
+
+        if ($ma = trim((string) $request->query('ma_khach_hang'))) {
+            $query->where('ls.MaKhachHang', 'like', "%{$ma}%");
+        }
+        if ($loai = $request->query('loai_giao_dich')) {
+            $query->where('ls.LoaiGiaoDich', $loai);
+        }
+
+        $query->orderBy('ls.MaGiaoDichDiem', 'desc');
+
+        $perPage   = max(1, min(100, (int) $request->query('per_page', 10)));
+        $paginator = $query->paginate($perPage);
+
         return response()->json([
             'success'    => true,
             'data'       => $paginator->items(),

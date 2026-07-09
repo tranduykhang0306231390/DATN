@@ -168,6 +168,8 @@ Route::middleware('auth:nhanvien')->group(function () {
         Route::get('/lich-su-quy-tac',              [QuyTacController::class, 'lichSu']);
 
         Route::get('/lich-su-hang',                 [KhachHangController::class, 'lichSuHang']);
+
+         Route::get('/lich-su-diem',                 [KhachHangController::class, 'lichSuDiem']);
     });
    
 
