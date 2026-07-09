@@ -72,7 +72,7 @@ export const ADMIN_MENU = [
             },
             {
                 icon: '📊',
-                label: 'Thống kê & báo cáo',
+                label: 'Thống kê ',
                 path: '/admin/thong-ke',
                 color: '#f43f5e',
             },

@@ -11,6 +11,9 @@ const EMPTY_FORM = {
     NgayApDung: '',
     NgayHetHan: '',
     GhiChu: '',
+    GiaTriHoaDonToiThieu: 0,
+    HeSoNhanDiem: 1,
+    NhanDoiSinhNhat: false,
 };
 
 const fmtMoney = (n) =>
@@ -69,6 +72,9 @@ export default function QuanLyQuyTac() {
             NgayApDung: (qt.NgayApDung || '').slice(0, 10),
             NgayHetHan: (qt.NgayHetHan || '').slice(0, 10),
             GhiChu: '',
+            GiaTriHoaDonToiThieu: Number(qt.GiaTriHoaDonToiThieu) || 0,
+            HeSoNhanDiem: Number(qt.HeSoNhanDiem) || 1,
+            NhanDoiSinhNhat: !!Number(qt.NhanDoiSinhNhat),
         });
         setFormError('');
         setModalOpen(true);
@@ -85,6 +91,9 @@ export default function QuanLyQuyTac() {
             NgayApDung: form.NgayApDung,
             NgayHetHan: form.NgayHetHan || null,
             GhiChu: form.GhiChu || null,
+            GiaTriHoaDonToiThieu: Number(form.GiaTriHoaDonToiThieu),
+            HeSoNhanDiem: Number(form.HeSoNhanDiem),
+            NhanDoiSinhNhat: form.NhanDoiSinhNhat ? 1 : 0,
         };
         try {
             if (editing) {
@@ -182,6 +191,8 @@ export default function QuanLyQuyTac() {
                         <tr>
                             <th>Mã</th>
                             <th>Quy đổi</th>
+                            <th>Hệ số nhân</th>
+                            <th>Sinh nhật</th>
                             <th>Ngày áp dụng</th>
                             <th>Ngày hết hạn</th>
                             <th>Trạng thái</th>
@@ -191,11 +202,11 @@ export default function QuanLyQuyTac() {
                     <tbody>
                         {loading ? (
                             <tr>
-                                <td colSpan={6} className="admin-state">Đang tải…</td>
+                                <td colSpan={8} className="admin-state">Đang tải…</td>
                             </tr>
                         ) : list.length === 0 ? (
                             <tr>
-                                <td colSpan={6} className="admin-state">Chưa có quy tắc nào.</td>
+                                <td colSpan={8} className="admin-state">Chưa có quy tắc nào.</td>
                             </tr>
                         ) : (
                             list.map((qt) => (
@@ -203,6 +214,21 @@ export default function QuanLyQuyTac() {
                                     <td className="admin-mono">{qt.MaQuyTac}</td>
                                     <td>
                                         {fmtMoney(qt.SoTienQuyDoi)} = <b>{qt.SoDiemNhan}</b> điểm
+                                    </td>
+                                    <td className="admin-nowrap">
+                                        {Number(qt.HeSoNhanDiem) > 1 ? (
+                                            <>
+                                                <b>x{Number(qt.HeSoNhanDiem)}</b>
+                                                <div style={{ fontSize: 12, color: '#64748b' }}>
+                                                    từ {fmtMoney(qt.GiaTriHoaDonToiThieu)}
+                                                </div>
+                                            </>
+                                        ) : '—'}
+                                    </td>
+                                    <td>
+                                        {Number(qt.NhanDoiSinhNhat) === 1
+                                            ? <span className="admin-badge admin-badge--on">x2 🎂</span>
+                                            : '—'}
                                     </td>
                                     <td className="admin-nowrap">{(qt.NgayApDung || '').slice(0, 10)}</td>
                                     <td className="admin-nowrap">
@@ -337,12 +363,46 @@ export default function QuanLyQuyTac() {
                         />
                     </div>
 
+                    <div className="admin-field">
+                        <label>Giá trị hóa đơn tối thiểu (đ)</label>
+                        <input
+                            type="number"
+                            min="0"
+                            className="admin-input"
+                            value={form.GiaTriHoaDonToiThieu}
+                            onChange={(e) => setField('GiaTriHoaDonToiThieu', e.target.value)}
+                        />
+                    </div>
+
+                    <div className="admin-field">
+                        <label>Hệ số nhân điểm</label>
+                        <input
+                            type="number"
+                            min="1"
+                            step="0.1"
+                            className="admin-input"
+                            value={form.HeSoNhanDiem}
+                            onChange={(e) => setField('HeSoNhanDiem', e.target.value)}
+                        />
+                    </div>
+
+                    <div className="admin-field admin-field--full">
+                        <label className="admin-checkbox">
+                            <input
+                                type="checkbox"
+                                checked={form.NhanDoiSinhNhat}
+                                onChange={(e) => setField('NhanDoiSinhNhat', e.target.checked)}
+                            />
+                            Nhân đôi điểm nếu hóa đơn lập đúng ngày sinh nhật khách
+                        </label>
+                    </div>
+
                     {editing && (
                         <div className="admin-field admin-field--full">
                             <label>
                                 Ghi chú thay đổi{' '}
                                 <span style={{ color: '#94a3b8', fontWeight: 400 }}>
-                                    
+                                    (lưu vào lịch sử nếu bạn đổi mức quy đổi)
                                 </span>
                             </label>
                             <input
@@ -353,13 +413,6 @@ export default function QuanLyQuyTac() {
                             />
                         </div>
                     )}
-
-                    <div className="admin-field admin-field--full">
-                        <div style={{ fontSize: 13, color: '#64748b' }}>
-                            Nghĩa là: cứ <b>{fmtMoney(form.SoTienQuyDoi)}</b> khách chi tiêu thì
-                            nhận <b>{form.SoDiemNhan || 0}</b> điểm.
-                        </div>
-                    </div>
                 </div>
             </Modal>
         </div>

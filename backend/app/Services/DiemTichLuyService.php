@@ -9,9 +9,66 @@ use App\Models\HangThanhVien;
 use App\Models\LichSuGiaoDichDiem;
 use App\Models\LichSuHangThanhVien;
 use App\Models\Thongbao;
+use Carbon\Carbon;
 
 class DiemTichLuyService
 {
+    public function tinhDiem($quyTac, float $tongThanhToan, ?string $ngaySinh = null): int
+    {
+        $soTienQuyDoi = (float) $quyTac->SoTienQuyDoi;
+        if ($soTienQuyDoi <= 0) {
+            return 0;
+        }
+
+        // 1. Điểm cơ bản
+        $diem = (int) floor($tongThanhToan / $soTienQuyDoi) * (int) $quyTac->SoDiemNhan;
+        if ($diem <= 0) {
+            return 0;
+        }
+        $mucToiThieu = (float) ($quyTac->GiaTriHoaDonToiThieu ?? 0);
+        $heSo        = (float) ($quyTac->HeSoNhanDiem ?? 1);
+        $laSinhNhat  = ((int) ($quyTac->NhanDoiSinhNhat ?? 0) === 1 && $this->laSinhNhatHomNay($ngaySinh));
+        
+        // Kiểm tra hóa đơn có đạt giá trị tối thiểu để nhận hệ số không
+        $hoaDonDuDieuKien = ($mucToiThieu > 0 && $tongThanhToan >= $mucToiThieu && $heSo > 1);
+
+        if ($laSinhNhat) {
+            // Khi là sinh nhật: 
+            // Nếu hóa đơn đủ điều kiện -> (Điểm * HeSoNhanDiem * 2)
+            // Nếu không đủ điều kiện -> (Điểm * 2)
+            if ($hoaDonDuDieuKien) {
+                $diem = (int) floor($diem * $heSo * 2);
+            } else {
+                $diem *= 2;
+            }
+        } else {
+            
+            if ($hoaDonDuDieuKien) {
+                $diem = (int) floor($diem * $heSo);
+            }
+        }
+
+        return $diem;
+    }
+
+    /**
+     * Hôm nay có phải sinh nhật khách không (so ngày + tháng, bỏ qua năm).
+     */
+    public function laSinhNhatHomNay(?string $ngaySinh): bool
+    {
+        if (empty($ngaySinh)) {
+            return false;
+        }
+
+        try {
+            $ns    = Carbon::parse($ngaySinh);
+            $today = Carbon::today();
+            return $ns->day === $today->day && $ns->month === $today->month;
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
+
     /**
      * Cộng điểm cho khách hàng sau khi tạo hóa đơn
      * Tự động kiểm tra và xử lý lên hạng

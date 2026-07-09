@@ -72,6 +72,9 @@ class QuyTacController extends Controller
         $qt->NgayApDung   = $data['NgayApDung'];
         $qt->NgayHetHan   = $data['NgayHetHan'] ?: null;
         $qt->TrangThai    = 'HoatDong';
+        $qt->GiaTriHoaDonToiThieu = $data['GiaTriHoaDonToiThieu'] ?? 0;
+        $qt->HeSoNhanDiem         = $data['HeSoNhanDiem'] ?? 1;
+        $qt->NhanDoiSinhNhat      = (int) ($data['NhanDoiSinhNhat'] ?? 0);
         $qt->save();
 
         return response()->json([
@@ -81,7 +84,10 @@ class QuyTacController extends Controller
         ], 201);
     }
 
-    
+    /**
+     * Cập nhật quy tắc (không đổi trạng thái ở đây, dùng nút bật/tắt riêng).
+     * Nếu mức quy đổi thay đổi thì tự ghi vào lichsuthaydoiquytac.
+     */
     public function update(Request $request, string $ma)
     {
         $qt = QuyTacTichDiem::find($ma);
@@ -103,6 +109,9 @@ class QuyTacController extends Controller
             $qt->SoDiemNhan   = $newDiem;
             $qt->NgayApDung   = $data['NgayApDung'];
             $qt->NgayHetHan   = $data['NgayHetHan'] ?: null;
+            $qt->GiaTriHoaDonToiThieu = $data['GiaTriHoaDonToiThieu'] ?? 0;
+            $qt->HeSoNhanDiem         = $data['HeSoNhanDiem'] ?? 1;
+            $qt->NhanDoiSinhNhat      = (int) ($data['NhanDoiSinhNhat'] ?? 0);
             $qt->save();
 
             // Chỉ ghi lịch sử khi mức quy đổi (tiền hoặc điểm) thực sự thay đổi
@@ -195,10 +204,13 @@ class QuyTacController extends Controller
     private function validateData(Request $request): array
     {
         return $request->validate([
-            'SoTienQuyDoi' => ['required', 'numeric', 'gt:0'],
-            'SoDiemNhan'   => ['required', 'integer', 'min:0'],
-            'NgayApDung'   => ['required', 'date'],
-            'NgayHetHan'   => ['nullable', 'date', 'after_or_equal:NgayApDung'],
+            'SoTienQuyDoi'         => ['required', 'numeric', 'gt:0'],
+            'SoDiemNhan'           => ['required', 'integer', 'min:0'],
+            'NgayApDung'           => ['required', 'date'],
+            'NgayHetHan'           => ['nullable', 'date', 'after_or_equal:NgayApDung'],
+            'GiaTriHoaDonToiThieu' => ['nullable', 'numeric', 'min:0'],
+            'HeSoNhanDiem'         => ['nullable', 'numeric', 'min:1'],
+            'NhanDoiSinhNhat'      => ['nullable', 'boolean'],
         ]);
     }
 }
