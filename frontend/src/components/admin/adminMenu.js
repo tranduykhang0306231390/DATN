@@ -40,6 +40,12 @@ export const ADMIN_MENU = [
                 path: '/admin/phan-hoi',
                 color: '#ec4899',
             },
+            {
+                icon: '📢',
+                label: 'Thông báo',
+                path: '/admin/thong-bao',
+                color: '#ec4899',
+            },
         ],
     },
     {

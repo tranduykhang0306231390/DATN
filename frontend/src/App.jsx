@@ -34,6 +34,7 @@ import QuanLyKhachHang from './pages/admin/QuanLyKhachHang';
 import LichSuQuyTac from './pages/admin/LichSuQuyTac';
 import LichSuHang from './pages/admin/LichSuHang';
 import LichSuDiem from './pages/admin/LichSuDiem';
+import QuanLyThongBao from './pages/admin/QuanLyThongBao';
 
 
 
@@ -189,6 +190,14 @@ function App() {
                      element={
                         <AdminRoute>
                             <LichSuDiem />
+                         </AdminRoute>
+                     }
+                />
+                <Route
+                    path="/admin/thong-bao"
+                     element={
+                        <AdminRoute>
+                            <QuanLyThongBao />
                          </AdminRoute>
                      }
                 />
