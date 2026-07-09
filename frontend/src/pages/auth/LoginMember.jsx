@@ -157,6 +157,16 @@ function LoginMember() {
                         </a>
 
                     </div>
+                    <div className="text-center mt-2">
+
+                        <a
+                            href="/forgot-password"
+                            className="auth-link"
+                        >
+                            Quên mật khẩu?
+                        </a>
+
+                    </div>
 
                 </form>
 

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import axiosClient from "../../api/axiosClient";
-import InvoiceDetailModal from "./InvoiceDetailModal";
+import InvoiceDetailModal from "../../components/member/InvoiceDetailModal";
 
 import "../../assets/css/member/Invoice.css";
 

@@ -305,4 +305,81 @@ class AuthController extends Controller
             'user' => $khachHang->fresh()
         ]);
     }
+    public function forgotPassword(Request $request)
+    {
+        $request->validate(
+            [
+                'Email' => 'required|email',
+                'SoDienThoai' => 'required',
+                'NgaySinh' => 'required|date'
+            ],
+            [
+                'Email.required' => 'Vui lòng nhập email.',
+                'Email.email' => 'Email không hợp lệ.',
+                'SoDienThoai.required' => 'Vui lòng nhập số điện thoại.',
+                'NgaySinh.required' => 'Vui lòng nhập ngày sinh.'
+            ]
+        );
+
+        $khachHang = KhachHang::where('Email', $request->Email)
+            ->where('SoDienThoai', $request->SoDienThoai)
+            ->where('NgaySinh', $request->NgaySinh)
+            ->first();
+
+        if (!$khachHang) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Thông tin xác thực không chính xác.'
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Xác thực thành công.'
+        ]);
+    }
+    public function resetPassword(Request $request)
+    {
+        $request->validate(
+            [
+                'Email' => 'required|email',
+                'SoDienThoai' => 'required',
+                'NgaySinh' => 'required|date',
+
+                'MatKhau' => [
+                    'required',
+                    'string',
+                    'min:8',
+                    'max:20',
+                    'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*#?&]).+$/'
+                ],
+
+                'MatKhau_confirmation' => [
+                    'required',
+                    'same:MatKhau'
+                ]
+            ]
+        );
+
+        $khachHang = KhachHang::where('Email', $request->Email)
+            ->where('SoDienThoai', $request->SoDienThoai)
+            ->where('NgaySinh', $request->NgaySinh)
+            ->first();
+
+        if (!$khachHang) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Thông tin xác thực không đúng.'
+            ], 404);
+        }
+
+        $khachHang->MatKhau = bcrypt($request->MatKhau);
+
+        $khachHang->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Đổi mật khẩu thành công.'
+        ]);
+    }
 }

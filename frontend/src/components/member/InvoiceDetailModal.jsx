@@ -1,6 +1,6 @@
 import "../../assets/css/member/InvoiceDetailModal.css";
 import { useState, useEffect } from "react";
-import FeedbackModal from "../../components/member/FeedbackModal";
+import FeedbackModal from "./FeedbackModal";
 import { getInvoiceFeedback } from "../../api/authApi";
 
 function InvoiceDetailModal({ show, onClose, invoice }) {

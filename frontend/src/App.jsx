@@ -5,7 +5,8 @@ import Home from "./pages/Home";
 import LoginMember from "./pages/auth/LoginMember";
 import LoginStaff from "./pages/auth/LoginStaff";
 import Register from "./pages/auth/Register";
-
+import ForgotPassword from "./pages/auth/ForgotPassword";
+import ResetPassword from "./pages/auth/ResetPassword";
 // ================= MEMBER =================
 import MemberLayout from "./layouts/MemberLayout";
 import MemberHome from "./pages/member/MemberHome";
@@ -37,8 +38,8 @@ import LichSuDiem from './pages/admin/LichSuDiem';
 import QuanLyThongBao from './pages/admin/QuanLyThongBao';
 import QuanLyPhanHoi from './pages/admin/QuanLyPhanHoi';
 import ThongKe from "./pages/admin/ThongKe";
-import QuanLyHoaDonAdmin from "./pages/admin/QuanLyHoaDon"; 
-import CauHinhWebsite from "./pages/admin/CauHinhWebsite"; 
+import QuanLyHoaDonAdmin from "./pages/admin/QuanLyHoaDon";
+import CauHinhWebsite from "./pages/admin/CauHinhWebsite";
 
 
 
@@ -71,7 +72,15 @@ function App() {
                 <Route path="/member/login" element={<LoginMember />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/staff/login" element={<LoginStaff />} />
+                <Route
+                    path="/forgot-password"
+                    element={<ForgotPassword />}
+                />
 
+                <Route
+                    path="/reset-password"
+                    element={<ResetPassword />}
+                />
                 {/* ---------------- MEMBER ROUTES ---------------- */}
                 <Route
                     path="/member"
@@ -110,137 +119,137 @@ function App() {
                     <Route
                         path="/staff/quan-ly-hoa-don"
                         element={
-                            <QuanLyHoaDon/>
+                            <QuanLyHoaDon />
                         }
                     />
 
                 </Route>
 
                 {/* ---------------- ADMIN ROUTES ---------------- */}
-                <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute> }>
-                <Route
-                    path="/admin/dashboard"
-                    element={
-                        <AdminRoute>
-                            <AdminDashboard />
-                        </AdminRoute>
-                    }
-                />
-                <Route
-                    path="/admin/uu-dai"
-                    element={
-                        <AdminRoute>
-                            <QuanLyUuDai />
-                        </AdminRoute>
-                    }
-                />
-                <Route
-                    path="/admin/loai-ve"
-                     element={
-                        <AdminRoute>
-                            <QuanLyLoaiVe />
-                         </AdminRoute>
-                     }
-                />
-                <Route
-                    path="/admin/quy-tac"
-                     element={
-                        <AdminRoute>
-                            <QuanLyQuyTac />
-                         </AdminRoute>
-                     }
-                />
-                <Route
-                    path="/admin/hang-thanh-vien"
-                     element={
-                        <AdminRoute>
-                            <QuanLyHangThanhVien />
-                         </AdminRoute>
-                     }
-                />
-                <Route
-                    path="/admin/nhan-vien"
-                     element={
-                        <AdminRoute>
-                            <QuanLyNhanVien />
-                         </AdminRoute>
-                     }
-                />
-                <Route
-                    path="/admin/khach-hang"
-                     element={
-                        <AdminRoute>
-                            <QuanLyKhachHang />
-                         </AdminRoute>
-                     }
-                />
-                <Route
-                    path="/admin/lich-su-quy-tac"
-                     element={
-                        <AdminRoute>
-                            <LichSuQuyTac />
-                         </AdminRoute>
-                     }
-                />
-                <Route
-                    path="/admin/lich-su-hang"
-                     element={
-                        <AdminRoute>
-                            <LichSuHang />
-                         </AdminRoute>
-                     }
-                />
-                <Route
-                    path="/admin/lich-su-diem"
-                     element={
-                        <AdminRoute>
-                            <LichSuDiem />
-                         </AdminRoute>
-                     }
-                />
-                <Route
-                    path="/admin/thong-bao"
-                     element={
-                        <AdminRoute>
-                            <QuanLyThongBao />
-                         </AdminRoute>
-                     }
-                />
-                <Route
-                    path="/admin/phan-hoi"
-                     element={
-                        <AdminRoute>
-                            <QuanLyPhanHoi />
-                         </AdminRoute>
-                     }
-                />
-                <Route
-                    path="/admin/thong-ke"
-                     element={
-                        <AdminRoute>
-                            <ThongKe />
-                         </AdminRoute>
-                     }
-                />
-                <Route
-                    path="quan-ly-hoa-don"
-                     element={
-                        <AdminRoute>
-                            <QuanLyHoaDonAdmin />
-                         </AdminRoute>
-                     }
-                />
-                <Route
-                    path="/admin/cau-hinh-website"
-                     element={
-                        <AdminRoute>
-                            <CauHinhWebsite />
-                         </AdminRoute>
-                     }
-                />
+                <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
+                    <Route
+                        path="/admin/dashboard"
+                        element={
+                            <AdminRoute>
+                                <AdminDashboard />
+                            </AdminRoute>
+                        }
+                    />
+                    <Route
+                        path="/admin/uu-dai"
+                        element={
+                            <AdminRoute>
+                                <QuanLyUuDai />
+                            </AdminRoute>
+                        }
+                    />
+                    <Route
+                        path="/admin/loai-ve"
+                        element={
+                            <AdminRoute>
+                                <QuanLyLoaiVe />
+                            </AdminRoute>
+                        }
+                    />
+                    <Route
+                        path="/admin/quy-tac"
+                        element={
+                            <AdminRoute>
+                                <QuanLyQuyTac />
+                            </AdminRoute>
+                        }
+                    />
+                    <Route
+                        path="/admin/hang-thanh-vien"
+                        element={
+                            <AdminRoute>
+                                <QuanLyHangThanhVien />
+                            </AdminRoute>
+                        }
+                    />
+                    <Route
+                        path="/admin/nhan-vien"
+                        element={
+                            <AdminRoute>
+                                <QuanLyNhanVien />
+                            </AdminRoute>
+                        }
+                    />
+                    <Route
+                        path="/admin/khach-hang"
+                        element={
+                            <AdminRoute>
+                                <QuanLyKhachHang />
+                            </AdminRoute>
+                        }
+                    />
+                    <Route
+                        path="/admin/lich-su-quy-tac"
+                        element={
+                            <AdminRoute>
+                                <LichSuQuyTac />
+                            </AdminRoute>
+                        }
+                    />
+                    <Route
+                        path="/admin/lich-su-hang"
+                        element={
+                            <AdminRoute>
+                                <LichSuHang />
+                            </AdminRoute>
+                        }
+                    />
+                    <Route
+                        path="/admin/lich-su-diem"
+                        element={
+                            <AdminRoute>
+                                <LichSuDiem />
+                            </AdminRoute>
+                        }
+                    />
+                    <Route
+                        path="/admin/thong-bao"
+                        element={
+                            <AdminRoute>
+                                <QuanLyThongBao />
+                            </AdminRoute>
+                        }
+                    />
+                    <Route
+                        path="/admin/phan-hoi"
+                        element={
+                            <AdminRoute>
+                                <QuanLyPhanHoi />
+                            </AdminRoute>
+                        }
+                    />
+                    <Route
+                        path="/admin/thong-ke"
+                        element={
+                            <AdminRoute>
+                                <ThongKe />
+                            </AdminRoute>
+                        }
+                    />
+                    <Route
+                        path="quan-ly-hoa-don"
+                        element={
+                            <AdminRoute>
+                                <QuanLyHoaDonAdmin />
+                            </AdminRoute>
+                        }
+                    />
+                    <Route
+                        path="/admin/cau-hinh-website"
+                        element={
+                            <AdminRoute>
+                                <CauHinhWebsite />
+                            </AdminRoute>
+                        }
+                    />
 
 
-                
+
                 </Route>
             </Routes>
         </BrowserRouter>
