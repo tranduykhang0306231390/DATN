@@ -6,7 +6,7 @@ namespace App\Http\Controllers\Api\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-
+use App\Models\ThongBao;
 class PhanHoiController extends Controller
 {
     /**
@@ -75,29 +75,62 @@ class PhanHoiController extends Controller
      * Trả lời phản hồi -> tự đánh dấu đã xử lý, lưu người trả lời & thời gian.
      */
     public function traLoi(Request $request, string $ma)
-    {
-        $data = $request->validate([
-            'NoiDungPhanHoiCuaHang' => ['required', 'string', 'max:500'],
-        ]);
+{
+    $data = $request->validate([
+        'NoiDungPhanHoiCuaHang' => ['required', 'string', 'max:500'],
+    ]);
 
-        $ph = DB::table('phanhoikhachhang')->where('MaPhanHoi', $ma)->first();
+    $ph = DB::table('phanhoikhachhang')
+        ->where('MaPhanHoi', $ma)
+        ->first();
 
-        if (!$ph) {
-            return response()->json(['success' => false, 'message' => 'Không tìm thấy phản hồi'], 404);
-        }
+    if (!$ph) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Không tìm thấy phản hồi'
+        ], 404);
+    }
 
-        DB::table('phanhoikhachhang')->where('MaPhanHoi', $ma)->update([
+    // Cập nhật phản hồi
+    DB::table('phanhoikhachhang')
+        ->where('MaPhanHoi', $ma)
+        ->update([
             'NoiDungPhanHoiCuaHang' => $data['NoiDungPhanHoiCuaHang'],
             'TrangThaiXuLy'         => 'DaXuLy',
             'ThoiGianPhanHoi'       => now(),
             'MaNhanVien'            => auth('nhanvien')->user()->MaNhanVien,
         ]);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Đã gửi phản hồi tới khách hàng',
-        ]);
+    /*
+    |--------------------------------------------------------------------------
+    | TẠO THÔNG BÁO CHO KHÁCH
+    |--------------------------------------------------------------------------
+    */
+
+    $last = ThongBao::orderByDesc('MaThongBao')->lockForUpdate()->first();
+
+    if ($last) {
+        $number = intval(substr($last->MaThongBao, 2)) + 1;
+    } else {
+        $number = 1;
     }
+
+    $maThongBao = 'TB' . str_pad($number, 3, '0', STR_PAD_LEFT);
+
+    ThongBao::create([
+        'MaThongBao'  => $maThongBao,
+        'TieuDe'      => 'Phản hồi của bạn đã được hồi đáp',
+        'NoiDung'     => 'Nhà hàng đã phản hồi đánh giá của bạn cho hóa đơn ' . $ph->MaHoaDon . '. Nhấn để xem chi tiết.',
+        'ThoiGian'    => now(),
+        'TrangThai'   => 'ChuaDoc',
+        'MaKhachHang' => $ph->MaKhachHang,
+    ]);
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Đã gửi phản hồi tới khách hàng',
+    ]);
+}
 
     /**
      * Số liệu nhanh: tổng, chưa xử lý, điểm trung bình.

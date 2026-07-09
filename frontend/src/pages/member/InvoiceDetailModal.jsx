@@ -112,7 +112,6 @@ function InvoiceDetailModal({ show, onClose, invoice }) {
 
                                 <div className="col-md-6">
                                     <p><strong>Trạng thái</strong> <span>{invoice.TrangThai}</span></p>
-                                    <p><strong>Điểm sử dụng</strong> <span>{invoice.DiemSuDung}</span></p>
                                     <p><strong>Điểm tích lũy</strong> <span>{invoice.DiemTichLuy}</span></p>
                                 </div>
                             </div>
@@ -195,6 +194,7 @@ function InvoiceDetailModal({ show, onClose, invoice }) {
                         </div>
 
                         {/* FEEDBACK */}
+                        {/* FEEDBACK */}
                         <div className="invoice-section">
                             <h5>Đánh giá của bạn</h5>
 
@@ -202,8 +202,70 @@ function InvoiceDetailModal({ show, onClose, invoice }) {
 
                             {!loadingFeedback && feedback && (
                                 <div className="feedback-box">
-                                    <div>⭐ {feedback.DiemDanhGia}/5</div>
-                                    <div>{feedback.NoiDungCuaKhachHang}</div>
+
+                                    {/* Đánh giá */}
+                                    <div className="mb-3">
+                                        <strong>Đánh giá của bạn</strong>
+
+                                        <div className="mt-2">
+                                            <span className="text-warning fs-5">
+                                                {"★".repeat(feedback.DiemDanhGia)}
+                                                {"☆".repeat(5 - feedback.DiemDanhGia)}
+                                            </span>
+
+                                            <span className="ms-2 fw-bold">
+                                                {feedback.DiemDanhGia}/5
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    {/* Nội dung khách */}
+                                    <div className="mb-3">
+                                        <strong>Ý kiến của bạn</strong>
+
+                                        <div className="border rounded p-3 mt-2 bg-light">
+                                            {feedback.NoiDungCuaKhachHang}
+                                        </div>
+                                    </div>
+
+                                    <hr />
+
+                                    {/* Trạng thái */}
+                                    <div className="mb-3">
+                                        <strong>Trạng thái xử lý</strong>
+
+                                        <div className="mt-2">
+                                            <span
+                                                className={
+                                                    feedback.TrangThaiXuLy === "DaXuLy"
+                                                        ? "badge bg-success"
+                                                        : "badge bg-warning text-dark"
+                                                }
+                                            >
+                                                {feedback.TrangThaiXuLy === "DaXuLy"
+                                                    ? "Đã xử lý"
+                                                    : "Chưa xử lý"}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    {/* Phản hồi của cửa hàng */}
+                                    {feedback.TrangThaiXuLy === "DaXuLy" &&
+                                        feedback.NoiDungPhanHoiCuaHang && (
+                                            <div className="mt-4">
+                                                <strong>Phản hồi từ cửa hàng</strong>
+
+                                                <div className="border rounded p-3 bg-white mt-2">
+                                                    {feedback.NoiDungPhanHoiCuaHang}
+                                                </div>
+
+                                                {feedback.ThoiGianPhanHoi && (
+                                                    <small className="text-muted d-block mt-2">
+                                                        Phản hồi lúc: {feedback.ThoiGianPhanHoi}
+                                                    </small>
+                                                )}
+                                            </div>
+                                        )}
                                 </div>
                             )}
 
@@ -238,15 +300,39 @@ function InvoiceDetailModal({ show, onClose, invoice }) {
                 </div>
             </div>
 
-            <FeedbackModal
-                show={showFeedback}
-                invoice={invoice}
-                onClose={() => setShowFeedback(false)}
-                onSuccess={() => {
-                    setShowFeedback(false);
-                    fetchFeedback(); // reload lại sau khi đánh giá
-                }}
-            />
+            {!loadingFeedback && feedback && (
+                <div className="feedback-box">
+
+                    <div className="mb-2">
+                        <strong>Đánh giá:</strong> ⭐ {feedback.DiemDanhGia}/5
+                    </div>
+
+                    <div className="mb-3">
+                        <strong>Ý kiến của bạn:</strong>
+                        <br />
+                        {feedback.NoiDungCuaKhachHang}
+                    </div>
+
+                    <hr />
+
+                    <div className="mb-2">
+                        <strong>Trạng thái xử lý:</strong>{" "}
+                        <span
+                            className={
+                                feedback.TrangThaiXuLy === "DaXuLy"
+                                    ? "badge bg-success"
+                                    : "badge bg-warning text-dark"
+                            }
+                        >
+                            {feedback.TrangThaiXuLy === "DaXuLy"
+                                ? "Đã xử lý"
+                                : "Chưa xử lý"}
+                        </span>
+
+                    </div>
+
+                </div>
+            )}
         </div>
     );
 }
