@@ -5,6 +5,13 @@ import '../../assets/css/staff.css';
 const CARDS = [
     {
         icon: '🧾',
+        label: 'trang chủ',
+        desc: 'Trang tổng quan của nhân viên',
+        path: '/staff/dashboard',
+        color: '#3b82f6',
+    },
+    {
+        icon: '🧾',
         label: 'Tạo hóa đơn',
         desc: 'Lập hóa đơn tại quầy cho khách',
         path: '/staff/tao-hoa-don',

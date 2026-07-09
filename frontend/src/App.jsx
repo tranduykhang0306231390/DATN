@@ -35,6 +35,8 @@ import LichSuQuyTac from './pages/admin/LichSuQuyTac';
 import LichSuHang from './pages/admin/LichSuHang';
 import LichSuDiem from './pages/admin/LichSuDiem';
 import QuanLyThongBao from './pages/admin/QuanLyThongBao';
+import QuanLyPhanHoi from './pages/admin/QuanLyPhanHoi';
+import ThongKe from "./pages/admin/ThongKe";
 
 
 
@@ -47,6 +49,7 @@ import {
 } from "./routes/ProtectedRoute";
 import QuanLyHoaDon from "./pages/staff/QuanLyHoaDon";
 import PublicLayout from "./layouts/PublicLayout";
+
 function App() {
     return (
         <BrowserRouter>
@@ -198,6 +201,22 @@ function App() {
                      element={
                         <AdminRoute>
                             <QuanLyThongBao />
+                         </AdminRoute>
+                     }
+                />
+                <Route
+                    path="/admin/phan-hoi"
+                     element={
+                        <AdminRoute>
+                            <QuanLyPhanHoi />
+                         </AdminRoute>
+                     }
+                />
+                <Route
+                    path="/admin/thong-ke"
+                     element={
+                        <AdminRoute>
+                            <ThongKe />
                          </AdminRoute>
                      }
                 />

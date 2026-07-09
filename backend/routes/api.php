@@ -20,6 +20,8 @@ use App\Http\Controllers\Api\Admin\HangThanhVienController;
 use App\Http\Controllers\Api\Admin\NhanVienController;
 use App\Http\Controllers\Api\Admin\KhachHangController;
 use App\Http\Controllers\Api\Admin\ThongBaoController;
+use App\Http\Controllers\Api\Admin\PhanHoiController;
+use App\Http\Controllers\Api\Admin\ThongKeController;
 
 
 
@@ -170,11 +172,18 @@ Route::middleware('auth:nhanvien')->group(function () {
         Route::get('/thong-bao',                    [ThongBaoController::class, 'index']);
         Route::post('/thong-bao',                   [ThongBaoController::class, 'store']);
 
+        Route::get('/phan-hoi',                     [PhanHoiController::class, 'index']);
+        Route::get('/phan-hoi/{ma}',                [PhanHoiController::class, 'show']);
+        Route::patch('/phan-hoi/{ma}/tra-loi',      [PhanHoiController::class, 'traLoi']);
+
         Route::get('/lich-su-quy-tac',              [QuyTacController::class, 'lichSu']);
 
         Route::get('/lich-su-hang',                 [KhachHangController::class, 'lichSuHang']);
 
-         Route::get('/lich-su-diem',                 [KhachHangController::class, 'lichSuDiem']);
+        Route::get('/lich-su-diem',                 [KhachHangController::class, 'lichSuDiem']);
+
+        Route::get('/thong-ke/tong-quan',           [ThongKeController::class, 'tongQuan']);
+        Route::get('/thong-ke/chi-tiet',            [ThongKeController::class, 'chiTiet']);
     });
    
 
