@@ -18,7 +18,7 @@ import Invoice from "./pages/member/Invoice";
 import StaffLayout from "./layouts/StaffLayout";
 import StaffDashboard from "./pages/staff/StaffDashboard";
 import TaoHoaDon from "./pages/staff/TaoHoaDon";
-
+import QuanLyHoaDon from "./pages/staff/QuanLyHoaDon"
 
 
 
@@ -37,6 +37,7 @@ import LichSuDiem from './pages/admin/LichSuDiem';
 import QuanLyThongBao from './pages/admin/QuanLyThongBao';
 import QuanLyPhanHoi from './pages/admin/QuanLyPhanHoi';
 import ThongKe from "./pages/admin/ThongKe";
+import QuanLyHoaDonAdmin from "./pages/admin/QuanLyHoaDon";  
 
 
 
@@ -47,7 +48,7 @@ import {
     StaffRoute,
     AdminRoute,
 } from "./routes/ProtectedRoute";
-import QuanLyHoaDon from "./pages/staff/QuanLyHoaDon";
+;
 import PublicLayout from "./layouts/PublicLayout";
 
 function App() {
@@ -108,7 +109,7 @@ function App() {
                     <Route
                         path="/staff/quan-ly-hoa-don"
                         element={
-                            <QuanLyHoaDon />
+                            <QuanLyHoaDon/>
                         }
                     />
 
@@ -220,6 +221,17 @@ function App() {
                          </AdminRoute>
                      }
                 />
+                <Route
+                    path="quan-ly-hoa-don"
+                     element={
+                        <AdminRoute>
+                            <QuanLyHoaDonAdmin />
+                         </AdminRoute>
+                     }
+                />
+                
+
+
                 
                 </Route>
             </Routes>

@@ -7,7 +7,7 @@ export const ADMIN_MENU = [
             {
                 icon: '🧾',
                 label: 'Quản lý hóa đơn',
-                path: '/staff/quan-ly-hoa-don',
+                path: '/admin/quan-ly-hoa-don',
                 color: '#3b82f6',
             },
             {
