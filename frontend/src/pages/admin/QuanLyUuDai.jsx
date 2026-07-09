@@ -344,23 +344,6 @@ export default function QuanLyUuDai() {
                     >
                         ← Trước
                     </button>
-
-                    <div className="admin-page-numbers">
-                        {pageList.map((p, i) =>
-                            p === '…' ? (
-                                <span key={`dots-${i}`} className="admin-page-dots">…</span>
-                            ) : (
-                                <button
-                                    key={p}
-                                    className={`admin-btn admin-btn--sm ${p === pagination.current_page ? 'admin-btn--primary' : 'admin-btn--ghost'}`}
-                                    onClick={() => goToPage(p)}
-                                >
-                                    {p}
-                                </button>
-                            )
-                        )}
-                    </div>
-
                     <button
                         className="admin-btn admin-btn--ghost admin-btn--sm"
                         disabled={pagination.current_page >= pagination.last_page}

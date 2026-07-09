@@ -65,9 +65,6 @@ export default function ThongKe() {
                 <div className="admin-hero-text">
                     <span className="admin-hero-eyebrow">Quản trị</span>
                     <h2 className="admin-hero-title">Thống kê &amp; báo cáo</h2>
-                    <p className="admin-hero-sub">
-                        Doanh thu, hóa đơn và điểm theo khoảng thời gian.
-                    </p>
                 </div>
             </header>
 
@@ -116,7 +113,6 @@ export default function ThongKe() {
                     <div className="admin-stats">
                         <div className="admin-stat" style={{ '--stat-accent': '#10b981' }}>
                             <div className="admin-stat-head">
-                                <span className="admin-stat-icon">💰</span>
                                 <span className="admin-stat-label">Tổng doanh thu</span>
                             </div>
                             <div className="admin-stat-value">{fmtMoney(th.tong_doanh_thu)}</div>
@@ -125,7 +121,6 @@ export default function ThongKe() {
 
                         <div className="admin-stat" style={{ '--stat-accent': '#3b82f6' }}>
                             <div className="admin-stat-head">
-                                <span className="admin-stat-icon">🧾</span>
                                 <span className="admin-stat-label">Số hóa đơn</span>
                             </div>
                             <div className="admin-stat-value">{fmtNum(th.so_hoa_don)}</div>
@@ -134,7 +129,6 @@ export default function ThongKe() {
 
                         <div className="admin-stat" style={{ '--stat-accent': '#8b5cf6' }}>
                             <div className="admin-stat-head">
-                                <span className="admin-stat-icon">📊</span>
                                 <span className="admin-stat-label">Trung bình / hóa đơn</span>
                             </div>
                             <div className="admin-stat-value">{fmtMoney(th.trung_binh_hoa_don)}</div>
@@ -143,7 +137,6 @@ export default function ThongKe() {
 
                         <div className="admin-stat" style={{ '--stat-accent': '#f59e0b' }}>
                             <div className="admin-stat-head">
-                                <span className="admin-stat-icon">⭐</span>
                                 <span className="admin-stat-label">Điểm đã phát</span>
                             </div>
                             <div className="admin-stat-value">{fmtNum(th.tong_diem_phat)}</div>

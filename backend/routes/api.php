@@ -25,6 +25,7 @@ use App\Http\Controllers\Api\Admin\ThongKeController;
 use App\Http\Controllers\Api\Admin\WebSettingController;
 
 
+
 use App\Http\Controllers\Api\MemberRankHistoryController;
 
 
@@ -44,6 +45,8 @@ Route::post('/logout', [AuthController::class, 'logout']);
 Route::get('/banner', [BannerController::class, 'index']);
 Route::get('/tickets', [TicketController::class, 'index']);
 Route::get('/tickets/hot', [TicketController::class, 'hot']);
+Route::get('/web-setting', [WebSettingController::class, 'show']); 
+Route::put('/web-setting', [WebSettingController::class, 'update']);
 
 /*
 |--------------------------------------------------------------------------
@@ -185,37 +188,11 @@ Route::middleware('auth:nhanvien')->group(function () {
         Route::get('/thong-ke/tong-quan',           [ThongKeController::class, 'tongQuan']);
         Route::get('/thong-ke/chi-tiet',            [ThongKeController::class, 'chiTiet']);
 
-        Route::get('/web-setting',                  [WebSettingController::class, 'show']);
-        Route::put('/web-setting',                  [WebSettingController::class, 'update']);
+        
     });
    
 
 });
 
 
-// ------- ADMIN --------
-Route::middleware('staff:Admin')->prefix('admin')->group(function () {
-    Route::get('/uu-dai/tuy-chon', [UuDaiController::class, 'tuyChon']);
-    Route::get('/uu-dai', [UuDaiController::class, 'index']);
-    Route::get('/uu-dai/{ma}', [UuDaiController::class, 'show']);
-    Route::post('/uu-dai', [UuDaiController::class, 'store']);
-    Route::put('/uu-dai/{ma}', [UuDaiController::class, 'update']);
-    Route::patch('/uu-dai/{ma}/trang-thai', [UuDaiController::class, 'toggleTrangThai']);
-
-    Route::get('/test', function () {
-        return response()->json([
-            'success' => true,
-            'message' => 'Chỉ Admin mới truy cập được.'
-        ]);
-    });
-
-   
-
-
-    Route::get('/loai-ve', [LoaiVeController::class, 'adminIndex']);
-    Route::post('/loai-ve', [LoaiVeController::class, 'store']);
-    Route::put('/loai-ve/{ma}', [LoaiVeController::class, 'update']);
-    Route::patch('/loai-ve/{ma}/trang-thai', [LoaiVeController::class, 'toggleTrangThai']);
-
-});
 

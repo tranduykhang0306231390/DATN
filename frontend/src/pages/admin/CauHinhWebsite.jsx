@@ -22,7 +22,7 @@ export default function CauHinhWebsite() {
 
     useEffect(() => {
         webSettingApi
-            .get()
+            .getAdmin()
             .then((res) => {
                 if (res.data?.success) {
                     const d = res.data.data;
@@ -75,9 +75,6 @@ export default function CauHinhWebsite() {
                 <div className="admin-hero-text">
                     <span className="admin-hero-eyebrow">Hệ thống</span>
                     <h2 className="admin-hero-title">Cấu hình website</h2>
-                    <p className="admin-hero-sub">
-                        Tên, logo và thông tin liên hệ hiển thị trên trang khách hàng.
-                    </p>
                 </div>
             </header>
 
