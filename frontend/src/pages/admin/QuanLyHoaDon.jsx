@@ -162,7 +162,7 @@ export default function QuanLyHoaDon() {
                                     <td className="admin-mono">{hd.MaHoaDon}</td>
                                     <td className="admin-nowrap">{fmtDateTime(hd.NgayLap)}</td>
                                     <td>
-                                        {hd.khach_hang?.HoTen || hd.khachHang?.HoTen || hd.MaKhachHang || 'Khách lẻ'}
+                                        {hd.khach_hang?.HoTen || hd.khachHang?.HoTen || hd.MaKhachHang || 'Khách vãng lai'}
                                     </td>
                                     <td>
                                         {hd.nhan_vien?.HoTen || hd.nhanVien?.HoTen || hd.MaNhanVien || '—'}

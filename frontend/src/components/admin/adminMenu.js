@@ -82,6 +82,12 @@ export const ADMIN_MENU = [
                 path: '/admin/thong-ke',
                 color: '#f43f5e',
             },
+             {
+                icon: '⚙️',
+                label: 'Cấu hình website',
+                path: '/admin/cau-hinh-website',
+                color: '#f43f5e',
+            },
         ],
     },
     {

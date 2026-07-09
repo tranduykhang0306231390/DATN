@@ -22,11 +22,11 @@ use App\Http\Controllers\Api\Admin\KhachHangController;
 use App\Http\Controllers\Api\Admin\ThongBaoController;
 use App\Http\Controllers\Api\Admin\PhanHoiController;
 use App\Http\Controllers\Api\Admin\ThongKeController;
-
+use App\Http\Controllers\Api\Admin\WebSettingController;
 
 
 use App\Http\Controllers\Api\MemberRankHistoryController;
-use App\Http\Controllers\Api\WebSettingController;
+
 
 use App\Http\Controllers\Api\NotificationController;
 
@@ -44,7 +44,7 @@ Route::post('/logout', [AuthController::class, 'logout']);
 Route::get('/banner', [BannerController::class, 'index']);
 Route::get('/tickets', [TicketController::class, 'index']);
 Route::get('/tickets/hot', [TicketController::class, 'hot']);
-Route::get('/web-setting', [WebSettingController::class, 'index']);
+
 /*
 |--------------------------------------------------------------------------
 | MEMBER
@@ -184,6 +184,9 @@ Route::middleware('auth:nhanvien')->group(function () {
 
         Route::get('/thong-ke/tong-quan',           [ThongKeController::class, 'tongQuan']);
         Route::get('/thong-ke/chi-tiet',            [ThongKeController::class, 'chiTiet']);
+
+        Route::get('/web-setting',                  [WebSettingController::class, 'show']);
+        Route::put('/web-setting',                  [WebSettingController::class, 'update']);
     });
    
 

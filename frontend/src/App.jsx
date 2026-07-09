@@ -37,7 +37,8 @@ import LichSuDiem from './pages/admin/LichSuDiem';
 import QuanLyThongBao from './pages/admin/QuanLyThongBao';
 import QuanLyPhanHoi from './pages/admin/QuanLyPhanHoi';
 import ThongKe from "./pages/admin/ThongKe";
-import QuanLyHoaDonAdmin from "./pages/admin/QuanLyHoaDon";  
+import QuanLyHoaDonAdmin from "./pages/admin/QuanLyHoaDon"; 
+import CauHinhWebsite from "./pages/admin/CauHinhWebsite"; 
 
 
 
@@ -229,7 +230,14 @@ function App() {
                          </AdminRoute>
                      }
                 />
-                
+                <Route
+                    path="/admin/cau-hinh-website"
+                     element={
+                        <AdminRoute>
+                            <CauHinhWebsite />
+                         </AdminRoute>
+                     }
+                />
 
 
                 
