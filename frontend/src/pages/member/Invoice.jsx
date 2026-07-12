@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import axiosClient from "../../api/axiosClient";
-import InvoiceDetailModal from "./InvoiceDetailModal";
+import InvoiceDetailModal from "../../components/member/InvoiceDetailModal";
 
 import "../../assets/css/member/Invoice.css";
 
@@ -123,8 +123,6 @@ function Invoice() {
 
                                 <th>Tổng tiền</th>
 
-                                <th>Điểm sử dụng</th>
-
                                 <th width="170">
                                     Thao tác
                                 </th>
@@ -140,7 +138,7 @@ function Invoice() {
                                 <tr>
 
                                     <td
-                                        colSpan="5"
+                                        colSpan="4"
                                         className="invoice-loading"
                                     >
                                         Đang tải dữ liệu...
@@ -153,7 +151,7 @@ function Invoice() {
                                 <tr>
 
                                     <td
-                                        colSpan="5"
+                                        colSpan="4"
                                         className="invoice-empty"
                                     >
                                         Bạn chưa có hóa đơn nào.
@@ -179,16 +177,6 @@ function Invoice() {
 
                                         <td className="invoice-price">
                                             {Number(item.TongTien).toLocaleString()} đ
-                                        </td>
-
-                                        <td>
-
-                                            <span className="invoice-point">
-
-                                                Điểm sử dụng {item.DiemSuDung}
-
-                                            </span>
-
                                         </td>
 
                                         <td>

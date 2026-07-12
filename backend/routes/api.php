@@ -47,7 +47,8 @@ Route::get('/tickets', [TicketController::class, 'index']);
 Route::get('/tickets/hot', [TicketController::class, 'hot']);
 Route::get('/web-setting', [WebSettingController::class, 'show']); 
 Route::put('/web-setting', [WebSettingController::class, 'update']);
-
+Route::post('/member/forgot-password', [AuthController::class, 'forgotPassword']);
+Route::post('/member/reset-password', [AuthController::class, 'resetPassword']);
 /*
 |--------------------------------------------------------------------------
 | MEMBER

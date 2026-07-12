@@ -183,5 +183,23 @@
     .invoice-final strong {
         font-size: 18px;
     }
+    .feedback-box{
+    border:1px solid #e5e5e5;
+    border-radius:10px;
+    padding:15px;
+    background:#fff;
+}
+
+.feedback-box hr{
+    margin:15px 0;
+}
+
+.feedback-box .badge{
+    font-size:13px;
+}
+
+.feedback-box .border{
+    background:#f8f9fa;
+}
 
 }

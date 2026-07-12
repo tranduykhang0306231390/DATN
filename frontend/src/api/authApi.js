@@ -83,3 +83,10 @@ export const sendInvoiceFeedback = (maHoaDon, data) => {
 export const getRankHistory = () => {
     return axiosClient.get("/member/rank-history");
 };
+export const forgotPassword = (data) => {
+    return axios.post(`${API_URL}/member/forgot-password`, data);
+};
+
+export const resetPassword = (data) => {
+    return axios.post(`${API_URL}/member/reset-password`, data);
+};
