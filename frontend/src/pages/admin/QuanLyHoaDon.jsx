@@ -71,27 +71,6 @@ export default function QuanLyHoaDon() {
         }
     };
 
-    const handleHuy = async (maHD) => {
-        const confirm = await Swal.fire({
-            title: `Hủy hóa đơn ${maHD}?`,
-            text: 'Điểm tích lũy sẽ bị hoàn lại, voucher sẽ được khôi phục.',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Xác nhận hủy',
-            cancelButtonText: 'Không',
-            confirmButtonColor: '#dc2626',
-        });
-        if (!confirm.isConfirmed) return;
-        try {
-            await hoaDonAdminApi.huy(maHD);
-            Swal.fire({ icon: 'success', title: 'Đã hủy hóa đơn', timer: 1500, showConfirmButton: false });
-            setDetailOpen(false);
-            loadList();
-        } catch (e) {
-            Swal.fire('Lỗi', e.response?.data?.message || 'Có lỗi xảy ra', 'error');
-        }
-    };
-
     const applyFilter = () => {
         setPage(1);
         loadList();
@@ -103,9 +82,6 @@ export default function QuanLyHoaDon() {
                 <div className="admin-hero-text">
                     <span className="admin-hero-eyebrow">Vận hành</span>
                     <h2 className="admin-hero-title">Quản lý hóa đơn</h2>
-                    <p className="admin-hero-sub">
-                        Tra cứu, xem chi tiết và hủy hóa đơn.
-                    </p>
                 </div>
             </header>
 
@@ -241,15 +217,6 @@ export default function QuanLyHoaDon() {
                         >
                             Đóng
                         </button>
-                        {detail?.TrangThai === 'DaThanhToan' && (
-                            <button
-                                type="button"
-                                className="admin-btn admin-btn--danger"
-                                onClick={() => handleHuy(detail.MaHoaDon)}
-                            >
-                                Hủy hóa đơn
-                            </button>
-                        )}
                     </>
                 }
             >

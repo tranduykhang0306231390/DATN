@@ -125,9 +125,13 @@ Route::middleware('auth:nhanvien')->group(function () {
     Route::post('/hoa-don', [HoaDonController::class, 'store']);
     Route::get('/hoa-don/{maHoaDon}', [HoaDonController::class, 'show']);
 
-    Route::get('/quan-ly-hoa-don', [QuanLyHoaDonController::class, 'index']);
-    Route::get('/quan-ly-hoa-don/{maHD}', [QuanLyHoaDonController::class, 'show']);
-    Route::patch('/quan-ly-hoa-don/{maHD}/huy', [QuanLyHoaDonController::class, 'huy']);
+    Route::get('/quan-ly-hoa-don',               [HoaDonController::class, 'index']);
+    Route::get('/quan-ly-hoa-don/ban-dang-treo', [HoaDonController::class, 'banDangTreo']);
+    Route::get('/quan-ly-hoa-don/{maHD}',        [HoaDonController::class, 'show']);
+    Route::post('/hoa-don',                       [HoaDonController::class, 'store']);
+    Route::patch('/hoa-don/{maHD}/thanh-toan',   [HoaDonController::class, 'thanhToan']);
+     
+  
 
 
     Route::middleware('staff:Admin')->prefix('admin')->group(function () {

@@ -5,13 +5,13 @@ export const ADMIN_MENU = [
         title: 'Vận hành',
         items: [
             {
-                icon: '🧾',
+                
                 label: 'Quản lý hóa đơn',
                 path: '/admin/quan-ly-hoa-don',
                 color: '#3b82f6',
             },
             {
-                icon: '🎫',
+                
                 label: 'Loại vé',
                 path: '/admin/loai-ve',
                 color: '#0ea5e9',
@@ -23,25 +23,25 @@ export const ADMIN_MENU = [
         title: 'Khách hàng & thành viên',
         items: [
             {
-                icon: '👥',
+                
                 label: 'Quản lý khách hàng',
                 path: '/admin/khach-hang',
                 color: '#8b5cf6',
             },
             {
-                icon: '🏆',
+                
                 label: 'Hạng thành viên',
                 path: '/admin/hang-thanh-vien',
                 color: '#f59e0b',
             },
             {
-                icon: '💬',
+                
                 label: 'Phản hồi khách hàng',
                 path: '/admin/phan-hoi',
                 color: '#ec4899',
             },
             {
-                icon: '📢',
+                
                 label: 'Thông báo',
                 path: '/admin/thong-bao',
                 color: '#ec4899',
@@ -53,13 +53,13 @@ export const ADMIN_MENU = [
         title: 'Ưu đãi & tích điểm',
         items: [
             {
-                icon: '🎁',
+                
                 label: 'Ưu đãi & Voucher',
                 path: '/admin/uu-dai',
                 color: '#10b981',
             },
             {
-                icon: '⚙️',
+                
                 label: 'Quy tắc tích điểm',
                 path: '/admin/quy-tac',
                 color: '#14b8a6',
@@ -71,19 +71,19 @@ export const ADMIN_MENU = [
         title: 'Hệ thống',
         items: [
             {
-                icon: '👷',
+                
                 label: 'Quản lý nhân viên',
                 path: '/admin/nhan-vien',
                 color: '#6366f1',
             },
             {
-                icon: '📊',
+                
                 label: 'Thống kê ',
                 path: '/admin/thong-ke',
                 color: '#f43f5e',
             },
              {
-                icon: '⚙️',
+                
                 label: 'Cấu hình website',
                 path: '/admin/cau-hinh-website',
                 color: '#f43f5e',
@@ -95,19 +95,19 @@ export const ADMIN_MENU = [
         title: 'Lịch sử',
         items: [
             {
-                icon: '🧾',
+                
                 label: 'lịch sử thây đổi quy tắc',
                 path: '/admin/lich-su-quy-tac',
                 color: '#6366f1',
             },
             {
-                icon: '🧾',
+                
                 label: 'Lịch sử thăng hạng',
                 path: '/admin/lich-su-hang',
                 color: '#6366f1',
             },
             {
-                icon: '🧾',
+               
                 label: 'Lịch sử tích điểm',
                 path: '/admin/lich-su-diem',
                 color: '#6366f1',

@@ -2,28 +2,24 @@
 import { useState } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import Swal from "sweetalert2";
+import { STAFF_MENU } from "../components/staff/staffMenu";
 
-const MENU = [
-    {
-        icon: "🧾",
-        label: "Tạo hóa đơn",
-        path: "/staff/tao-hoa-don",
-        roles: ["Admin", "NhanVien"],
-    },
-    {
-        icon: "📋",
-        label: "Quản lý hóa đơn",
-        path: "/staff/quan-ly-hoa-don",
-        roles: ["Admin", "NhanVien"],
-    },
-];
+// Mục "Tổng quan" đứng đầu, các nhóm còn lại lấy từ STAFF_MENU
+const DASHBOARD_ITEM = {
+    icon: "🏠",
+    label: "Tổng quan",
+    path: "/staff/dashboard",
+};
+
+// Gộp phẳng để tra tên trang cho breadcrumb
+const FLAT_ITEMS = [DASHBOARD_ITEM, ...STAFF_MENU.flatMap((s) => s.items)];
 
 export default function StaffLayout() {
     const [sidebarOpen, setSidebarOpen] = useState(true);
-    const navigate  = useNavigate();
-    const location  = useLocation();
-    const user      = JSON.parse(localStorage.getItem("user") || "{}");
-    const role      = localStorage.getItem("role");
+    const navigate = useNavigate();
+    const location = useLocation();
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    const role = localStorage.getItem("role");
 
     const handleLogout = async () => {
         const result = await Swal.fire({
@@ -43,50 +39,63 @@ export default function StaffLayout() {
         }
     };
 
-    const menuItems = MENU.filter((m) => m.roles.includes(role));
+    const NavItem = ({ item }) => {
+        const active = location.pathname === item.path;
+        return (
+            <div
+                style={{
+                    ...styles.navItem,
+                    background: active ? "#3b82f6" : "transparent",
+                    color: active ? "#fff" : "#cbd5e1",
+                    justifyContent: sidebarOpen ? "flex-start" : "center",
+                }}
+                onClick={() => navigate(item.path)}
+                title={!sidebarOpen ? item.label : ""}
+            >
+                <span style={styles.navIcon}>{item.icon}</span>
+                {sidebarOpen && <span style={styles.navLabel}>{item.label}</span>}
+            </div>
+        );
+    };
 
     return (
         <div style={styles.root}>
             {/* ── SIDEBAR ─────────────────────────────────── */}
-            <aside style={{ ...styles.sidebar, width: sidebarOpen ? 220 : 60 }}>
+            <aside style={{ ...styles.sidebar, width: sidebarOpen ? 240 : 60 }}>
                 {/* Logo */}
                 <div style={styles.sidebarLogo}>
                     <span style={styles.logoIcon}>🍽</span>
-                    {sidebarOpen && <span style={styles.logoText}>BUFFET VIP</span>}
+                    {sidebarOpen && (
+                        <span style={styles.logoText}>
+                            BUFFET VIP <span style={styles.logoTag}>STAFF</span>
+                        </span>
+                    )}
                 </div>
 
                 {/* Menu */}
                 <nav style={styles.nav}>
-                    {menuItems.map((item) => {
-                        const active = location.pathname === item.path;
-                        return (
-                            <div
-                                key={item.path}
-                                style={{
-                                    ...styles.navItem,
-                                    background: active ? "#3b82f6" : "transparent",
-                                    justifyContent: sidebarOpen ? "flex-start" : "center",
-                                }}
-                                onClick={() => navigate(item.path)}
-                                title={!sidebarOpen ? item.label : ""}
-                            >
-                                <span style={styles.navIcon}>{item.icon}</span>
-                                {sidebarOpen && (
-                                    <span style={styles.navLabel}>{item.label}</span>
-                                )}
-                            </div>
-                        );
-                    })}
+                    <NavItem item={DASHBOARD_ITEM} />
+
+                    {STAFF_MENU.map((section) => (
+                        <div key={section.key} style={styles.navGroup}>
+                            {sidebarOpen && (
+                                <div style={styles.navGroupTitle}>{section.title}</div>
+                            )}
+                            {section.items.map((item) => (
+                                <NavItem key={item.path} item={item} />
+                            ))}
+                        </div>
+                    ))}
                 </nav>
 
                 {/* User info ở dưới */}
-                <div style={{
-                    ...styles.sidebarFooter,
-                    justifyContent: sidebarOpen ? "flex-start" : "center",
-                }}>
-                    <div style={styles.avatar}>
-                        {user.HoTen?.charAt(0) || "?"}
-                    </div>
+                <div
+                    style={{
+                        ...styles.sidebarFooter,
+                        justifyContent: sidebarOpen ? "flex-start" : "center",
+                    }}
+                >
+                    <div style={styles.avatar}>{user.HoTen?.charAt(0) || "?"}</div>
                     {sidebarOpen && (
                         <div style={{ overflow: "hidden" }}>
                             <div style={styles.footerName}>{user.HoTen}</div>
@@ -100,7 +109,6 @@ export default function StaffLayout() {
             <div style={styles.main}>
                 {/* Header */}
                 <header style={styles.header}>
-                    {/* Nút toggle */}
                     <button
                         style={styles.btnToggle}
                         onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -109,13 +117,11 @@ export default function StaffLayout() {
                         {sidebarOpen ? "◀" : "▶"}
                     </button>
 
-                    {/* Breadcrumb tên trang */}
                     <div style={styles.pageName}>
-                        {menuItems.find((m) => m.path === location.pathname)?.label
-                            || "Dashboard"}
+                        {FLAT_ITEMS.find((m) => m.path === location.pathname)?.label ||
+                            "Tổng quan"}
                     </div>
 
-                    {/* Logout */}
                     <button style={styles.btnLogout} onClick={handleLogout}>
                         🚪 Đăng xuất
                     </button>
@@ -164,6 +170,18 @@ const styles = {
         fontSize: 15,
         letterSpacing: 1,
         whiteSpace: "nowrap",
+        display: "flex",
+        alignItems: "center",
+        gap: 6,
+    },
+    logoTag: {
+        fontSize: 10,
+        fontWeight: 700,
+        color: "#dbeafe",
+        background: "#3b82f6",
+        padding: "2px 6px",
+        borderRadius: 5,
+        letterSpacing: 0.5,
     },
     nav: {
         flex: 1,
@@ -171,6 +189,21 @@ const styles = {
         display: "flex",
         flexDirection: "column",
         gap: 4,
+        overflowY: "auto",
+    },
+    navGroup: {
+        display: "flex",
+        flexDirection: "column",
+        gap: 4,
+        marginTop: 10,
+    },
+    navGroupTitle: {
+        color: "#64748b",
+        fontSize: 10,
+        fontWeight: 700,
+        letterSpacing: 0.8,
+        textTransform: "uppercase",
+        padding: "4px 12px",
     },
     navItem: {
         display: "flex",
@@ -180,7 +213,6 @@ const styles = {
         borderRadius: 8,
         cursor: "pointer",
         transition: "background .15s",
-        color: "#cbd5e1",
         fontSize: 14,
         fontWeight: 500,
     },

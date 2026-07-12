@@ -1,6 +1,7 @@
 <?php
 // app/Http/Controllers/Api/HoaDonController.php
-// Chỉ xử lý: tạo hóa đơn + xem chi tiết
+// Gộp: tạo/treo hóa đơn theo bàn + danh sách + chi tiết + thanh toán
+// (Đã bỏ chức năng hủy)
 
 namespace App\Http\Controllers\Api;
 
@@ -20,33 +21,54 @@ class HoaDonController extends Controller
         private DiemTichLuyService $diemService
     ) {}
 
-    /**
-     * Tạo hóa đơn
-     */
+    /* ==================================================================
+     *  TẠO / TREO HÓA ĐƠN THEO BÀN
+     *  - Lưu ở trạng thái 'ChuaThanhToan' (treo trên bàn), CHƯA tích điểm.
+     *  - Điểm & voucher chỉ xử lý khi bấm Thanh toán.
+     * ================================================================== */
     public function store(Request $request)
     {
         $request->validate([
+            'so_ban'               => 'required|integer|min:1|max:20',
             'chi_tiet'             => 'required|array|min:1',
-            'chi_tiet.*.MaLoaiVe' => 'required|string|exists:loaive,MaLoaiVe',
-            'chi_tiet.*.SoLuong'  => 'required|integer|min:1',
+            'chi_tiet.*.MaLoaiVe'  => 'required|string|exists:loaive,MaLoaiVe',
+            'chi_tiet.*.SoLuong'   => 'required|integer|min:1',
             'ma_khach_hang'        => 'nullable|string|exists:khachhang,MaKhachHang',
             'vouchers_ap_dung'     => 'nullable|array',
         ]);
+
+        // Một bàn chỉ được có 1 hóa đơn đang treo
+        $daCo = HoaDon::where('SoBan', $request->so_ban)
+            ->where('TrangThai', 'ChuaThanhToan')
+            ->exists();
+        if ($daCo) {
+            return response()->json([
+                'success' => false,
+                'message' => "Bàn {$request->so_ban} đang có hóa đơn chưa thanh toán.",
+            ], 422);
+        }
 
         DB::beginTransaction();
         try {
             $nhanVien = auth('nhanvien')->user();
 
-            // ── 1. Tính tổng tiền gốc ──────────────────────────────────
             $tongTienGoc = 0;
             $chiTietData = [];
 
             foreach ($request->chi_tiet as $item) {
                 $loaiVe = LoaiVe::find($item['MaLoaiVe']);
                 if (!$loaiVe || $loaiVe->TrangThai !== 'HoatDong') {
+                    DB::rollBack();
                     return response()->json([
                         'success' => false,
-                        'message' => "Loại vé {$item['MaLoaiVe']} không khả dụng"
+                        'message' => "Loại vé {$item['MaLoaiVe']} không khả dụng",
+                    ], 422);
+                }
+                if (!$this->veHopLeThoiDiemNay($loaiVe)) {
+                    DB::rollBack();
+                    return response()->json([
+                        'success' => false,
+                        'message' => "Vé \"{$loaiVe->TenLoaiVe}\" không áp dụng cho thời điểm hiện tại.",
                     ], 422);
                 }
                 $tongTienGoc  += $loaiVe->GiaVe * $item['SoLuong'];
@@ -57,78 +79,31 @@ class HoaDonController extends Controller
                 ];
             }
 
-            // ── 2. Xử lý voucher ──────────────────────────────────────
-            $tongGiam      = 0;
-            $maVoucherList = [];
-            $khachHang     = null;
+            $khachHang = $request->ma_khach_hang
+                ? KhachHang::find($request->ma_khach_hang)
+                : null;
 
-            if ($request->ma_khach_hang) {
-                $khachHang = KhachHang::with(['hangThanhVien.quyTac'])
-                    ->find($request->ma_khach_hang);
-
-                if ($request->filled('vouchers_ap_dung')) {
-                    $vouchers = VoucherKhachHang::with('uuDai')
-                        ->whereIn('MaVoucherKhachHang', $request->vouchers_ap_dung)
-                        ->where('MaKhachHang', $khachHang->MaKhachHang)
-                        ->where('TrangThai', 'ChuaSuDung')
-                        ->where('NgayHetHan', '>=', now()->format('Y-m-d'))
-                        ->get()
-                        ->sortBy('uuDai.ThuTuApDung');
-
-                    $nhomDaSuDung = [];
-                    foreach ($vouchers as $v) {
-                        $nhom = $v->uuDai->NhomUuDai;
-                        if (isset($nhomDaSuDung[$nhom]) && !$v->uuDai->CoTheDungChung) {
-                            continue;
-                        }
-                        $tongGiam += $v->uuDai->NhomUuDai === 'PhanTram'
-                            ? $tongTienGoc * ($v->uuDai->GiaTriGiam / 100)
-                            : $v->uuDai->GiaTriGiam;
-
-                        $nhomDaSuDung[$nhom]   = true;
-                        $maVoucherList[]        = $v->MaVoucherKhachHang;
-                    }
-                }
-            }
-
-            $tongThanhToan = max(0, $tongTienGoc - $tongGiam);
-
-            // ── 3. Sinh mã hóa đơn ────────────────────────────────────
             $lastHD = HoaDon::orderBy('MaHoaDon', 'desc')->first();
             $soHD   = $lastHD ? ((int) substr($lastHD->MaHoaDon, 2)) + 1 : 1;
             $maHD   = 'HD' . str_pad($soHD, 3, '0', STR_PAD_LEFT);
 
-            // ── 4. Tính điểm tích lũy ─────────────────────────────────
-            $diemTichLuy = 0;
-            $maQuyTac    = null;
-            $maHang      = null;
-
-            if ($khachHang) {
-                $quyTac = $khachHang->hangThanhVien->quyTac ?? null;
-                if ($quyTac && $quyTac->TrangThai === 'HoatDong') {
-                    $diemTichLuy = (int) floor($tongThanhToan / $quyTac->SoTienQuyDoi)
-                                   * $quyTac->SoDiemNhan;
-                    $maQuyTac    = $quyTac->MaQuyTac;
-                }
-                $maHang = $khachHang->MaHangThanhVien;
-            }
-
-            // ── 5. Lưu hóa đơn ────────────────────────────────────────
             HoaDon::create([
                 'MaHoaDon'        => $maHD,
                 'NgayLap'         => now(),
-                'TongTien'        => $tongThanhToan,
+                'TongTien'        => $tongTienGoc,
                 'DiemSuDung'      => 0,
-                'DiemTichLuy'     => $diemTichLuy,
-                'TrangThai'       => 'DaThanhToan',
+                'DiemTichLuy'     => 0,
+                'TrangThai'       => 'ChuaThanhToan',
                 'MaNhanVien'      => $nhanVien->MaNhanVien,
                 'MaKhachHang'     => $khachHang?->MaKhachHang,
-                'MaQuyTacHienTai' => $maQuyTac,
-                'MaHangThanhVien' => $maHang,
-                'MaVoucher'       => implode(',', $maVoucherList) ?: null,
+                'MaQuyTacHienTai' => null,
+                'MaHangThanhVien' => $khachHang?->MaHangThanhVien,
+                'MaVoucher'       => $request->filled('vouchers_ap_dung')
+                    ? implode(',', $request->vouchers_ap_dung)
+                    : null,
+                'SoBan'           => $request->so_ban,
             ]);
 
-            // ── 6. Lưu chi tiết hóa đơn ───────────────────────────────
             $lastCT = ChiTietHoaDon::orderBy('MaChiTietHD', 'desc')->first();
             $soCT   = $lastCT ? ((int) substr($lastCT->MaChiTietHD, 4)) + 1 : 1;
 
@@ -142,13 +117,105 @@ class HoaDonController extends Controller
                 ]);
             }
 
-            // ── 7. Cập nhật voucher đã dùng ───────────────────────────
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => "Đã mở bàn {$request->so_ban}",
+                'data'    => ['MaHoaDon' => $maHD, 'SoBan' => $request->so_ban],
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Có lỗi xảy ra: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /* 
+     *  THANH TOÁN HÓA ĐƠN TREO
+     */
+    public function thanhToan(string $maHD)
+    {
+        $hoaDon = HoaDon::with('chiTietHoaDon')->find($maHD);
+
+        if (!$hoaDon) {
+            return response()->json(['success' => false, 'message' => 'Không tìm thấy hóa đơn'], 404);
+        }
+        if ($hoaDon->TrangThai !== 'ChuaThanhToan') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Hóa đơn này đã được thanh toán hoặc không hợp lệ.',
+            ], 422);
+        }
+
+        DB::beginTransaction();
+        try {
+            $tongTienGoc = $hoaDon->chiTietHoaDon->sum(fn ($ct) => $ct->DonGia * $ct->SoLuong);
+
+            $khachHang = $hoaDon->MaKhachHang
+                ? KhachHang::with(['hangThanhVien.quyTac'])->find($hoaDon->MaKhachHang)
+                : null;
+
+            $tongGiam      = 0;
+            $maVoucherList = [];
+
+            if ($khachHang && $hoaDon->MaVoucher) {
+                $vouchers = VoucherKhachHang::with('uuDai')
+                    ->whereIn('MaVoucherKhachHang', explode(',', $hoaDon->MaVoucher))
+                    ->where('MaKhachHang', $khachHang->MaKhachHang)
+                    ->where('TrangThai', 'ChuaSuDung')
+                    ->where('NgayHetHan', '>=', now()->format('Y-m-d'))
+                    ->get()
+                    ->sortBy('uuDai.ThuTuApDung');
+
+                $nhomDaSuDung = [];
+                foreach ($vouchers as $v) {
+                    $nhom = $v->uuDai->NhomUuDai;
+                    if (isset($nhomDaSuDung[$nhom]) && !$v->uuDai->CoTheDungChung) {
+                        continue;
+                    }
+                    $tongGiam += $v->uuDai->NhomUuDai === 'PhanTram'
+                        ? $tongTienGoc * ($v->uuDai->GiaTriGiam / 100)
+                        : $v->uuDai->GiaTriGiam;
+
+                    $nhomDaSuDung[$nhom] = true;
+                    $maVoucherList[]     = $v->MaVoucherKhachHang;
+                }
+            }
+
+            $tongThanhToan = max(0, $tongTienGoc - $tongGiam);
+
+            $diemTichLuy = 0;
+            $maQuyTac    = null;
+
+            if ($khachHang) {
+                $quyTac = $khachHang->hangThanhVien->quyTac ?? null;
+                if ($quyTac && $quyTac->TrangThai === 'HoatDong') {
+                    $diemTichLuy = $this->diemService->tinhDiem(
+                        $quyTac,
+                        (float) $tongThanhToan,
+                        $khachHang->NgaySinh
+                    );
+                    $maQuyTac = $quyTac->MaQuyTac;
+                }
+            }
+
+            $hoaDon->update([
+                'TongTien'        => $tongThanhToan,
+                'DiemTichLuy'     => $diemTichLuy,
+                'TrangThai'       => 'DaThanhToan',
+                'NgayLap'         => now(),
+                'MaQuyTacHienTai' => $maQuyTac,
+                'MaVoucher'       => implode(',', $maVoucherList) ?: null,
+            ]);
+
             if (!empty($maVoucherList)) {
                 VoucherKhachHang::whereIn('MaVoucherKhachHang', $maVoucherList)
                     ->update(['TrangThai' => 'DaSuDung', 'NgaySuDung' => now()->format('Y-m-d')]);
             }
 
-            // ── 8. Tích điểm + lên hạng (delegate sang Service) ───────
             if ($khachHang && $diemTichLuy > 0) {
                 $this->diemService->congDiem($khachHang, $diemTichLuy, $maHD);
             }
@@ -157,44 +224,121 @@ class HoaDonController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Tạo hóa đơn thành công',
+                'message' => 'Thanh toán thành công',
                 'data'    => [
                     'MaHoaDon'      => $maHD,
                     'TongTienGoc'   => $tongTienGoc,
                     'TongGiam'      => $tongGiam,
                     'TongThanhToan' => $tongThanhToan,
                     'DiemTichLuy'   => $diemTichLuy,
-                ]
+                ],
             ]);
-
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([
                 'success' => false,
-                'message' => 'Có lỗi xảy ra: ' . $e->getMessage()
+                'message' => 'Có lỗi xảy ra: ' . $e->getMessage(),
             ], 500);
         }
     }
 
-    /**
-     * Xem chi tiết hóa đơn
-     */
-    public function show(string $maHoaDon)
+    /* ==================================================================
+     *  DANH SÁCH BÀN ĐANG TREO
+     * ================================================================== */
+    public function banDangTreo()
+    {
+        $data = HoaDon::with([
+                'khachHang:MaKhachHang,HoTen,SoDienThoai',
+                'chiTietHoaDon.loaiVe:MaLoaiVe,TenLoaiVe',
+            ])
+            ->where('TrangThai', 'ChuaThanhToan')
+            ->orderBy('NgayLap')
+            ->get();
+
+        return response()->json(['success' => true, 'data' => $data]);
+    }
+
+    /* ==================================================================
+     *  DANH SÁCH HÓA ĐƠN
+     * ================================================================== */
+    public function index(Request $request)
+    {
+        $query = HoaDon::with([
+                'khachHang:MaKhachHang,HoTen,SoDienThoai',
+                'nhanVien:MaNhanVien,HoTen',
+                'chiTietHoaDon.loaiVe:MaLoaiVe,TenLoaiVe',
+            ])
+            ->orderBy('NgayLap', 'desc');
+
+        if ($request->filled('tu_ngay')) {
+            $query->whereDate('NgayLap', '>=', $request->tu_ngay);
+        }
+        if ($request->filled('den_ngay')) {
+            $query->whereDate('NgayLap', '<=', $request->den_ngay);
+        }
+        if ($request->filled('trang_thai')) {
+            $query->where('TrangThai', $request->trang_thai);
+        }
+        if ($request->filled('keyword')) {
+            $kw = $request->keyword;
+            $query->whereHas('khachHang', fn ($q) =>
+                $q->where('HoTen', 'like', "%{$kw}%")
+                  ->orWhere('SoDienThoai', 'like', "%{$kw}%")
+            );
+        }
+
+        $hoaDons = $query->paginate($request->get('per_page', 10));
+
+        $tongDoanhThu = HoaDon::where('TrangThai', 'DaThanhToan')
+            ->when($request->filled('tu_ngay'),  fn ($q) => $q->whereDate('NgayLap', '>=', $request->tu_ngay))
+            ->when($request->filled('den_ngay'), fn ($q) => $q->whereDate('NgayLap', '<=', $request->den_ngay))
+            ->sum('TongTien');
+
+        return response()->json([
+            'success'    => true,
+            'data'       => $hoaDons->items(),
+            'pagination' => [
+                'current_page' => $hoaDons->currentPage(),
+                'last_page'    => $hoaDons->lastPage(),
+                'per_page'     => $hoaDons->perPage(),
+                'total'        => $hoaDons->total(),
+            ],
+            'thong_ke'   => [
+                'tong_hoa_don'   => $hoaDons->total(),
+                'tong_doanh_thu' => $tongDoanhThu,
+            ],
+        ]);
+    }
+
+    /* ==================================================================
+     *  CHI TIẾT HÓA ĐƠN
+     * ================================================================== */
+    public function show(string $maHD)
     {
         $hoaDon = HoaDon::with([
             'chiTietHoaDon.loaiVe',
             'khachHang.hangThanhVien',
-            'nhanVien',
-            'hangThanhVien',
-        ])->find($maHoaDon);
+            'nhanVien:MaNhanVien,HoTen',
+            'hangThanhVien:MaHangThanhVien,TenHang',
+        ])->find($maHD);
 
         if (!$hoaDon) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Không tìm thấy hóa đơn'
-            ], 404);
+            return response()->json(['success' => false, 'message' => 'Không tìm thấy hóa đơn'], 404);
         }
 
         return response()->json(['success' => true, 'data' => $hoaDon]);
+    }
+
+    /* ==================================================================
+     *  Helper: vé có hợp lệ ở thời điểm hiện tại (buổi + ngày)
+     * ================================================================== */
+    private function veHopLeThoiDiemNay(LoaiVe $ve): bool
+    {
+        $now = now();
+        $laCuoiTuan = in_array($now->dayOfWeek, [0, 6], true);
+        $loaiNgayHienTai = $laCuoiTuan ? 'CuoiTuan' : 'NgayThuong';
+        $buoiHienTai = $now->hour < 16 ? 'Trua' : 'Toi';
+
+        return $ve->LoaiNgay === $loaiNgayHienTai && $ve->BuoiAn === $buoiHienTai;
     }
 }

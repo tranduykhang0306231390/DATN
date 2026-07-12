@@ -1,5 +1,4 @@
 <?php
-// app/Http/Controllers/Api/LoaiVeController.php
 
 namespace App\Http\Controllers\Api;
 
@@ -10,23 +9,32 @@ use Illuminate\Validation\Rule;
 
 class LoaiVeController extends Controller
 {
-    // ================================================================
-    // GIỮ NGUYÊN: dùng cho màn tạo hóa đơn (chỉ vé đang hoạt động).
-    // Nếu index hiện tại của bạn đã khác, hãy giữ bản của bạn và chỉ
-    // copy các method quản trị bên dưới.
-    // ================================================================
-    public function index()
+   
+    public function index(Request $request)
     {
-        $data = LoaiVe::where('TrangThai', 'HoatDong')
-            ->orderBy('MaLoaiVe')
-            ->get();
-
+        $query = \App\Models\LoaiVe::where('TrangThai', 'HoatDong');
+ 
+        // Mặc định lọc theo thời điểm hiện tại; ?tat_ca=1 để xem hết
+        if (!$request->boolean('tat_ca')) {
+            $now = now();
+ 
+            // Cuối tuần = thứ 7 hoặc chủ nhật
+            $laCuoiTuan = in_array($now->dayOfWeek, [0, 6], true);
+            $loaiNgay   = $laCuoiTuan ? 'CuoiTuan' : 'NgayThuong';
+ 
+            // Trước 16h là buổi Trưa, từ 16h là buổi Tối
+            $buoi = $now->hour < 16 ? 'Trua' : 'Toi';
+ 
+            $query->where('LoaiNgay', $loaiNgay)
+                  ->where('BuoiAn', $buoi);
+        }
+ 
+        $data = $query->orderBy('MaLoaiVe')->get();
+ 
         return response()->json(['success' => true, 'data' => $data]);
     }
 
-    // ================================================================
-    // MỚI: danh sách cho trang quản trị (mọi trạng thái + tìm/lọc).
-    // ================================================================
+   
     public function adminIndex(Request $request)
     {
         $query = LoaiVe::query();
@@ -64,9 +72,7 @@ class LoaiVeController extends Controller
         ]);
     }
 
-    // ================================================================
-    // MỚI: thêm loại vé.
-    // ================================================================
+    
     public function store(Request $request)
     {
         $data = $request->validate([
@@ -97,9 +103,7 @@ class LoaiVeController extends Controller
         ], 201);
     }
 
-    // ================================================================
-    // MỚI: cập nhật loại vé.
-    // ================================================================
+    
     public function update(Request $request, string $ma)
     {
         $lv = LoaiVe::find($ma);
