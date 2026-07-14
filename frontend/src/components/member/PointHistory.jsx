@@ -100,18 +100,14 @@ function PointHistory() {
             </div>
 
             <div className="card-body">
-                <div className="row g-3 mb-4">
+                <div className="row g-3 mb-4 align-items-end">
 
                     {/* Tìm kiếm */}
-
-                    <div className="col-lg-4">
-
+                    <div className="col-lg-3">
                         <div className="input-group">
-
                             <span className="input-group-text bg-white">
                                 <i className="bi bi-search"></i>
                             </span>
-
                             <input
                                 type="text"
                                 className="form-control"
@@ -119,121 +115,76 @@ function PointHistory() {
                                 value={keyword}
                                 onChange={(e) => setKeyword(e.target.value)}
                             />
-
                         </div>
-
                     </div>
 
                     {/* Loại giao dịch */}
-
                     <div className="col-lg-2">
-
                         <select
                             className="form-select"
                             value={type}
                             onChange={(e) => setType(e.target.value)}
                         >
-
                             <option value="all">Tất cả</option>
-
-                            <option value="CongDiemHoaDon">
-                                Cộng điểm
-                            </option>
-
-                            <option value="DoiVoucher">
-                                Đổi voucher
-                            </option>
-
+                            <option value="CongDiemHoaDon">Cộng điểm</option>
+                            <option value="DoiVoucher">Đổi voucher</option>
                         </select>
-
                     </div>
 
                     {/* Từ ngày */}
-
                     <div className="col-lg-2">
-
                         <input
                             type="date"
                             className="form-control"
                             value={fromDate}
                             onChange={(e) => setFromDate(e.target.value)}
                         />
-
                     </div>
 
                     {/* Đến ngày */}
-
                     <div className="col-lg-2">
-
                         <input
                             type="date"
                             className="form-control"
                             value={toDate}
                             onChange={(e) => setToDate(e.target.value)}
                         />
-
                     </div>
 
                     {/* Sắp xếp */}
-
                     <div className="col-lg-2">
-
                         <select
                             className="form-select"
                             value={sort}
                             onChange={(e) => setSort(e.target.value)}
                         >
-
-                            <option value="latest">
-                                Mới nhất
-                            </option>
-
-                            <option value="oldest">
-                                Cũ nhất
-                            </option>
-
-                            <option value="point_desc">
-                                Điểm giảm dần
-                            </option>
-
-                            <option value="point_asc">
-                                Điểm tăng dần
-                            </option>
-
+                            <option value="latest">Mới nhất</option>
+                            <option value="oldest">Cũ nhất</option>
+                            <option value="point_desc">Điểm giảm dần</option>
+                            <option value="point_asc">Điểm tăng dần</option>
                         </select>
+                    </div>
 
+                    {/* Đặt lại - giờ là 1 col cùng hàng */}
+                    <div className="col-lg-1 d-grid">
+                        <button
+                            className="btn btn-outline-secondary"
+                            onClick={() => {
+                                setKeyword("");
+                                setType("all");
+                                setFromDate("");
+                                setToDate("");
+                                setSort("latest");
+                            }}
+                        >
+                            Reset
+                            <i className="bi bi-arrow-counterclockwise"></i>
+                        </button>
                     </div>
 
                 </div>
 
-                <div className="d-flex justify-content-end mb-3">
 
-                    <button
-                        className="btn btn-outline-secondary"
-
-                        onClick={() => {
-
-                            setKeyword("");
-
-                            setType("all");
-
-                            setFromDate("");
-
-                            setToDate("");
-
-                            setSort("latest");
-
-                        }}
-
-                    >
-
-                        <i className="bi bi-arrow-counterclockwise me-2"></i>
-
-                        Đặt lại
-
-                    </button>
-
-                </div>
 
                 <table className="table table-hover">
 

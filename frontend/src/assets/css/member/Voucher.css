@@ -347,5 +347,75 @@
     cursor: not-allowed;
     background: transparent;
 }
+/* ==================================================
+   PAGINATION - Voucher list
+================================================== */
 
+.voucher-pagination{
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    gap:8px;
+
+    margin-top:28px;
+
+}
+
+.voucher-pagination .page-btn{
+
+    min-width:38px;
+
+    height:38px;
+
+    padding:0 12px;
+
+    border:none;
+
+    border-radius:8px;
+
+    background:#f1f3f5;
+
+    color:#495057;
+
+    font-weight:600;
+
+    font-size:14px;
+
+    display:inline-flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    cursor:pointer;
+
+    transition:.2s;
+
+}
+
+.voucher-pagination .page-btn:hover:not(.disabled):not(.active){
+
+    background:#e2e6ea;
+
+}
+
+.voucher-pagination .page-btn.active{
+
+    background:#0B5D3B;
+
+    color:#fff;
+
+}
+
+.voucher-pagination .page-btn.disabled{
+
+    opacity:.4;
+
+    cursor:not-allowed;
+
+}
 }

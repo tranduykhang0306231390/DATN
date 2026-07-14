@@ -6,6 +6,16 @@ function MyVoucherList({
     onPageChange
 }) {
 
+    const getLabel = (label) => {
+
+        if (label.includes("Previous")) return "«";
+
+        if (label.includes("Next")) return "»";
+
+        return label;
+
+    };
+
     return (
 
         <div className="voucher-section">
@@ -48,7 +58,7 @@ function MyVoucherList({
 
                         {/* Phân trang */}
 
-                        <div className="d-flex justify-content-center mt-4">
+                        <div className="voucher-pagination">
 
                             {
 
@@ -58,10 +68,10 @@ function MyVoucherList({
 
                                         key={index}
 
-                                        className={`btn btn-sm mx-1 ${
-                                            link.active
-                                                ? "btn-success"
-                                                : "btn-outline-success"
+                                        className={`page-btn ${
+                                            link.active ? "active" : ""
+                                        } ${
+                                            !link.url ? "disabled" : ""
                                         }`}
 
                                         disabled={!link.url}
@@ -80,11 +90,11 @@ function MyVoucherList({
 
                                         }}
 
-                                        dangerouslySetInnerHTML={{
-                                            __html: link.label
-                                        }}
+                                    >
 
-                                    />
+                                        {getLabel(link.label)}
+
+                                    </button>
 
                                 ))
 

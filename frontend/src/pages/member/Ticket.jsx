@@ -76,7 +76,7 @@ function Ticket() {
                 {tickets.map((ticket) => (
 
                     <div
-                        className="col-lg-6"
+                        className="col-lg-3 col-md-6 col-sm-6 col-12"
                         key={ticket.MaLoaiVe}
                     >
 
