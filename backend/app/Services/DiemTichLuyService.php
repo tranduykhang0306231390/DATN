@@ -10,9 +10,15 @@ use App\Models\LichSuGiaoDichDiem;
 use App\Models\LichSuHangThanhVien;
 use App\Models\Thongbao;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class DiemTichLuyService
 {
+    /**
+     *   1. Điểm cơ bản = floor(TongThanhToan / SoTienQuyDoi) * SoDiemNhan
+     *   2. Nếu TongThanhToan >= GiaTriHoaDonToiThieu  -> nhân HeSoNhanDiem
+     *   3. Nếu đúng sinh nhật khách & NhanDoiSinhNhat -> nhân 2
+     */
     public function tinhDiem($quyTac, float $tongThanhToan, ?string $ngaySinh = null): int
     {
         $soTienQuyDoi = (float) $quyTac->SoTienQuyDoi;
@@ -25,24 +31,24 @@ class DiemTichLuyService
         if ($diem <= 0) {
             return 0;
         }
+
+        // 2. Xác định các điều kiện
         $mucToiThieu = (float) ($quyTac->GiaTriHoaDonToiThieu ?? 0);
         $heSo        = (float) ($quyTac->HeSoNhanDiem ?? 1);
         $laSinhNhat  = ((int) ($quyTac->NhanDoiSinhNhat ?? 0) === 1 && $this->laSinhNhatHomNay($ngaySinh));
-        
-        // Kiểm tra hóa đơn có đạt giá trị tối thiểu để nhận hệ số không
+
+        // Hóa đơn có đạt giá trị tối thiểu để nhận hệ số không
         $hoaDonDuDieuKien = ($mucToiThieu > 0 && $tongThanhToan >= $mucToiThieu && $heSo > 1);
 
+        // 3. Áp hệ số + nhân đôi sinh nhật
         if ($laSinhNhat) {
-            // Khi là sinh nhật: 
-            // Nếu hóa đơn đủ điều kiện -> (Điểm * HeSoNhanDiem * 2)
-            // Nếu không đủ điều kiện -> (Điểm * 2)
+            // Sinh nhật: đủ điều kiện -> (Điểm * HeSo * 2); không đủ -> (Điểm * 2)
             if ($hoaDonDuDieuKien) {
                 $diem = (int) floor($diem * $heSo * 2);
             } else {
                 $diem *= 2;
             }
         } else {
-            
             if ($hoaDonDuDieuKien) {
                 $diem = (int) floor($diem * $heSo);
             }
@@ -146,6 +152,12 @@ class DiemTichLuyService
         $maHangCu = $khachHang->MaHangThanhVien;
         $khachHang->update(['MaHangThanhVien' => $hangMoi->MaHangThanhVien]);
 
+        // Tổng chi tiêu thực của khách tại thời điểm lên hạng
+        $tongChiTieu = (float) DB::table('hoadon')
+            ->where('MaKhachHang', $khachHang->MaKhachHang)
+            ->where('TrangThai', 'DaThanhToan')
+            ->sum('TongTien');
+
         // Lịch sử thay đổi hạng
         $lastLSH = LichSuHangThanhVien::orderBy('MaLichSuHang', 'desc')->first();
         $soLSH   = $lastLSH ? ((int) substr($lastLSH->MaLichSuHang, 3)) + 1 : 1;
@@ -158,7 +170,7 @@ class DiemTichLuyService
             'ThoiGianThayDoi'        => now(),
             'LyDoThayDoi'            => 'Đủ điều kiện lên hạng ' . $hangMoi->TenHang,
             'DiemTaiThoiDiemTH'      => (string) $khachHang->TongDiem,
-            'TongChiTieuTaiThoiDiem' => 0,
+            'TongChiTieuTaiThoiDiem' => $tongChiTieu,
         ]);
 
         $this->taoThongBao(

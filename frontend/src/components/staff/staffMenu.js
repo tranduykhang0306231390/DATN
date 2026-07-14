@@ -5,14 +5,14 @@ export const STAFF_MENU = [
         title: 'Bán hàng',
         items: [
             {
-                icon: '🧾',
+                
                 label: 'Tạo hóa đơn',
                 desc: 'Chọn bàn, lập hóa đơn tại quầy cho khách',
                 path: '/staff/tao-hoa-don',
                 color: '#3b82f6',
             },
             {
-                icon: '📋',
+               
                 label: 'Quản lý hóa đơn',
                 desc: 'Xem và tra cứu lịch sử hóa đơn',
                 path: '/staff/quan-ly-hoa-don',

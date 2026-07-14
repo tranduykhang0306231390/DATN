@@ -76,8 +76,17 @@ export default function TaoHoaDon() {
             .filter((v) => selected.includes(v.MaVoucherKhachHang))
             .sort((a, b) => a.ThuTuApDung - b.ThuTuApDung);
         for (const v of sorted) {
+            if (giam >= tongTienGoc) break;                 // đã giảm hết mức
             if (nhomDung[v.NhomUuDai] && !v.CoTheDungChung) continue;
-            giam += v.NhomUuDai === 'PhanTram' ? tongTienGoc * (v.GiaTriGiam / 100) : v.GiaTriGiam;
+
+            let giamVoucher = v.NhomUuDai === 'PhanTram'
+                ? tongTienGoc * (v.GiaTriGiam / 100)
+                : v.GiaTriGiam;
+
+            giamVoucher = Math.min(giamVoucher, tongTienGoc - giam); // không vượt phần còn lại
+            if (giamVoucher <= 0) continue;
+
+            giam += giamVoucher;
             nhomDung[v.NhomUuDai] = true;
         }
         return Math.min(giam, tongTienGoc);
@@ -166,6 +175,10 @@ export default function TaoHoaDon() {
 
             <div className="staff-card" style={{ marginBottom: 20 }}>
                 <h3 style={{ margin: '0 0 4px', fontSize: 16, fontWeight: 600 }}>Chọn bàn</h3>
+                <div style={{ fontSize: 13, color: '#6b7280', marginBottom: 14 }}>
+                    <span style={legendDot('#dcfce7', '#16a34a')} /> Trống &nbsp;&nbsp;
+                    <span style={legendDot('#fee2e2', '#dc2626')} /> Đang phục vụ (bấm để thanh toán)
+                </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(76px, 1fr))', gap: 10 }}>
                     {Array.from({ length: TONG_SO_BAN }, (_, i) => i + 1).map((n) => {
                         const occupied = !!banTreoMap[String(n)];

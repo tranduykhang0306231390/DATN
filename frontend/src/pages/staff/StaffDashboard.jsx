@@ -14,10 +14,10 @@ export default function StaffDashboard() {
             <header style={s.hero}>
                 <div>
                     <span style={s.eyebrow}>Bảng điều khiển nhân viên</span>
-                    <h2 style={s.heroTitle}>Xin chào, {user.HoTen || 'Nhân viên'} 👋</h2>
+                    <h2 style={s.heroTitle}>Xin chào, {user.HoTen || 'Nhân viên'} </h2>
                     <p style={s.heroSub}>Chọn chức năng bạn muốn thao tác.</p>
                 </div>
-                <span style={s.badge}>{role}</span>
+                
             </header>
 
             {/* Các nhóm chức năng */}
@@ -44,9 +44,9 @@ export default function StaffDashboard() {
                                     e.currentTarget.style.borderColor = '#e5e7eb';
                                 }}
                             >
-                                <div style={{ ...s.cardIcon, background: `${item.color}1a`, color: item.color }}>
+                                {/* <div style={{ ...s.cardIcon, background: `${item.color}1a`, color: item.color }}>
                                     {item.icon}
-                                </div>
+                                </div> */}
                                 <div style={{ flex: 1 }}>
                                     <div style={s.cardLabel}>{item.label}</div>
                                     <div style={s.cardDesc}>{item.desc}</div>

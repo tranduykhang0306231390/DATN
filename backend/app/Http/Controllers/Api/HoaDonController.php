@@ -133,9 +133,9 @@ class HoaDonController extends Controller
         }
     }
 
-    /* 
+    /* ==================================================================
      *  THANH TOÁN HÓA ĐƠN TREO
-     */
+     * ================================================================== */
     public function thanhToan(string $maHD)
     {
         $hoaDon = HoaDon::with('chiTietHoaDon')->find($maHD);
@@ -172,14 +172,30 @@ class HoaDonController extends Controller
 
                 $nhomDaSuDung = [];
                 foreach ($vouchers as $v) {
+                    // Đã giảm hết mức (bằng tổng tiền) thì dừng, các voucher sau không áp nữa
+                    if ($tongGiam >= $tongTienGoc) {
+                        break;
+                    }
+
                     $nhom = $v->uuDai->NhomUuDai;
                     if (isset($nhomDaSuDung[$nhom]) && !$v->uuDai->CoTheDungChung) {
                         continue;
                     }
-                    $tongGiam += $v->uuDai->NhomUuDai === 'PhanTram'
+
+                    // Số tiền giảm của voucher này
+                    $giamVoucher = $v->uuDai->NhomUuDai === 'PhanTram'
                         ? $tongTienGoc * ($v->uuDai->GiaTriGiam / 100)
                         : $v->uuDai->GiaTriGiam;
 
+                    // Không cho giảm quá phần tiền còn lại (tránh hóa đơn âm)
+                    $conLai      = $tongTienGoc - $tongGiam;
+                    $giamVoucher = min($giamVoucher, $conLai);
+
+                    if ($giamVoucher <= 0) {
+                        continue;
+                    }
+
+                    $tongGiam += $giamVoucher;
                     $nhomDaSuDung[$nhom] = true;
                     $maVoucherList[]     = $v->MaVoucherKhachHang;
                 }
