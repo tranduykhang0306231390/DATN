@@ -19,6 +19,46 @@ function HotTicket() {
         }
     };
 
+    const getBuoiAn = (buoi) => {
+
+        switch (buoi) {
+
+            case "Sang":
+                return "Buổi sáng";
+
+            case "Trua":
+                return "Buổi trưa";
+
+            case "Toi":
+                return "Buổi tối";
+
+            default:
+                return buoi;
+
+        }
+
+    };
+
+    const getLoaiNgay = (loaiNgay) => {
+
+        switch (loaiNgay) {
+
+            case "NgayThuong":
+                return "Ngày thường";
+
+            case "CuoiTuan":
+                return "Cuối tuần";
+
+            case "LeTet":
+                return "Lễ / Tết";
+
+            default:
+                return loaiNgay;
+
+        }
+
+    };
+
     return (
         <section className="ticket-section" id="ticket">
             <div className="container">
@@ -45,7 +85,7 @@ function HotTicket() {
                             {/* Header */}
                             <div className="ticket-top">
                                 <span className="ticket-type">
-                                    {ticket.BuoiAn}
+                                    {getBuoiAn(ticket.BuoiAn)}
                                 </span>
                                 <h5>{ticket.TenLoaiVe}</h5>
                             </div>
@@ -55,8 +95,8 @@ function HotTicket() {
                             {/* Nội dung */}
                             <div className="ticket-info">
                                 <p>
-                                    <span>Loại ngày</span>
-                                    <strong>{ticket.LoaiNgay}</strong>
+                                    <span>Loại ngày:  </span>
+                                    <strong>{getLoaiNgay(ticket.LoaiNgay)}</strong>
                                 </p>
                             </div>
 
