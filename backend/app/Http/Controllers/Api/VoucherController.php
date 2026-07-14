@@ -16,19 +16,16 @@ class VoucherController extends Controller
      * Voucher khách hàng đang sở hữu
      */
     public function myVoucher()
-    {
-        $user = auth('khachhang')->user();
+{
+    $user = auth('khachhang')->user();
 
-        $vouchers = VoucherKhachHang::with('uuDai')
-            ->where('MaKhachHang', $user->MaKhachHang)
-            ->orderByDesc('NgayCap')
-            ->get();
+    $vouchers = VoucherKhachHang::with('uuDai')
+        ->where('MaKhachHang', $user->MaKhachHang)
+        ->orderByDesc('NgayCap')
+        ->paginate(6);
 
-        return response()->json([
-            'success' => true,
-            'data' => $vouchers
-        ]);
-    }
+    return response()->json($vouchers);
+}
 
     /**
      * Kho voucher

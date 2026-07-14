@@ -36,7 +36,7 @@ function TicketCard({ ticket }) {
 
                 <span>
 
-                    {ticket.LoaiNgay}
+                    {ticket.LoaiVe}
 
                 </span>
 

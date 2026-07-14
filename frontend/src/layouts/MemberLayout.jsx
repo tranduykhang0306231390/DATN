@@ -95,7 +95,7 @@ function MemberLayout() {
                         to="/member/ticket"
                         className={location.pathname === "/member/ticket" ? "active" : ""}
                     >
-                        Tham khảo vé
+                        Giá vé
                     </Link>
 
                     <Link

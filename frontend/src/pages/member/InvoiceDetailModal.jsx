@@ -1,6 +1,6 @@
 import "../../assets/css/member/InvoiceDetailModal.css";
 import { useState, useEffect } from "react";
-import FeedbackModal from "./FeedbackModal";
+import FeedbackModal from "../../components/member/FeedbackModal";
 import { getInvoiceFeedback } from "../../api/authApi";
 
 function InvoiceDetailModal({ show, onClose, invoice }) {
@@ -300,39 +300,14 @@ function InvoiceDetailModal({ show, onClose, invoice }) {
                 </div>
             </div>
 
-            {!loadingFeedback && feedback && (
-                <div className="feedback-box">
-
-                    <div className="mb-2">
-                        <strong>Đánh giá:</strong> ⭐ {feedback.DiemDanhGia}/5
-                    </div>
-
-                    <div className="mb-3">
-                        <strong>Ý kiến của bạn:</strong>
-                        <br />
-                        {feedback.NoiDungCuaKhachHang}
-                    </div>
-
-                    <hr />
-
-                    <div className="mb-2">
-                        <strong>Trạng thái xử lý:</strong>{" "}
-                        <span
-                            className={
-                                feedback.TrangThaiXuLy === "DaXuLy"
-                                    ? "badge bg-success"
-                                    : "badge bg-warning text-dark"
-                            }
-                        >
-                            {feedback.TrangThaiXuLy === "DaXuLy"
-                                ? "Đã xử lý"
-                                : "Chưa xử lý"}
-                        </span>
-
-                    </div>
-
-                </div>
-            )}
+            <FeedbackModal
+                show={showFeedback}
+                onClose={() => {
+                    setShowFeedback(false);
+                    fetchFeedback(); // tải lại đánh giá sau khi gửi
+                }}
+                invoice={invoice}
+            />
         </div>
     );
 }

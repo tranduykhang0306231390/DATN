@@ -7,6 +7,8 @@ import "../../assets/css/memberRank.css";
 
 function MemberProfile({ user }) {
 
+    const [isEditing, setIsEditing] = useState(false);
+
     const [formData, setFormData] = useState({
         HoTen: "",
         Email: "",
@@ -34,6 +36,20 @@ function MemberProfile({ user }) {
         });
     };
 
+    const handleCancel = () => {
+        // Khôi phục lại dữ liệu gốc từ user, hủy các thay đổi chưa lưu
+        if (user) {
+            setFormData({
+                HoTen: user.HoTen || "",
+                Email: user.Email || "",
+                SoDienThoai: user.SoDienThoai || "",
+                NgaySinh: user.NgaySinh || "",
+                GioiTinh: user.GioiTinh || ""
+            });
+        }
+        setIsEditing(false);
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -56,6 +72,9 @@ function MemberProfile({ user }) {
                     GioiTinh: res.data.user.GioiTinh || ""
                 });
             }
+
+            // Cập nhật xong thì quay về chế độ xem
+            setIsEditing(false);
 
         } catch (error) {
 
@@ -87,80 +106,141 @@ function MemberProfile({ user }) {
     return (
         <div className="profile-section">
 
-            <h3 className="section-title">
-                Thông tin cá nhân
-            </h3>
+            <div className="profile-header">
+                <h3 className="section-title">
+                    Thông tin cá nhân
+                </h3>
 
-            <form className="profile-form" onSubmit={handleSubmit}>
 
-                <div className="row">
-                    <div className="col-md-6">
-                        <label>Họ và tên</label>
-                        <input
-                            type="text"
-                            name="HoTen"
-                            value={formData.HoTen}
-                            onChange={handleChange}
-                        />
+            </div>
+
+            {!isEditing ? (
+
+                /* ============ CHẾ ĐỘ XEM (READ-ONLY) ============ */
+                <div className="profile-view">
+
+                    <div className="row">
+                        <div className="col-md-6">
+                            <label>Họ và tên</label>
+                            <p className="profile-value">{formData.HoTen || "—"}</p>
+                        </div>
+
+                        <div className="col-md-6">
+                            <label>Email</label>
+                            <p className="profile-value">{formData.Email || "—"}</p>
+                        </div>
                     </div>
 
-                    <div className="col-md-6">
-                        <label>Email</label>
-                        <input
-                            type="email"
-                            name="Email"
-                            value={formData.Email}
-                            onChange={handleChange}
-                        />
-                    </div>
-                </div>
+                    <div className="row">
+                        <div className="col-md-6">
+                            <label>Số điện thoại</label>
+                            <p className="profile-value">{formData.SoDienThoai || "—"}</p>
+                        </div>
 
-                <div className="row">
-                    <div className="col-md-6">
-                        <label>Số điện thoại</label>
-                        <input
-                            type="text"
-                            name="SoDienThoai"
-                            value={formData.SoDienThoai}
-                            onChange={handleChange}
-                        />
+                        <div className="col-md-6">
+                            <label>Ngày sinh</label>
+                            <p className="profile-value">{formData.NgaySinh || "—"}</p>
+                        </div>
                     </div>
 
-                    <div className="col-md-6">
-                        <label>Ngày sinh</label>
-                        <input
-                            type="date"
-                            name="NgaySinh"
-                            value={formData.NgaySinh}
-                            onChange={handleChange}
-                        />
+                    <div className="row">
+                        <div className="col-md-6">
+                            <label>Giới tính</label>
+                            <p className="profile-value">{formData.GioiTinh || "—"}</p>
+                        </div>
                     </div>
-                </div>
-
-                <div className="row">
-                    <div className="col-md-6">
-                        <label>Giới tính</label>
-                        <select
-                            name="GioiTinh"
-                            value={formData.GioiTinh}
-                            onChange={handleChange}
+                    {/* Chỉ hiện nút Sửa khi đang ở chế độ xem */}
+                    {!isEditing && (
+                        <button
+                            type="button"
+                            className="edit-btn"
+                            onClick={() => setIsEditing(true)}
                         >
-                            <option value="Nam">Nam</option>
-                            <option value="Nữ">Nữ</option>
-                        </select>
+                            Chỉnh sửa
+                        </button>
+                    )}
+                </div>
+
+            ) : (
+
+                /* ============ CHẾ ĐỘ CHỈNH SỬA (FORM) ============ */
+                <form className="profile-form" onSubmit={handleSubmit}>
+
+                    <div className="row">
+                        <div className="col-md-6">
+                            <label>Họ và tên</label>
+                            <input
+                                type="text"
+                                name="HoTen"
+                                value={formData.HoTen}
+                                onChange={handleChange}
+                            />
+                        </div>
+
+                        <div className="col-md-6">
+                            <label>Email</label>
+                            <input
+                                type="email"
+                                name="Email"
+                                value={formData.Email}
+                                onChange={handleChange}
+                            />
+                        </div>
                     </div>
-                </div>
 
-                {/* Nút Lưu tách ra khỏi row/col, nằm ở cuối form
-                    để căn phải theo đúng toàn bộ chiều rộng form,
-                    không còn bị kẹt trong cột Giới tính nữa */}
-                <div className="text-end mt-4">
-                    <button className="save-btn" type="submit">
-                        Lưu
-                    </button>
-                </div>
+                    <div className="row">
+                        <div className="col-md-6">
+                            <label>Số điện thoại</label>
+                            <input
+                                type="text"
+                                name="SoDienThoai"
+                                value={formData.SoDienThoai}
+                                onChange={handleChange}
+                            />
+                        </div>
 
-            </form>
+                        <div className="col-md-6">
+                            <label>Ngày sinh</label>
+                            <input
+                                type="date"
+                                name="NgaySinh"
+                                value={formData.NgaySinh}
+                                onChange={handleChange}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="row">
+                        <div className="col-md-6">
+                            <label>Giới tính</label>
+                            <select
+                                name="GioiTinh"
+                                value={formData.GioiTinh}
+                                onChange={handleChange}
+                            >
+                                <option value="Nam">Nam</option>
+                                <option value="Nữ">Nữ</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    {/* Nút Hủy + Lưu, căn phải theo đúng toàn bộ chiều rộng form */}
+                    <div className="text-end mt-4 form-actions">
+                        <button
+                            type="button"
+                            className="cancel-btn"
+                            onClick={handleCancel}
+                        >
+                            Hủy
+                        </button>
+                        <button className="save-btn" type="submit">
+                            Lưu
+                        </button>
+                    </div>
+
+                </form>
+
+            )}
 
         </div>
     );
