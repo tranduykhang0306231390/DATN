@@ -193,7 +193,8 @@ Route::middleware('auth:nhanvien')->group(function () {
         Route::get('/thong-ke/tong-quan',           [ThongKeController::class, 'tongQuan']);
         Route::get('/thong-ke/chi-tiet',            [ThongKeController::class, 'chiTiet']);
 
-        
+         Route::get('web-setting', [WebSettingController::class, 'show']);
+    Route::put('web-setting', [WebSettingController::class, 'update']);
     });
    
 

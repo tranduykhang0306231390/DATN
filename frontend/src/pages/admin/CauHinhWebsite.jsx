@@ -132,7 +132,7 @@ export default function CauHinhWebsite() {
                                     ) : (
                                         <>
                                             <img
-                                                src={form.Logo}
+                                                src={`http://127.0.0.1:8000/logo/${form.Logo}`}
                                                 alt="Logo"
                                                 onError={() => setLogoLoi(true)}
                                                 style={{
