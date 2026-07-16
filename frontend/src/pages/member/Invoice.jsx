@@ -4,6 +4,18 @@ import InvoiceDetailModal from "./InvoiceDetailModal";
 
 import "../../assets/css/member/Invoice.css";
 
+const SORT_OPTIONS = [
+    { value: "newest", label: "Mới nhất" },
+    { value: "oldest", label: "Cũ nhất" },
+];
+
+const DEFAULT_FILTERS = {
+    keyword: "",
+    tuNgay: "",
+    denNgay: "",
+    sortOrder: "newest",
+};
+
 function Invoice() {
 
     const [data, setData] = useState([]);
@@ -17,10 +29,17 @@ function Invoice() {
     const location = useLocation();
     const navigate = useNavigate();
     const [pendingInvoice, setPendingInvoice] = useState(null);
+
+    // Giá trị đang gõ trong ô tìm kiếm / bộ lọc (chưa áp dụng)
+    const [filterDraft, setFilterDraft] = useState(DEFAULT_FILTERS);
+    // Bộ lọc đã áp dụng (dùng để gọi API)
+    const [appliedFilters, setAppliedFilters] = useState(DEFAULT_FILTERS);
+
     useEffect(() => {
-        loadInvoices(currentPage);
+        loadInvoices(currentPage, appliedFilters);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [currentPage]);
+    }, [currentPage, appliedFilters]);
+
     useEffect(() => {
         if (location.state?.openInvoice) {
             setPendingInvoice(location.state.openInvoice);
@@ -34,14 +53,21 @@ function Invoice() {
             setPendingInvoice(null);
         }
     },[loading,pendingInvoice]);
-    const loadInvoices = async (page = 1) => {
+
+    const loadInvoices = async (page = 1, filters = appliedFilters) => {
 
         setLoading(true);
 
         try {
 
             const res = await axiosClient.get("/member/invoices", {
-                params: { page }
+                params: {
+                    page,
+                    keyword: filters.keyword || undefined,
+                    tu_ngay: filters.tuNgay || undefined,
+                    den_ngay: filters.denNgay || undefined,
+                    sort_order: filters.sortOrder || "newest",
+                }
             });
 
             const meta = res.data.meta || res.data;
@@ -59,6 +85,27 @@ function Invoice() {
 
             setLoading(false);
 
+        }
+    };
+
+    const handleFilterChange = (field, value) => {
+        setFilterDraft((prev) => ({ ...prev, [field]: value }));
+    };
+
+    const handleSearch = () => {
+        setAppliedFilters(filterDraft);
+        setCurrentPage(1);
+    };
+
+    const handleReset = () => {
+        setFilterDraft(DEFAULT_FILTERS);
+        setAppliedFilters(DEFAULT_FILTERS);
+        setCurrentPage(1);
+    };
+
+    const handleSearchKeyDown = (e) => {
+        if (e.key === "Enter") {
+            handleSearch();
         }
     };
 
@@ -123,6 +170,75 @@ function Invoice() {
 
                 </div>
 
+                <div className="invoice-filter row g-2 align-items-end mb-3">
+
+                    <div className="col-12 col-md-3">
+                        <label className="form-label mb-1">Tìm kiếm mã HD</label>
+                        <input
+                            type="text"
+                            className="form-control"
+                            placeholder="Nhập mã hóa đơn..."
+                            value={filterDraft.keyword}
+                            onChange={(e) => handleFilterChange("keyword", e.target.value)}
+                            onKeyDown={handleSearchKeyDown}
+                        />
+                    </div>
+
+                    <div className="col-6 col-md-2">
+                        <label className="form-label mb-1">Từ ngày</label>
+                        <input
+                            type="date"
+                            className="form-control"
+                            value={filterDraft.tuNgay}
+                            onChange={(e) => handleFilterChange("tuNgay", e.target.value)}
+                        />
+                    </div>
+
+                    <div className="col-6 col-md-2">
+                        <label className="form-label mb-1">Đến ngày</label>
+                        <input
+                            type="date"
+                            className="form-control"
+                            value={filterDraft.denNgay}
+                            onChange={(e) => handleFilterChange("denNgay", e.target.value)}
+                        />
+                    </div>
+
+                    <div className="col-6 col-md-2">
+                        <label className="form-label mb-1">Sắp xếp</label>
+                        <select
+                            className="form-select"
+                            value={filterDraft.sortOrder}
+                            onChange={(e) => handleFilterChange("sortOrder", e.target.value)}
+                        >
+                            {SORT_OPTIONS.map((opt) => (
+                                <option key={opt.value} value={opt.value}>
+                                    {opt.label}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div className="col-12 col-md-auto d-flex gap-2">
+                        <button
+                            type="button"
+                            className="invoice-btn"
+                            onClick={handleSearch}
+                        >
+                            Tìm kiếm
+                        </button>
+
+                        <button
+                            type="button"
+                            className="invoice-btn invoice-btn-reset"
+                            onClick={handleReset}
+                        >
+                            Đặt lại
+                        </button>
+                    </div>
+
+                </div>
+
                 <div className="invoice-table">
 
                     <table className="table text-center align-middle">
@@ -168,7 +284,7 @@ function Invoice() {
                                         colSpan="4"
                                         className="invoice-empty"
                                     >
-                                        Bạn chưa có hóa đơn nào.
+                                        Không tìm thấy hóa đơn phù hợp.
                                     </td>
 
                                 </tr>

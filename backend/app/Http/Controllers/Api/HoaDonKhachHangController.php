@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 class HoaDonKhachHangController extends Controller
 {
     /**
-     * Danh sách hóa đơn của khách hàng (có phân trang)
+     * Danh sách hóa đơn của khách hàng (có phân trang, tìm kiếm & lọc)
      */
     public function index(Request $request)
     {
@@ -26,9 +26,33 @@ class HoaDonKhachHangController extends Controller
         $perPage = (int) $request->query('per_page', 10);
         $perPage = $perPage > 0 && $perPage <= 50 ? $perPage : 10;
 
-        $hoaDons = HoaDon::where('MaKhachHang', $user->MaKhachHang)
-            ->orderByDesc('NgayLap')
-            ->paginate($perPage);
+        $query = HoaDon::where('MaKhachHang', $user->MaKhachHang);
+
+        // Tìm kiếm theo mã hóa đơn (search bar)
+        if ($request->filled('keyword')) {
+            $keyword = trim($request->query('keyword'));
+            $query->where('MaHoaDon', 'like', '%' . $keyword . '%');
+        }
+
+        // Lọc theo khoảng ngày lập (tu_ngay -> den_ngay)
+        if ($request->filled('tu_ngay')) {
+            $query->whereDate('NgayLap', '>=', $request->query('tu_ngay'));
+        }
+        if ($request->filled('den_ngay')) {
+            $query->whereDate('NgayLap', '<=', $request->query('den_ngay'));
+        }
+
+        // Sắp xếp theo ngày lập: newest (mặc định) hoặc oldest
+        $sortOrder = $request->query('sort_order', 'newest');
+        $sortOrder = $sortOrder === 'oldest' ? 'oldest' : 'newest';
+
+        if ($sortOrder === 'oldest') {
+            $query->orderBy('NgayLap', 'asc');
+        } else {
+            $query->orderByDesc('NgayLap');
+        }
+
+        $hoaDons = $query->paginate($perPage);
 
         return response()->json([
             'success' => true,

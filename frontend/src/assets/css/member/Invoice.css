@@ -245,5 +245,17 @@
 .invoice-btn{
     width:100%;
 }
+}
+/* Thêm vào file Invoice.css hiện có (tuỳ chọn) để style riêng cho bộ lọc */
+.invoice-filter .form-label {
+    font-size: 0.85rem;
+    font-weight: 500;
+}
 
+.invoice-btn-reset {
+    background-color: #6c757d;
+}
+
+.invoice-btn-reset:hover {
+    background-color: #5a6268;
 }

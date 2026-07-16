@@ -76,6 +76,11 @@ export const updateMemberProfile = (data) => {
     return axiosClient.put("/member/profile", data);
 };
 
+/* CHANGE PASSWORD */
+export const changePassword = (data) => {
+    return axiosClient.put("/member/change-password", data);
+};
+
 /* FEEDBACK */
 export const getInvoiceFeedback = (maHoaDon) => {
     return axiosClient.get(`/member/invoices/${maHoaDon}/feedback`);

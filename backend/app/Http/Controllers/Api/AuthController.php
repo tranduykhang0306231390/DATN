@@ -305,6 +305,70 @@ class AuthController extends Controller
             'user' => $khachHang->fresh()
         ]);
     }
+    public function changePassword(Request $request)
+    {
+        $khachHang = auth('khachhang')->user();
+
+        $request->validate(
+            [
+                'MatKhauHienTai' => [
+                    'required'
+                ],
+
+                'MatKhauMoi' => [
+                    'required',
+                    'string',
+                    'min:8',
+                    'max:20',
+                    'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*#?&]).+$/'
+                ],
+
+                'MatKhauMoi_confirmation' => [
+                    'required',
+                    'same:MatKhauMoi'
+                ],
+            ],
+            [
+                'MatKhauHienTai.required' => 'Vui lòng nhập mật khẩu hiện tại.',
+
+                'MatKhauMoi.required' => 'Mật khẩu mới không được để trống.',
+                'MatKhauMoi.min' => 'Mật khẩu mới phải từ 8 ký tự.',
+                'MatKhauMoi.max' => 'Mật khẩu mới tối đa 20 ký tự.',
+                'MatKhauMoi.regex' => 'Mật khẩu mới phải có chữ hoa, chữ thường, số và ký tự đặc biệt.',
+
+                'MatKhauMoi_confirmation.required' => 'Vui lòng xác nhận mật khẩu mới.',
+                'MatKhauMoi_confirmation.same' => 'Xác nhận mật khẩu mới không khớp.',
+            ]
+        );
+
+        if (!Hash::check($request->MatKhauHienTai, $khachHang->MatKhau)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Mật khẩu hiện tại không đúng.',
+                'errors' => [
+                    'MatKhauHienTai' => ['Mật khẩu hiện tại không đúng.']
+                ]
+            ], 422);
+        }
+
+        if (Hash::check($request->MatKhauMoi, $khachHang->MatKhau)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Mật khẩu mới không được trùng mật khẩu hiện tại.',
+                'errors' => [
+                    'MatKhauMoi' => ['Mật khẩu mới không được trùng mật khẩu hiện tại.']
+                ]
+            ], 422);
+        }
+
+        $khachHang->MatKhau = bcrypt($request->MatKhauMoi);
+        $khachHang->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Đổi mật khẩu thành công.'
+        ]);
+    }
     public function forgotPassword(Request $request)
     {
         $request->validate(

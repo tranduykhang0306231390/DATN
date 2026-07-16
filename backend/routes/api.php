@@ -62,6 +62,7 @@ Route::middleware('member')->prefix('member')->group(function () {
     Route::get('/points', [MemberPointController::class, 'index']);
     Route::get('/history', [MemberHistoryController::class, 'index']);
     Route::put('/profile', [AuthController::class, 'updateMemberProfile']);
+    Route::put('/change-password', [AuthController::class, 'changePassword']);
     // ===== Vé đã mua =====
     Route::get('/tickets', [TicketController::class, 'index']);
     Route::get('/tickets/hot', [TicketController::class, 'hot']);
@@ -199,6 +200,3 @@ Route::middleware('auth:nhanvien')->group(function () {
    
 
 });
-
-
-

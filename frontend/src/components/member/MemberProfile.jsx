@@ -2,12 +2,14 @@ import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 
 import { updateMemberProfile } from "../../api/authApi";
+import ChangePasswordForm from "./ChangePasswordForm";
 
 import "../../assets/css/memberRank.css";
 
 function MemberProfile({ user }) {
 
     const [isEditing, setIsEditing] = useState(false);
+    const [isChangingPassword, setIsChangingPassword] = useState(false);
 
     const [formData, setFormData] = useState({
         HoTen: "",
@@ -149,15 +151,41 @@ function MemberProfile({ user }) {
                             <p className="profile-value">{formData.GioiTinh || "—"}</p>
                         </div>
                     </div>
-                    {/* Chỉ hiện nút Sửa khi đang ở chế độ xem */}
+                    {/* Chỉ hiện nút Sửa + Đổi mật khẩu khi đang ở chế độ xem */}
                     {!isEditing && (
-                        <button
-                            type="button"
-                            className="edit-btn"
-                            onClick={() => setIsEditing(true)}
+                        <div
+                            className="profile-actions"
+                            style={{
+                                display: "flex",
+                                flexWrap: "wrap",
+                                gap: "12px",
+                                marginTop: "20px"
+                            }}
                         >
-                            Chỉnh sửa
-                        </button>
+                            <button
+                                type="button"
+                                className="edit-btn"
+                                onClick={() => setIsEditing(true)}
+                            >
+                                Chỉnh sửa
+                            </button>
+
+                            <button
+                                type="button"
+                                className="edit-btn"
+                                onClick={() => setIsChangingPassword((prev) => !prev)}
+                            >
+                                Đổi mật khẩu
+                            </button>
+                        </div>
+                    )}
+
+                    {/* Form đổi mật khẩu hiện bên dưới, tách khỏi hàng nút */}
+                    {!isEditing && isChangingPassword && (
+                        <ChangePasswordForm
+                            onCancel={() => setIsChangingPassword(false)}
+                            onSuccess={() => setIsChangingPassword(false)}
+                        />
                     )}
                 </div>
 
