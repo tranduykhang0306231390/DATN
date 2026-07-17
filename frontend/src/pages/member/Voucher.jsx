@@ -16,22 +16,19 @@ function Voucher() {
 
     // Phân trang Voucher của tôi
     const [myVoucherLinks, setMyVoucherLinks] = useState([]);
+    const [storeVoucherLinks, setStoreVoucherLinks] = useState([]);
 
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        loadData();
-    }, []);
-
-    const loadData = async (page = 1) => {
+    async function loadData(myPage = 1, storePage = 1) {
 
         try {
 
             setLoading(true);
 
             const [myVoucherRes, storeRes] = await Promise.all([
-                getMyVoucher(page),
-                getVoucherStore(),
+                getMyVoucher(myPage),
+                getVoucherStore(storePage),
             ]);
 
             setMyVouchers(myVoucherRes.data.data);
@@ -40,6 +37,7 @@ function Voucher() {
             setMyVoucherLinks(myVoucherRes.data.links);
 
             setStoreVouchers(storeRes.data.data);
+            setStoreVoucherLinks(storeRes.data.links);
 
         } catch (err) {
 
@@ -51,7 +49,11 @@ function Voucher() {
 
         }
 
-    };
+    }
+
+    useEffect(() => {
+        loadData(1, 1);
+    }, []);
 
     if (loading) {
 
@@ -74,12 +76,14 @@ function Voucher() {
             <MyVoucherList
                 vouchers={myVouchers}
                 links={myVoucherLinks}
-                onPageChange={loadData}
+                onPageChange={(page) => loadData(page, 1)}
             />
 
             <VoucherStoreList
                 vouchers={storeVouchers}
-                reloadData={loadData}
+                links={storeVoucherLinks}
+                onPageChange={(page) => loadData(1, page)}
+                reloadData={() => loadData(1, 1)}
             />
 
         </div>

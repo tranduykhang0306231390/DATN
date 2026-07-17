@@ -122,7 +122,7 @@ class MemberHistoryController extends Controller
             default:
 
                 $query->orderBy(
-                    'ThoiGianGiaoDich',
+                    'MaGiaoDichDiem',
                     'desc'
                 );
 

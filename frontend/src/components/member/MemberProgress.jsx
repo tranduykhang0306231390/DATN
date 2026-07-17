@@ -101,6 +101,17 @@ function MemberProgress({ points }) {
 
             </div>
 
+            <div className="progress-boundaries" aria-hidden="true">
+                <span>
+                    <strong>{current.name}</strong>
+                    {current.min.toLocaleString()} điểm
+                </span>
+                <span className="progress-boundary-end">
+                    <strong>{current.next || current.name}</strong>
+                    {current.max.toLocaleString()} điểm
+                </span>
+            </div>
+
             {
 
                 current.next ?

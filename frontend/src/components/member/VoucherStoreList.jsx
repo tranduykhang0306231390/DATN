@@ -1,6 +1,12 @@
 import VoucherStoreCard from "./VoucherStoreCard";
 
-function VoucherStoreList({ vouchers, reloadData }) {
+function VoucherStoreList({ vouchers, links, onPageChange, reloadData }) {
+
+    const getLabel = (label) => {
+        if (label.includes("Previous")) return "«";
+        if (label.includes("Next")) return "»";
+        return label;
+    };
 
     return (
 
@@ -25,6 +31,7 @@ function VoucherStoreList({ vouchers, reloadData }) {
 
                 ) : (
 
+                    <>
                     <div className="voucher-grid">
 
                         {
@@ -40,6 +47,25 @@ function VoucherStoreList({ vouchers, reloadData }) {
                         }
 
                     </div>
+
+                    <div className="voucher-pagination">
+                        {links.map((link, index) => (
+                            <button
+                                key={index}
+                                className={`page-btn ${link.active ? "active" : ""} ${!link.url ? "disabled" : ""}`}
+                                disabled={!link.url}
+                                onClick={() => {
+                                    if (link.url) {
+                                        const page = new URL(link.url).searchParams.get("page");
+                                        onPageChange(Number(page));
+                                    }
+                                }}
+                            >
+                                {getLabel(link.label)}
+                            </button>
+                        ))}
+                    </div>
+                    </>
 
                 )
             }

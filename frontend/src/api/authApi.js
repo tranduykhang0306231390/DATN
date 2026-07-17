@@ -59,8 +59,10 @@ export const getMyVoucher = (page = 1) => {
     });
 };
 
-export const getVoucherStore = () => {
-    return axiosClient.get("/member/voucher-store");
+export const getVoucherStore = (page = 1) => {
+    return axiosClient.get("/member/voucher-store", {
+        params: { page }
+    });
 };
 
 export const exchangeVoucher = (MaUuDai) => {

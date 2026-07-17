@@ -287,6 +287,8 @@
     .discount{
         font-size:22px;
     }
+}
+
     .voucher-pagination {
     display: flex;
     justify-content: center;
@@ -417,5 +419,4 @@
 
     cursor:not-allowed;
 
-}
 }

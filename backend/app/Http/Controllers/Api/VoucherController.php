@@ -46,12 +46,9 @@ class VoucherController extends Controller
             })
             ->orderBy('ThuTuApDung')
             ->orderBy('SoDiemCanDoi')
-            ->get();
+            ->paginate(6);
 
-        return response()->json([
-            'success' => true,
-            'data' => $vouchers
-        ]);
+        return response()->json($vouchers);
     }
 
     /**
@@ -121,10 +118,33 @@ class VoucherController extends Controller
 
         try {
 
+            $voucher = UuDai::where('MaUuDai', $request->MaUuDai)
+                ->where('TrangThai', 'HoatDong')
+                ->lockForUpdate()
+                ->first();
+
             $khachHang = KhachHang::where(
                 'MaKhachHang',
                 $user->MaKhachHang
             )->lockForUpdate()->first();
+
+            if (!$voucher || $voucher->SoLuongTon <= 0) {
+                DB::rollBack();
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Voucher đã hết hoặc không còn hoạt động.'
+                ], 400);
+            }
+
+            if ($khachHang->TongDiem < $voucher->SoDiemCanDoi) {
+                DB::rollBack();
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Bạn không đủ điểm để đổi voucher.'
+                ], 400);
+            }
 
             $diemTruoc = $khachHang->TongDiem;
 
@@ -139,7 +159,9 @@ class VoucherController extends Controller
             $voucher->save();
                         // ===== Sinh mã VoucherKhachHang =====
 
-            $lastVoucher = VoucherKhachHang::orderByDesc('MaVoucherKhachHang')->first();
+            $lastVoucher = VoucherKhachHang::orderByDesc('MaVoucherKhachHang')
+                ->lockForUpdate()
+                ->first();
 
             if ($lastVoucher) {
 
@@ -181,7 +203,9 @@ class VoucherController extends Controller
 
             // ===== Sinh mã giao dịch điểm =====
 
-            $lastGD = LichSuGiaoDichDiem::orderByDesc('MaGiaoDichDiem')->first();
+            $lastGD = LichSuGiaoDichDiem::orderByDesc('MaGiaoDichDiem')
+                ->lockForUpdate()
+                ->first();
 
             if ($lastGD) {
 

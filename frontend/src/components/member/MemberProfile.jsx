@@ -8,6 +8,12 @@ import "../../assets/css/memberRank.css";
 
 function MemberProfile({ user }) {
 
+    const formatDateVi = (value) => {
+        if (!value) return "—";
+        const [year, month, day] = String(value).slice(0, 10).split("-");
+        return year && month && day ? `${day}/${month}/${year}` : value;
+    };
+
     const [isEditing, setIsEditing] = useState(false);
     const [isChangingPassword, setIsChangingPassword] = useState(false);
 
@@ -141,7 +147,7 @@ function MemberProfile({ user }) {
 
                         <div className="col-md-6">
                             <label>Ngày sinh</label>
-                            <p className="profile-value">{formData.NgaySinh || "—"}</p>
+                            <p className="profile-value">{formatDateVi(formData.NgaySinh)}</p>
                         </div>
                     </div>
 
