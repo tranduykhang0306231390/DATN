@@ -18,43 +18,47 @@ class DiemTichLuyService
      *   1. Điểm cơ bản = floor(TongThanhToan / SoTienQuyDoi) * SoDiemNhan
      *   2. Nếu TongThanhToan >= GiaTriHoaDonToiThieu  -> nhân HeSoNhanDiem
      *   3. Nếu đúng sinh nhật khách & NhanDoiSinhNhat -> nhân 2
+     *
+     * Trả về mảng chi tiết từng bước (không chỉ điểm cuối) để nơi gọi có
+     * thể hiển thị cách tính minh bạch cho khách xem lúc thanh toán.
      */
-    public function tinhDiem($quyTac, float $tongThanhToan, ?string $ngaySinh = null): int
+    public function tinhDiem($quyTac, float $tongThanhToan, ?string $ngaySinh = null): array
     {
         $soTienQuyDoi = (float) $quyTac->SoTienQuyDoi;
-        if ($soTienQuyDoi <= 0) {
-            return 0;
-        }
-
-        // 1. Điểm cơ bản
-        $diem = (int) floor($tongThanhToan / $soTienQuyDoi) * (int) $quyTac->SoDiemNhan;
-        if ($diem <= 0) {
-            return 0;
-        }
-
-        // 2. Xác định các điều kiện
-        $mucToiThieu = (float) ($quyTac->GiaTriHoaDonToiThieu ?? 0);
-        $heSo        = (float) ($quyTac->HeSoNhanDiem ?? 1);
-        $laSinhNhat  = ((int) ($quyTac->NhanDoiSinhNhat ?? 0) === 1 && $this->laSinhNhatHomNay($ngaySinh));
+        $mucToiThieu  = (float) ($quyTac->GiaTriHoaDonToiThieu ?? 0);
+        $heSo         = (float) ($quyTac->HeSoNhanDiem ?? 1);
+        $laSinhNhat   = ((int) ($quyTac->NhanDoiSinhNhat ?? 0) === 1 && $this->laSinhNhatHomNay($ngaySinh));
 
         // Hóa đơn có đạt giá trị tối thiểu để nhận hệ số không
-        $hoaDonDuDieuKien = ($mucToiThieu > 0 && $tongThanhToan >= $mucToiThieu && $heSo > 1);
+        $apDungHeSo = ($mucToiThieu > 0 && $tongThanhToan >= $mucToiThieu && $heSo > 1);
 
-        // 3. Áp hệ số + nhân đôi sinh nhật
-        if ($laSinhNhat) {
-            // Sinh nhật: đủ điều kiện -> (Điểm * HeSo * 2); không đủ -> (Điểm * 2)
-            if ($hoaDonDuDieuKien) {
-                $diem = (int) floor($diem * $heSo * 2);
-            } else {
-                $diem *= 2;
-            }
-        } else {
-            if ($hoaDonDuDieuKien) {
+        // 1. Điểm cơ bản
+        $diemCoBan = $soTienQuyDoi > 0
+            ? (int) floor($tongThanhToan / $soTienQuyDoi) * (int) $quyTac->SoDiemNhan
+            : 0;
+
+        $diem = $diemCoBan;
+
+        // 2 & 3. Áp hệ số + nhân đôi sinh nhật — chỉ khi có điểm cơ bản
+        if ($diemCoBan > 0) {
+            if ($laSinhNhat) {
+                // Sinh nhật: đủ điều kiện -> (Điểm * HeSo * 2); không đủ -> (Điểm * 2)
+                $diem = $apDungHeSo ? (int) floor($diem * $heSo * 2) : $diem * 2;
+            } elseif ($apDungHeSo) {
                 $diem = (int) floor($diem * $heSo);
             }
         }
 
-        return $diem;
+        return [
+            'diem'            => $diem,
+            'diemCoBan'       => $diemCoBan,
+            'soTienQuyDoi'    => $soTienQuyDoi,
+            'soDiemNhan'      => (int) $quyTac->SoDiemNhan,
+            'mucToiThieu'     => $mucToiThieu,
+            'heSo'            => $heSo,
+            'apDungHeSo'      => $apDungHeSo,
+            'laSinhNhat'      => $laSinhNhat,
+        ];
     }
 
     /**

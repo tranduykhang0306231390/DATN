@@ -89,6 +89,12 @@ class HoaDonController extends Controller
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
+            if ($this->laLoiTrungBan($e)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Bàn {$request->so_ban} vừa được mở bởi người khác, vui lòng chọn bàn trống khác.",
+                ], 422);
+            }
             return response()->json(['success' => false, 'message' => 'Có lỗi xảy ra: ' . $e->getMessage()], 500);
         }
     }
@@ -185,8 +191,18 @@ class HoaDonController extends Controller
         }
 
         $banCu = $hoaDon->SoBan;
-        $hoaDon->SoBan = $request->so_ban_moi;
-        $hoaDon->save();
+        try {
+            $hoaDon->SoBan = $request->so_ban_moi;
+            $hoaDon->save();
+        } catch (\Exception $e) {
+            if ($this->laLoiTrungBan($e)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Bàn {$request->so_ban_moi} vừa được mở bởi người khác, vui lòng chọn bàn trống khác.",
+                ], 422);
+            }
+            return response()->json(['success' => false, 'message' => 'Có lỗi xảy ra: ' . $e->getMessage()], 500);
+        }
 
         return response()->json([
             'success' => true,
@@ -219,6 +235,71 @@ class HoaDonController extends Controller
         return response()->json([
             'success' => true,
             'message' => "Đã hủy bàn {$banCu}",
+        ]);
+    }
+
+    /* ==================================================================
+     *  4b. HỦY HÓA ĐƠN ĐÃ THANH TOÁN (dành cho Admin) — hoàn điểm đã tích,
+     *      trả lại voucher đã dùng để khách dùng lại, KHÔNG đụng tới hạng
+     *      thành viên (hệ thống chỉ tự động nâng hạng, không tự hạ hạng).
+     * ================================================================== */
+    public function huyHoaDonDaThanhToan(Request $request, string $maHD)
+    {
+        $request->validate([
+            'ly_do' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $hoaDon = HoaDon::find($maHD);
+        if (!$hoaDon) {
+            return response()->json(['success' => false, 'message' => 'Không tìm thấy hóa đơn'], 404);
+        }
+        if ($hoaDon->TrangThai !== 'DaThanhToan') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Chỉ có thể hủy những hóa đơn đã thanh toán qua chức năng này.',
+            ], 422);
+        }
+
+        DB::beginTransaction();
+        try {
+            // Trả lại voucher đã dùng (nếu có) để khách dùng lại lần sau
+            $soVoucherHoan = 0;
+            if (!empty($hoaDon->MaVoucher)) {
+                $maVoucherList = array_filter(explode(',', $hoaDon->MaVoucher));
+                if (!empty($maVoucherList)) {
+                    $soVoucherHoan = VoucherKhachHang::whereIn('MaVoucherKhachHang', $maVoucherList)
+                        ->update(['TrangThai' => 'ChuaSuDung', 'NgaySuDung' => null]);
+                }
+            }
+
+            // Hoàn điểm đã tích (nếu có khách hàng gắn với hóa đơn)
+            if ($hoaDon->MaKhachHang && $hoaDon->DiemTichLuy > 0) {
+                $khachHang = KhachHang::find($hoaDon->MaKhachHang);
+                if ($khachHang) {
+                    $this->diemService->hoanDiem($khachHang, (int) $hoaDon->DiemTichLuy, $maHD);
+                }
+            }
+
+            $hoaDon->TrangThai = 'DaHuy';
+            $hoaDon->save();
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Có lỗi khi hủy hóa đơn: ' . $e->getMessage(),
+            ], 500);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Đã hủy hóa đơn đã thanh toán',
+            'data'    => [
+                'MaHoaDon'      => $maHD,
+                'DiemDaHoan'    => (int) $hoaDon->DiemTichLuy,
+                'SoVoucherHoan' => $soVoucherHoan,
+            ],
         ]);
     }
 
@@ -403,29 +484,25 @@ class HoaDonController extends Controller
             $quyTac  = $khachHang->hangThanhVien->quyTac ?? null;
 
             if ($quyTac && $quyTac->TrangThai === 'HoatDong') {
-                $diemTichLuy = $this->diemService->tinhDiem(
+                $ketQuaDiem = $this->diemService->tinhDiem(
                     $quyTac,
                     (float) $tongThanhToan,
                     $khachHang->NgaySinh
                 );
-                $maQuyTac   = $quyTac->MaQuyTac;
-                $laSinhNhat = (int) ($quyTac->NhanDoiSinhNhat ?? 0) === 1
-                    && $this->diemService->laSinhNhatHomNay($khachHang->NgaySinh);
+                $diemTichLuy = $ketQuaDiem['diem'];
+                $maQuyTac    = $quyTac->MaQuyTac;
+                $laSinhNhat  = $ketQuaDiem['laSinhNhat'];
 
-                // Thông tin quy tắc để hiển thị cho nhân viên/khách xem
-                $mucToiThieu = (float) ($quyTac->GiaTriHoaDonToiThieu ?? 0);
-                $heSo        = (float) ($quyTac->HeSoNhanDiem ?? 1);
-
+                // Thông tin chi tiết cách tính để hiển thị minh bạch cho
+                // nhân viên/khách xem lúc thanh toán (không chỉ con số cuối).
                 $quyTacInfo = [
                     'MaQuyTac'             => $quyTac->MaQuyTac,
-                    'SoTienQuyDoi'         => (float) $quyTac->SoTienQuyDoi,
-                    'SoDiemNhan'           => (int) $quyTac->SoDiemNhan,
-                    'GiaTriHoaDonToiThieu' => $mucToiThieu,
-                    'HeSoNhanDiem'         => $heSo,
-                    // Hóa đơn này có đạt ngưỡng để được nhân hệ số không
-                    'ApDungHeSo'           => $mucToiThieu > 0
-                        && $tongThanhToan >= $mucToiThieu
-                        && $heSo > 1,
+                    'SoTienQuyDoi'         => $ketQuaDiem['soTienQuyDoi'],
+                    'SoDiemNhan'           => $ketQuaDiem['soDiemNhan'],
+                    'GiaTriHoaDonToiThieu' => $ketQuaDiem['mucToiThieu'],
+                    'HeSoNhanDiem'         => $ketQuaDiem['heSo'],
+                    'ApDungHeSo'           => $ketQuaDiem['apDungHeSo'],
+                    'DiemCoBan'            => $ketQuaDiem['diemCoBan'],
                 ];
             }
         }
@@ -520,6 +597,19 @@ class HoaDonController extends Controller
     /* ==================================================================
      *  HÀM HỖ TRỢ
      * ================================================================== */
+
+    /**
+     * Có phải lỗi vi phạm ràng buộc "1 bàn chỉ được 1 hóa đơn đang treo"
+     * (unique index hoadon_soban_dangmo_unique) không.
+     * Đây là lớp bảo vệ cuối cùng chống race condition khi 2 thu ngân
+     * cùng mở/đổi 1 bàn gần như đồng thời — check trước đó (banDangBan)
+     * chỉ để fail nhanh cho UX, không đủ để chống race vì không lock.
+     */
+    private function laLoiTrungBan(\Throwable $e): bool
+    {
+        return $e instanceof \Illuminate\Database\QueryException
+            && str_contains($e->getMessage(), 'hoadon_soban_dangmo_unique');
+    }
 
     /** Bàn này có hóa đơn đang treo không */
     private function banDangBan($soBan): bool

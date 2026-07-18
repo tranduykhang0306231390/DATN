@@ -131,7 +131,7 @@ export default function QuanLyBanner() {
                 <div className="admin-hero-text">
                     <span className="admin-hero-eyebrow">Hệ thống</span>
                     <h2 className="admin-hero-title">Quản lý banner</h2>
-                    <p className="admin-hero-sub">Quản lý danh sách banner của website.</p>
+                    
                 </div>
                 <div className="admin-hero-actions">
                     <button type="button" className="admin-btn admin-btn--light" onClick={openCreate}>

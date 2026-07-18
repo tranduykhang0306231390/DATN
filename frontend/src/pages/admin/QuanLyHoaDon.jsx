@@ -111,6 +111,42 @@ export default function QuanLyHoaDon() {
         }
     };
 
+    // Hủy hóa đơn ĐÃ THANH TOÁN — hoàn điểm đã tích + trả lại voucher đã dùng.
+    // Không đụng tới hạng thành viên (hệ thống chỉ tự động nâng hạng).
+    const handleHuyDaThanhToan = async (maHD) => {
+        const confirm = await Swal.fire({
+            title: `Hủy hóa đơn ${maHD} đã thanh toán?`,
+            html: 'Hệ thống sẽ <b>hoàn lại điểm</b> đã tích và <b>trả lại voucher</b> đã dùng cho khách.<br>' +
+                  'Hạng thành viên sẽ không tự động hạ xuống. Thao tác này không thể hoàn tác.',
+            icon: 'warning',
+            input: 'text',
+            inputPlaceholder: 'Lý do hủy (không bắt buộc)',
+            showCancelButton: true,
+            confirmButtonText: 'Xác nhận hủy',
+            cancelButtonText: 'Không',
+            confirmButtonColor: '#dc2626',
+        });
+        if (!confirm.isConfirmed) return;
+        try {
+            const res = await hoaDonAdminApi.huyDaThanhToan(maHD, confirm.value);
+            const d = res.data?.data;
+            Swal.fire({
+                icon: 'success',
+                title: 'Đã hủy hóa đơn',
+                html: d?.DiemDaHoan > 0 || d?.SoVoucherHoan > 0
+                    ? `Đã hoàn ${d.DiemDaHoan} điểm` +
+                      (d.SoVoucherHoan > 0 ? ` và trả lại ${d.SoVoucherHoan} voucher.` : '.')
+                    : undefined,
+                timer: 2200,
+                showConfirmButton: false,
+            });
+            setDetailOpen(false);
+            loadList();
+        } catch (e) {
+            Swal.fire('Lỗi', e.response?.data?.message || 'Không hủy được hóa đơn', 'error');
+        }
+    };
+
     const applyFilter = () => {
         setPage(1);
         loadList();
@@ -252,6 +288,15 @@ export default function QuanLyHoaDon() {
                                 onClick={() => handleHuyBan(detail.MaHoaDon, detail.SoBan)}
                             >
                                 🚫 Hủy bàn
+                            </button>
+                        )}
+                        {detail?.TrangThai === 'DaThanhToan' && (
+                            <button
+                                type="button"
+                                className="admin-btn admin-btn--danger"
+                                onClick={() => handleHuyDaThanhToan(detail.MaHoaDon)}
+                            >
+                                🚫 Hủy &amp; hoàn điểm
                             </button>
                         )}
                     </>

@@ -50,6 +50,34 @@ class HangThanhVienController extends Controller
     }
 
     /**
+     * Đảm bảo DiemToiThieu tăng dần theo ThuTuHang: hạng có thứ tự cao hơn
+     * phải yêu cầu điểm tối thiểu >= hạng liền kề thấp hơn, và <= hạng liền
+     * kề cao hơn. Chỉ cần so với 2 hàng xóm gần nhất là đủ đảm bảo cả danh
+     * sách luôn nhất quán (quy nạp), không cần quét lại toàn bộ bảng.
+     * Trả về null nếu hợp lệ, hoặc thông báo lỗi nếu vi phạm.
+     */
+    private function kiemTraThuTuNhatQuan(int $thuTuHang, float $diemToiThieu, ?string $boQua = null): ?string
+    {
+        $hangDuoi = HangThanhVien::where('ThuTuHang', '<', $thuTuHang)
+            ->when($boQua, fn ($q) => $q->where('MaHangThanhVien', '!=', $boQua))
+            ->orderBy('ThuTuHang', 'desc')
+            ->first();
+        if ($hangDuoi && (float) $hangDuoi->DiemToiThieu > $diemToiThieu) {
+            return "Điểm tối thiểu phải >= {$hangDuoi->DiemToiThieu} (ngưỡng của hạng \"{$hangDuoi->TenHang}\", có thứ tự thấp hơn).";
+        }
+
+        $hangTren = HangThanhVien::where('ThuTuHang', '>', $thuTuHang)
+            ->when($boQua, fn ($q) => $q->where('MaHangThanhVien', '!=', $boQua))
+            ->orderBy('ThuTuHang', 'asc')
+            ->first();
+        if ($hangTren && (float) $hangTren->DiemToiThieu < $diemToiThieu) {
+            return "Điểm tối thiểu phải <= {$hangTren->DiemToiThieu} (ngưỡng của hạng \"{$hangTren->TenHang}\", có thứ tự cao hơn).";
+        }
+
+        return null;
+    }
+
+    /**
      * Danh sách hạng (tìm + phân trang), sắp theo thứ tự hạng.
      */
     public function index(Request $request)
@@ -102,6 +130,11 @@ class HangThanhVienController extends Controller
             ], 422);
         }
 
+        $loiThuTu = $this->kiemTraThuTuNhatQuan((int) $data['ThuTuHang'], (float) $data['DiemToiThieu']);
+        if ($loiThuTu) {
+            return response()->json(['success' => false, 'message' => $loiThuTu], 422);
+        }
+
         $last = HangThanhVien::orderBy('MaHangThanhVien', 'desc')->first();
         $so   = $last ? ((int) substr($last->MaHangThanhVien, 3)) + 1 : 1;
         $maHTV = 'HTV' . str_pad($so, 3, '0', STR_PAD_LEFT);
@@ -140,6 +173,11 @@ class HangThanhVienController extends Controller
             ], 422);
         }
 
+        $loiThuTu = $this->kiemTraThuTuNhatQuan((int) $data['ThuTuHang'], (float) $data['DiemToiThieu'], $ma);
+        if ($loiThuTu) {
+            return response()->json(['success' => false, 'message' => $loiThuTu], 422);
+        }
+
         $htv->TenHang            = $data['TenHang'];
         $htv->MoTa               = $data['MoTa'] ?? null;
         $htv->TongChiTieuToiThieu = $data['TongChiTieuToiThieu'];
@@ -156,7 +194,8 @@ class HangThanhVienController extends Controller
     }
 
     /**
-     * Xóa hạng — chỉ khi chưa có khách hàng nào thuộc hạng này.
+     * Xóa hạng — chỉ khi chưa có khách hàng nào thuộc hạng này và
+     * chưa có ưu đãi nào gán riêng cho hạng này.
      */
     public function destroy(string $ma)
     {
@@ -172,6 +211,17 @@ class HangThanhVienController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Không thể xóa: đang có khách hàng thuộc hạng này.',
+            ], 409);
+        }
+
+        // uudai.MaHangThanhVien không có ràng buộc FK ở DB nên phải tự chặn ở
+        // đây — nếu không, xóa hạng sẽ để lại ưu đãi trỏ tới 1 hạng không còn
+        // tồn tại (dữ liệu mồ côi), khiến ưu đãi đó vĩnh viễn không ai đổi được.
+        $coUuDai = DB::table('uudai')->where('MaHangThanhVien', $ma)->exists();
+        if ($coUuDai) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Không thể xóa: đang có ưu đãi được gán riêng cho hạng này.',
             ], 409);
         }
 

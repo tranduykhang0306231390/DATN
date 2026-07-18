@@ -201,6 +201,8 @@ Route::middleware('auth:nhanvien')->group(function () {
         Route::get('/thong-ke/tong-quan',           [ThongKeController::class, 'tongQuan']);
         Route::get('/thong-ke/chi-tiet',            [ThongKeController::class, 'chiTiet']);
 
+        Route::patch('/hoa-don/{maHD}/huy',         [HoaDonController::class, 'huyHoaDonDaThanhToan']);
+
 
         Route::get('/banner',                       [AdminBannerController::class, 'index']);
         Route::post('/banner',                      [AdminBannerController::class, 'store']);

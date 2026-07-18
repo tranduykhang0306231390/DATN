@@ -57,12 +57,22 @@ export default function TaoHoaDon() {
         }
     }, []);
 
+    // Danh sách vé phụ thuộc buổi Trưa/Tối hiện tại (tính theo giờ server) —
+    // phải tải lại mỗi lần bắt đầu chọn vé (mở bàn / gọi thêm), không chỉ
+    // 1 lần lúc vào trang, vì ca làm có thể kéo dài qua mốc buổi.
+    const loadLoaiVe = useCallback(async () => {
+        try {
+            const res = await hoaDonApi.getLoaiVe();
+            setLoaiVeList(res.data.data || []);
+        } catch {
+            setError('Không tải được danh sách vé.');
+        }
+    }, []);
+
     useEffect(() => {
-        hoaDonApi.getLoaiVe()
-            .then((res) => setLoaiVeList(res.data.data))
-            .catch(() => setError('Không tải được danh sách vé.'));
+        loadLoaiVe();
         loadBanTreo();
-    }, [loadBanTreo]);
+    }, [loadLoaiVe, loadBanTreo]);
 
     // ── Chọn bàn ────────────────────────────────────────────────
     const chonBan = (n) => {
@@ -75,6 +85,7 @@ export default function TaoHoaDon() {
             setSoBan(null);
             setMode('xemBan');
         } else {
+            loadLoaiVe();
             setSoBan(n);
             setBill(null);
             setMode('moBan');
@@ -466,7 +477,7 @@ export default function TaoHoaDon() {
                                         Hủy bàn  | Thanh toán */}
                                     <div style={btnGrid}>
                                         <button className="btn-primary" style={btnCell}
-                                            onClick={() => { setCart({}); setDangGoiThem(true); }}>
+                                            onClick={() => { setCart({}); loadLoaiVe(); setDangGoiThem(true); }}>
                                             ➕ Gọi thêm
                                         </button>
                                         <button className="btn-outline" style={btnCell}
@@ -639,6 +650,26 @@ export default function TaoHoaDon() {
                                             <>
                                                 ⭐ Điểm tích lũy: <b>+{uoc.DiemTichLuy} điểm</b>
                                                 {uoc.LaSinhNhat && <span> 🎂 (đã nhân đôi sinh nhật)</span>}
+
+                                                {/* Cách tính — minh bạch công thức cho nhân viên/khách xem */}
+                                                {uoc.QuyTac && (
+                                                    <div style={{ fontSize: 12, marginTop: 6, color: '#78716c', lineHeight: 1.7 }}>
+                                                        {fmt(uoc.TongThanhToan)} ÷ {fmt(uoc.QuyTac.SoTienQuyDoi)} × {uoc.QuyTac.SoDiemNhan}
+                                                        {' '}= <b>{uoc.QuyTac.DiemCoBan} điểm</b> cơ bản
+                                                        {uoc.QuyTac.ApDungHeSo && (
+                                                            <div>
+                                                                × hệ số <b>{uoc.QuyTac.HeSoNhanDiem}</b> (hóa đơn từ {fmt(uoc.QuyTac.GiaTriHoaDonToiThieu)})
+                                                            </div>
+                                                        )}
+                                                        {!uoc.QuyTac.ApDungHeSo && uoc.QuyTac.HeSoNhanDiem > 1 && uoc.QuyTac.GiaTriHoaDonToiThieu > 0 && (
+                                                            <div>
+                                                                Đạt {fmt(uoc.QuyTac.GiaTriHoaDonToiThieu)} trở lên để nhân hệ số ×{uoc.QuyTac.HeSoNhanDiem}
+                                                            </div>
+                                                        )}
+                                                        {uoc.LaSinhNhat && <div>× 2 🎂 (sinh nhật hôm nay)</div>}
+                                                    </div>
+                                                )}
+
                                                 <div style={{ fontSize: 12, marginTop: 4 }}>
                                                     Điểm sau giao dịch: <b>{khachHang.TongDiem + uoc.DiemTichLuy}</b>
                                                 </div>
