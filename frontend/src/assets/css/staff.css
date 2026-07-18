@@ -108,6 +108,31 @@
   font-weight: 600;
 }
 
+/* Nút xác nhận trong modal-footer — cỡ nhỏ, KHÔNG full-width như .btn-success */
+.btn-confirm {
+  padding: 8px 20px;
+  background: var(--clr-success);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.btn-confirm:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Modifier: biến nút bất kỳ thành nút chiếm trọn chiều ngang.
+   Khử margin-top của .btn-success và margin-left:auto của .btn-ghost. */
+.btn-block {
+  width: 100%;
+  margin-top: 0;
+  margin-left: 0;
+  margin-bottom: 8px;
+  box-sizing: border-box;
+}
+.btn-block:last-child { margin-bottom: 0; }
+
 .btn-search {
   padding: 8px 16px;
   background: var(--clr-primary);
@@ -204,20 +229,25 @@
 /* ── Modal ──────────────────────────────────────────────────── */
 .modal-overlay {
   position: fixed;
-  inset: 0;
+  top: 0; left: 0; right: 0; bottom: 0;
   background: rgba(0,0,0,.45);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 100;
+  z-index: 1000;
+  padding: 20px;              /* luôn cách mép màn hình 20px */
+  box-sizing: border-box;
 }
 .modal-box {
   background: var(--clr-bg-card);
   border-radius: 16px;
-  width: 90%;
+  width: 100%;
   max-width: 600px;
-  max-height: 88vh;
-  overflow: auto;
+  max-height: calc(100vh - 40px);
+  display: flex;
+  flex-direction: column;     /* header / body / footer xếp dọc */
+  overflow: hidden;
+  text-align: left;           /* chặn text-align kế thừa từ ngoài */
   box-shadow: 0 20px 60px rgba(0,0,0,.25);
 }
 .modal-header {
@@ -226,16 +256,22 @@
   align-items: flex-start;
   padding: 20px 24px 16px;
   border-bottom: 1px solid #f3f4f6;
+  flex-shrink: 0;
 }
 .modal-title { font-weight: 700; font-size: 17px; color: var(--clr-text); }
 .modal-sub   { font-size: 13px; color: var(--clr-text-sub); margin-top: 3px; }
-.modal-body  { padding: 20px 24px; }
+.modal-body  {
+  padding: 20px 24px;
+  overflow-y: auto;           /* chỉ phần thân cuộn */
+  flex: 1;
+}
 .modal-footer {
   padding: 14px 24px;
   border-top: 1px solid #f3f4f6;
   display: flex;
   justify-content: flex-end;
   gap: 10px;
+  flex-shrink: 0;
 }
 .btn-close-modal {
   background: none;
@@ -243,6 +279,8 @@
   font-size: 18px;
   cursor: pointer;
   color: var(--clr-text-mute);
+  line-height: 1;
+  padding: 0;
 }
 
 /* ── Stat card ──────────────────────────────────────────────── */
@@ -346,3 +384,75 @@
 .result-row  { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f3f4f6; }
 
 .ma-hd { font-weight: 700; color: var(--clr-primary); font-size: 13px; }
+
+/* ── Sơ đồ bàn ──────────────────────────────────────────────── */
+.legend-row { font-size: 13px; color: var(--clr-text-sub); margin-bottom: 14px; }
+.legend-dot {
+  display: inline-block;
+  width: 12px; height: 12px;
+  border-radius: 3px;
+  vertical-align: middle;
+  margin-right: 4px;
+}
+.legend-dot--trong { background: #dcfce7; border: 1px solid #16a34a; }
+.legend-dot--ban   { background: #fee2e2; border: 1px solid #dc2626; }
+
+.ban-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(78px, 1fr));
+  gap: 10px;
+}
+.ban-item {
+  padding: 14px 8px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 15px;
+  font-family: inherit;
+  transition: transform .12s;
+}
+.ban-item:hover   { transform: translateY(-2px); }
+.ban-item-sub     { font-size: 10px; font-weight: 500; margin-top: 2px; }
+.ban-item--trong  { background: #dcfce7; color: #15803d; }
+.ban-item--ban    { background: #fee2e2; color: #b91c1c; }
+.ban-item--active { border: 2px solid var(--clr-text); }
+
+/* Lưới chọn bàn trong hộp thoại đổi bàn (SweetAlert) */
+.ban-pick-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 4px;
+}
+.ban-pick {
+  padding: 14px 4px;
+  border-radius: 10px;
+  border: 1px solid #bbf7d0;
+  background: #dcfce7;
+  color: #15803d;
+  font-weight: 700;
+  font-size: 14px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background .15s, color .15s;
+}
+.ban-pick:hover { background: var(--clr-success); color: #fff; }
+
+/* ── Khung điểm tích lũy dự kiến ────────────────────────────── */
+.point-box {
+  margin-top: 12px;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  color: #92400e;
+  font-size: 14px;
+}
+.point-box--none {
+  background: #f3f4f6;
+  border-color: var(--clr-border);
+  color: var(--clr-text-sub);
+  font-size: 13px;
+}
+.point-box-sub { font-size: 12px; margin-top: 4px; }

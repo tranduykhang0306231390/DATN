@@ -2,33 +2,38 @@
 import axiosClient from "./axiosClient";
 
 const hoaDonApi = {
-    /** Lấy danh sách loại vé */
-
     getLoaiVe: () => axiosClient.get("/loai-ve"),
-
-    /** Tra cứu KH + voucher theo số điện thoại */
     lookupKhachHang: (soDienThoai) =>
-        axiosClient.post("/khach-hang/lookup", {
-            so_dien_thoai: soDienThoai,
-        }),
+        axiosClient.post("/khach-hang/lookup", { so_dien_thoai: soDienThoai }),
 
-    /** Tạo hóa đơn */
+    // Danh sách bàn đang phục vụ
+    banDangTreo: () => axiosClient.get("/quan-ly-hoa-don/ban-dang-treo"),
 
-    taoHoaDon: (payload) => axiosClient.post("/hoa-don", payload),
+    // 1. Mở bàn: { so_ban, chi_tiet }
+    moBan: (payload) => axiosClient.post("/hoa-don", payload),
 
-    /** Xem chi tiết hóa đơn */
+    // 2. Gọi thêm: { chi_tiet }
+    themMon: (maHD, payload) => axiosClient.post(`/hoa-don/${maHD}/them-mon`, payload),
+
+    // 3. Đổi bàn: { so_ban_moi }
+    doiBan: (maHD, soBanMoi) =>
+        axiosClient.patch(`/hoa-don/${maHD}/doi-ban`, { so_ban_moi: soBanMoi }),
+
+    // 4. Hủy bàn
+    huyBan: (maHD) => axiosClient.patch(`/hoa-don/${maHD}/huy-ban`),
+
+    // 5. Ước tính trước khi thanh toán: { ma_khach_hang, vouchers_ap_dung }
+    uocTinh: (maHD, payload) => axiosClient.post(`/hoa-don/${maHD}/uoc-tinh`, payload),
+
+    // 6. Thanh toán: { ma_khach_hang, vouchers_ap_dung }
+    thanhToan: (maHD, payload) => axiosClient.patch(`/hoa-don/${maHD}/thanh-toan`, payload),
+
     chiTietHoaDon: (maHD) => axiosClient.get(`/hoa-don/${maHD}`),
 };
 
 export default hoaDonApi;
 
 export const quanLyHoaDonApi = {
-    /** Danh sách hóa đơn có lọc + phân trang */
     danhSach: (params) => axiosClient.get("/quan-ly-hoa-don", { params }),
- 
-    /** Chi tiết hóa đơn */
     chiTiet: (maHD) => axiosClient.get(`/quan-ly-hoa-don/${maHD}`),
- 
-    /** Hủy hóa đơn */
-    huy: (maHD) => axiosClient.patch(`/quan-ly-hoa-don/${maHD}/huy`),
 };

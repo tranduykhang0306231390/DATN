@@ -15,9 +15,22 @@ use App\Http\Controllers\Api\TraCuuKhachHangController;
 use App\Http\Controllers\Api\QuanLyHoaDonController;
 use App\Http\Controllers\Api\PhanHoiKhachHangController;
 use App\Http\Controllers\Api\Admin\UuDaiController;
+use App\Http\Controllers\Api\Admin\QuyTacController;
+use App\Http\Controllers\Api\Admin\HangThanhVienController;
+use App\Http\Controllers\Api\Admin\NhanVienController;
+use App\Http\Controllers\Api\Admin\KhachHangController;
+use App\Http\Controllers\Api\Admin\ThongBaoController;
+use App\Http\Controllers\Api\Admin\PhanHoiController;
+use App\Http\Controllers\Api\Admin\ThongKeController;
+use App\Http\Controllers\Api\Admin\WebSettingController;
+
+
+
 use App\Http\Controllers\Api\MemberRankHistoryController;
-use App\Http\Controllers\Api\WebSettingController;
+
+
 use App\Http\Controllers\Api\NotificationController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -32,7 +45,10 @@ Route::post('/logout', [AuthController::class, 'logout']);
 Route::get('/banner', [BannerController::class, 'index']);
 Route::get('/tickets', [TicketController::class, 'index']);
 Route::get('/tickets/hot', [TicketController::class, 'hot']);
-Route::get('/web-setting', [WebSettingController::class, 'index']);
+Route::get('/web-setting', [WebSettingController::class, 'show']); 
+Route::put('/web-setting', [WebSettingController::class, 'update']);
+Route::post('/member/forgot-password', [AuthController::class, 'forgotPassword']);
+Route::post('/member/reset-password', [AuthController::class, 'resetPassword']);
 /*
 |--------------------------------------------------------------------------
 | MEMBER
@@ -110,28 +126,84 @@ Route::middleware('auth:nhanvien')->group(function () {
     Route::post('/hoa-don', [HoaDonController::class, 'store']);
     Route::get('/hoa-don/{maHoaDon}', [HoaDonController::class, 'show']);
 
-    Route::get('/quan-ly-hoa-don', [QuanLyHoaDonController::class, 'index']);
-    Route::get('/quan-ly-hoa-don/{maHD}', [QuanLyHoaDonController::class, 'show']);
-    Route::patch('/quan-ly-hoa-don/{maHD}/huy', [QuanLyHoaDonController::class, 'huy']);
+    Route::post('/hoa-don',                      [HoaDonController::class, 'store']);       // mở bàn
+    Route::post('/hoa-don/{maHD}/them-mon',      [HoaDonController::class, 'themMon']);     // gọi thêm
+    Route::patch('/hoa-don/{maHD}/doi-ban',      [HoaDonController::class, 'doiBan']);      // đổi bàn
+    Route::patch('/hoa-don/{maHD}/huy-ban',      [HoaDonController::class, 'huyBan']);      // hủy bàn
+    Route::post('/hoa-don/{maHD}/uoc-tinh',      [HoaDonController::class, 'uocTinh']);
 
+    Route::get('/quan-ly-hoa-don',               [HoaDonController::class, 'index']);
+    Route::get('/quan-ly-hoa-don/ban-dang-treo', [HoaDonController::class, 'banDangTreo']);
+    Route::get('/quan-ly-hoa-don/{maHD}',        [HoaDonController::class, 'show']);
+    Route::post('/hoa-don',                       [HoaDonController::class, 'store']);
+    Route::patch('/hoa-don/{maHD}/thanh-toan',   [HoaDonController::class, 'thanhToan']);
+     
+  
+
+
+    Route::middleware('staff:Admin')->prefix('admin')->group(function () {
+        Route::get('/uu-dai/tuy-chon',              [UuDaiController::class, 'tuyChon']);
+        Route::get('/uu-dai',                       [UuDaiController::class, 'index']);
+        Route::get('/uu-dai/{ma}',                  [UuDaiController::class, 'show']);
+        Route::post('/uu-dai',                      [UuDaiController::class, 'store']);
+        Route::put('/uu-dai/{ma}',                  [UuDaiController::class, 'update']);
+        Route::patch('/uu-dai/{ma}/trang-thai',     [UuDaiController::class, 'toggleTrangThai']);
+
+
+        Route::get('/loai-ve',                      [LoaiVeController::class, 'adminIndex']);
+        Route::post('/loai-ve',                     [LoaiVeController::class, 'store']);
+        Route::put('/loai-ve/{ma}',                 [LoaiVeController::class, 'update']);
+        Route::patch('/loai-ve/{ma}/trang-thai',    [LoaiVeController::class, 'toggleTrangThai']);
+
+
+        Route::get('/quy-tac',                      [QuyTacController::class, 'index']);
+        Route::get('/quy-tac/{ma}',                 [QuyTacController::class, 'show']);
+        Route::post('/quy-tac',                     [QuyTacController::class, 'store']);
+        Route::put('/quy-tac/{ma}',                 [QuyTacController::class, 'update']);
+        Route::patch('/quy-tac/{ma}/trang-thai',    [QuyTacController::class, 'toggleTrangThai']);
+        
+
+        Route::get('/hang-thanh-vien/tuy-chon',     [HangThanhVienController::class, 'tuyChon']);
+        Route::get('/hang-thanh-vien',              [HangThanhVienController::class, 'index']);
+        Route::get('/hang-thanh-vien/{ma}',         [HangThanhVienController::class, 'show']);
+        Route::post('/hang-thanh-vien',             [HangThanhVienController::class, 'store']);
+        Route::put('/hang-thanh-vien/{ma}',         [HangThanhVienController::class, 'update']);
+        Route::delete('/hang-thanh-vien/{ma}',      [HangThanhVienController::class, 'destroy']);
+        
+        Route::get('/nhan-vien',                    [NhanVienController::class, 'index']);
+        Route::get('/nhan-vien/{ma}',               [NhanVienController::class, 'show']);
+        Route::post('/nhan-vien',                   [NhanVienController::class, 'store']);
+        Route::put('/nhan-vien/{ma}',               [NhanVienController::class, 'update']);
+        Route::patch('/nhan-vien/{ma}/trang-thai',  [NhanVienController::class, 'toggleTrangThai']);
+
+        Route::get('/khach-hang/tuy-chon',          [KhachHangController::class, 'tuyChon']);
+        Route::get('/khach-hang',                   [KhachHangController::class, 'index']);
+        Route::get('/khach-hang/{ma}',              [KhachHangController::class, 'show']);
+        Route::put('/khach-hang/{ma}',              [KhachHangController::class, 'update']);
+        Route::patch('/khach-hang/{ma}/trang-thai', [KhachHangController::class, 'toggleTrangThai']);
+
+        Route::get('/thong-bao/tuy-chon',           [ThongBaoController::class, 'tuyChon']);
+        Route::get('/thong-bao',                    [ThongBaoController::class, 'index']);
+        Route::post('/thong-bao',                   [ThongBaoController::class, 'store']);
+
+        Route::get('/phan-hoi',                     [PhanHoiController::class, 'index']);
+        Route::get('/phan-hoi/{ma}',                [PhanHoiController::class, 'show']);
+        Route::patch('/phan-hoi/{ma}/tra-loi',      [PhanHoiController::class, 'traLoi']);
+
+        Route::get('/lich-su-quy-tac',              [QuyTacController::class, 'lichSu']);
+
+        Route::get('/lich-su-hang',                 [KhachHangController::class, 'lichSuHang']);
+
+        Route::get('/lich-su-diem',                 [KhachHangController::class, 'lichSuDiem']);
+
+        Route::get('/thong-ke/tong-quan',           [ThongKeController::class, 'tongQuan']);
+        Route::get('/thong-ke/chi-tiet',            [ThongKeController::class, 'chiTiet']);
+
+        
+    });
+   
 
 });
 
 
-// ------- ADMIN --------
-Route::middleware('staff:Admin')->prefix('admin')->group(function () {
-    Route::get('/uu-dai/tuy-chon', [UuDaiController::class, 'tuyChon']);
-    Route::get('/uu-dai', [UuDaiController::class, 'index']);
-    Route::get('/uu-dai/{ma}', [UuDaiController::class, 'show']);
-    Route::post('/uu-dai', [UuDaiController::class, 'store']);
-    Route::put('/uu-dai/{ma}', [UuDaiController::class, 'update']);
-    Route::patch('/uu-dai/{ma}/trang-thai', [UuDaiController::class, 'toggleTrangThai']);
-
-
-    Route::get('/loai-ve', [LoaiVeController::class, 'adminIndex']);
-    Route::post('/loai-ve', [LoaiVeController::class, 'store']);
-    Route::put('/loai-ve/{ma}', [LoaiVeController::class, 'update']);
-    Route::patch('/loai-ve/{ma}/trang-thai', [LoaiVeController::class, 'toggleTrangThai']);
-
-});
 

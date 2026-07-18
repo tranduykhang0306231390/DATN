@@ -28,10 +28,7 @@ function MemberPointSummary({ points }) {
 
     const cards = [
 
-        {
-            title: "Điểm hiện tại",
-            value: points.TongDiem.toLocaleString()
-        },
+     
 
         {
             title: "Tổng hóa đơn",
@@ -48,11 +45,7 @@ function MemberPointSummary({ points }) {
             value: points.TongDiemNhan.toLocaleString()
         },
 
-        {
-            title: "Điểm đã sử dụng",
-            value: points.TongDiemDaDung.toLocaleString()
-        },
-
+        
         {
             title: "Hạng thành viên",
             value: getRankName(points.HangThanhVien)

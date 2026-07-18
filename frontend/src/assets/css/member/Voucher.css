@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap');
 
 /* =====================================================
-   MEMBER VOUCHER - PREMIUM BUFFET STYLE
+   MEMBER VOUCHER - COMPACT PREMIUM STYLE
 ===================================================== */
 
 :root{
@@ -14,33 +14,33 @@
     --border:#ECE6D8;
     --text:#1E2A24;
     --muted:#707070;
-    --shadow:0 12px 32px rgba(0,0,0,.08);
+    --shadow:0 8px 22px rgba(0,0,0,.08);
 }
 
 .voucher-page{
     max-width:1320px;
     margin:0 auto;
-    padding:24px 12px 40px;
+    padding:20px 10px 35px;
     font-family:"Be Vietnam Pro",sans-serif;
 }
 
 .voucher-section{
-    margin-bottom:42px;
+    margin-bottom:34px;
 }
 
 .section-header{
     display:flex;
     justify-content:space-between;
     align-items:center;
-    margin-bottom:24px;
-    padding-bottom:14px;
+    margin-bottom:18px;
+    padding-bottom:12px;
     border-bottom:2px solid var(--gold-light);
 }
 
 .section-header h3{
     margin:0;
     font-family:"Nunito",sans-serif;
-    font-size:30px;
+    font-size:26px;
     font-weight:800;
     color:var(--primary-dark);
 }
@@ -48,38 +48,46 @@
 .section-header span{
     background:linear-gradient(135deg,var(--gold),#B58B2F);
     color:#fff;
-    padding:8px 18px;
+    padding:6px 14px;
     border-radius:999px;
-    font-size:13px;
+    font-size:12px;
     font-weight:700;
-    box-shadow:0 6px 18px rgba(200,161,74,.25);
+    box-shadow:0 4px 12px rgba(200,161,74,.2);
 }
+
+/* ===========================
+   GRID NHỎ HƠN
+=========================== */
 
 .voucher-grid{
     display:grid;
-    grid-template-columns:repeat(auto-fill,minmax(320px,1fr));
-    gap:24px;
+    grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+    gap:16px;
 }
 
 .empty-voucher{
     background:#fff;
     border:2px dashed #d8d8d8;
-    border-radius:18px;
-    padding:60px 20px;
+    border-radius:14px;
+    padding:40px 20px;
     text-align:center;
     color:var(--muted);
 }
+
+/* ===========================
+   CARD
+=========================== */
 
 .my-voucher-card,
 .store-voucher-card{
     position:relative;
     background:linear-gradient(145deg,#fff,#fcfbf7);
     border:1px solid var(--border);
-    border-radius:22px;
-    padding:24px;
+    border-radius:14px;
+    padding:14px;
     overflow:hidden;
     box-shadow:var(--shadow);
-    transition:.35s ease;
+    transition:.3s ease;
 }
 
 .my-voucher-card::before{
@@ -87,7 +95,7 @@
     position:absolute;
     left:0;
     top:0;
-    width:6px;
+    width:5px;
     height:100%;
     background:linear-gradient(var(--gold),var(--primary));
 }
@@ -98,95 +106,131 @@
     left:0;
     top:0;
     width:100%;
-    height:5px;
+    height:4px;
     background:linear-gradient(90deg,var(--gold),var(--primary));
 }
 
 .my-voucher-card:hover,
 .store-voucher-card:hover{
-    transform:translateY(-8px);
-    box-shadow:0 22px 48px rgba(0,0,0,.13);
+    transform:translateY(-5px);
+    box-shadow:0 14px 28px rgba(0,0,0,.12);
 }
+
+/* ===========================
+   HEADER
+=========================== */
 
 .voucher-top,
 .voucher-header{
     display:flex;
     justify-content:space-between;
     align-items:flex-start;
-    gap:16px;
-    margin-bottom:18px;
+    gap:10px;
+    margin-bottom:12px;
 }
 
 .voucher-top h4,
 .voucher-header h4{
     margin:0;
     color:var(--text);
-    font-size:22px;
+    font-size:17px;
     font-weight:800;
     font-family:"Nunito",sans-serif;
+    line-height:1.3;
 }
 
 .status{
-    padding:6px 15px;
+    padding:5px 12px;
     border-radius:999px;
-    font-size:12px;
+    font-size:11px;
     font-weight:700;
+    white-space:nowrap;
 }
 
-.status.active{background:#EAF7EF;color:var(--primary);}
-.status.used{background:#EFEFEF;color:#666;}
-.status.expired{background:#FFF0F0;color:#D63E3E;}
+.status.active{
+    background:#EAF7EF;
+    color:var(--primary);
+}
+
+.status.used{
+    background:#EFEFEF;
+    color:#666;
+}
+
+.status.expired{
+    background:#FFF0F0;
+    color:#D63E3E;
+}
+
+/* ===========================
+   GIÁ TRỊ GIẢM
+=========================== */
 
 .voucher-money,
 .discount{
     font-family:"Nunito",sans-serif;
-    font-size:38px;
+    font-size:24px;
     font-weight:900;
     color:var(--gold);
-    margin:14px 0;
+    margin:8px 0;
 }
+
+/* ===========================
+   MÔ TẢ
+=========================== */
 
 .voucher-desc,
 .voucher-description{
     color:var(--muted);
-    line-height:1.8;
-    margin-bottom:18px;
+    font-size:13px;
+    line-height:1.5;
+    margin-bottom:12px;
 }
+
+/* ===========================
+   INFO
+=========================== */
 
 .voucher-info,
 .voucher-detail{
     display:flex;
     justify-content:space-between;
-    gap:16px;
+    gap:10px;
     border-top:1px solid #ededed;
-    padding-top:18px;
+    padding-top:12px;
     color:var(--muted);
-    font-size:14px;
+    font-size:12px;
 }
 
 .voucher-info strong,
 .voucher-detail strong{
     display:block;
     color:var(--primary-dark);
-    margin-bottom:4px;
+    margin-bottom:3px;
+    font-size:12px;
 }
+
+/* ===========================
+   BUTTON
+=========================== */
 
 .exchange-btn{
     width:100%;
     border:none;
     border-radius:999px;
-    padding:14px;
+    padding:10px;
+    margin-top:14px;
     background:linear-gradient(90deg,var(--primary),#14754B);
     color:#fff;
-    font-size:15px;
+    font-size:13px;
     font-weight:700;
     cursor:pointer;
-    transition:.3s;
+    transition:.25s;
 }
 
 .exchange-btn:hover{
-    transform:translateY(-3px);
-    box-shadow:0 14px 28px rgba(11,93,59,.28);
+    transform:translateY(-2px);
+    box-shadow:0 8px 18px rgba(11,93,59,.25);
 }
 
 .exchange-btn:disabled{
@@ -196,17 +240,34 @@
     box-shadow:none;
 }
 
+/* ===========================
+   LOADING
+=========================== */
+
 .voucher-loading{
     display:flex;
     justify-content:center;
     align-items:center;
-    min-height:350px;
+    min-height:250px;
     color:var(--primary);
-    font-size:24px;
+    font-size:20px;
     font-weight:800;
 }
 
+/* ===========================
+   RESPONSIVE
+=========================== */
+
+@media(max-width:992px){
+
+    .voucher-grid{
+        grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
+    }
+
+}
+
 @media(max-width:768px){
+
     .voucher-grid{
         grid-template-columns:1fr;
     }
@@ -214,7 +275,7 @@
     .section-header{
         flex-direction:column;
         align-items:flex-start;
-        gap:12px;
+        gap:10px;
     }
 
     .voucher-info,
@@ -224,6 +285,67 @@
 
     .voucher-money,
     .discount{
-        font-size:32px;
+        font-size:22px;
     }
+    .voucher-pagination {
+    display: flex;
+    justify-content: center;
+    margin-top: 24px;
+}
+
+.pagination-nav {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 999px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+.page-btn {
+    min-width: 38px;
+    height: 38px;
+    padding: 0 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 999px;
+    background: transparent;
+    color: #374151;
+    font-weight: 500;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.page-btn:hover:not(:disabled):not(.active) {
+    background: #f3f4f6;
+    color: #14532d;
+}
+
+.page-btn.active {
+    background: #166534; /* xanh đậm đồng bộ với header BUFFET VIP */
+    color: #fff;
+    font-weight: 600;
+    box-shadow: 0 2px 6px rgba(22, 101, 52, 0.3);
+}
+
+.page-btn--arrow {
+    color: #6b7280;
+}
+
+.page-btn--arrow:hover:not(:disabled) {
+    background: #f3f4f6;
+    color: #166534;
+}
+
+.page-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    background: transparent;
+}
+
 }

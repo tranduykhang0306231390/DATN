@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axiosClient from "../../api/axiosClient";
+import { useLocation, useNavigate } from "react-router-dom"; import axiosClient from "../../api/axiosClient";
 import InvoiceDetailModal from "./InvoiceDetailModal";
 
 import "../../assets/css/member/Invoice.css";
@@ -14,12 +14,26 @@ function Invoice() {
     const [lastPage, setLastPage] = useState(1);
     const [total, setTotal] = useState(0);
     const [loading, setLoading] = useState(true);
-
+    const location = useLocation();
+    const navigate = useNavigate();
+    const [pendingInvoice, setPendingInvoice] = useState(null);
     useEffect(() => {
         loadInvoices(currentPage);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentPage]);
+    useEffect(() => {
+        if (location.state?.openInvoice) {
+            setPendingInvoice(location.state.openInvoice);
+            navigate(location.pathname,{replace:true,state:{}});
+        }
+    }, [location.state,navigate,location.pathname]);
 
+    useEffect(()=>{
+        if(!loading && pendingInvoice){
+            handleViewDetail(pendingInvoice);
+            setPendingInvoice(null);
+        }
+    },[loading,pendingInvoice]);
     const loadInvoices = async (page = 1) => {
 
         setLoading(true);
@@ -123,8 +137,6 @@ function Invoice() {
 
                                 <th>Tổng tiền</th>
 
-                                <th>Điểm sử dụng</th>
-
                                 <th width="170">
                                     Thao tác
                                 </th>
@@ -140,7 +152,7 @@ function Invoice() {
                                 <tr>
 
                                     <td
-                                        colSpan="5"
+                                        colSpan="4"
                                         className="invoice-loading"
                                     >
                                         Đang tải dữ liệu...
@@ -153,7 +165,7 @@ function Invoice() {
                                 <tr>
 
                                     <td
-                                        colSpan="5"
+                                        colSpan="4"
                                         className="invoice-empty"
                                     >
                                         Bạn chưa có hóa đơn nào.
@@ -179,16 +191,6 @@ function Invoice() {
 
                                         <td className="invoice-price">
                                             {Number(item.TongTien).toLocaleString()} đ
-                                        </td>
-
-                                        <td>
-
-                                            <span className="invoice-point">
-
-                                                Điểm sử dụng {item.DiemSuDung}
-
-                                            </span>
-
                                         </td>
 
                                         <td>

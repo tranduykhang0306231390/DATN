@@ -30,8 +30,10 @@ export const getMemberPoints = () => {
     return axiosClient.get("/member/points");
 };
 
-export const getPointHistory = (page = 1) => {
-    return axiosClient.get(`/member/history?page=${page}`);
+export const getPointHistory = (params = {}) => {
+    return axiosClient.get("/member/history", {
+        params
+    });
 };
 
 /* BANNER */
@@ -49,8 +51,12 @@ export const getHotTickets = () => {
 };
 
 /* VOUCHER */
-export const getMyVoucher = () => {
-    return axiosClient.get("/member/my-vouchers");
+export const getMyVoucher = (page = 1) => {
+    return axiosClient.get("/member/my-vouchers", {
+        params: {
+            page
+        }
+    });
 };
 
 export const getVoucherStore = () => {
@@ -82,4 +88,11 @@ export const sendInvoiceFeedback = (maHoaDon, data) => {
 /* RANK HISTORY - lịch sử thăng hạng thành viên */
 export const getRankHistory = () => {
     return axiosClient.get("/member/rank-history");
+};
+export const forgotPassword = (data) => {
+    return axios.post(`${API_URL}/member/forgot-password`, data);
+};
+
+export const resetPassword = (data) => {
+    return axios.post(`${API_URL}/member/reset-password`, data);
 };

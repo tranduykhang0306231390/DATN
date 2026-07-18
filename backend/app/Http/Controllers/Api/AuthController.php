@@ -48,6 +48,14 @@ class AuthController extends Controller
             ], 401);
         }
 
+        // Kiểm tra trạng thái tài khoản
+        if ($khachHang->TrangThai !== 'HoatDong') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tài khoản đã bị khóa.'
+            ], 403);
+        }
+
         $token = JWTAuth::fromUser($khachHang);
 
         return response()->json([
@@ -92,6 +100,12 @@ class AuthController extends Controller
                 'success' => false,
                 'message' => 'Mật khẩu không đúng'
             ], 401);
+        }
+        if ($nhanVien->TrangThai !== 'HoatDong') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tài khoản đã bị khóa.'
+            ], 403);
         }
 
         $token = JWTAuth::fromUser($nhanVien);
@@ -289,6 +303,83 @@ class AuthController extends Controller
             'success' => true,
             'message' => 'Cập nhật thông tin thành công',
             'user' => $khachHang->fresh()
+        ]);
+    }
+    public function forgotPassword(Request $request)
+    {
+        $request->validate(
+            [
+                'Email' => 'required|email',
+                'SoDienThoai' => 'required',
+                'NgaySinh' => 'required|date'
+            ],
+            [
+                'Email.required' => 'Vui lòng nhập email.',
+                'Email.email' => 'Email không hợp lệ.',
+                'SoDienThoai.required' => 'Vui lòng nhập số điện thoại.',
+                'NgaySinh.required' => 'Vui lòng nhập ngày sinh.'
+            ]
+        );
+
+        $khachHang = KhachHang::where('Email', $request->Email)
+            ->where('SoDienThoai', $request->SoDienThoai)
+            ->where('NgaySinh', $request->NgaySinh)
+            ->first();
+
+        if (!$khachHang) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Thông tin xác thực không chính xác.'
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Xác thực thành công.'
+        ]);
+    }
+    public function resetPassword(Request $request)
+    {
+        $request->validate(
+            [
+                'Email' => 'required|email',
+                'SoDienThoai' => 'required',
+                'NgaySinh' => 'required|date',
+
+                'MatKhau' => [
+                    'required',
+                    'string',
+                    'min:8',
+                    'max:20',
+                    'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*#?&]).+$/'
+                ],
+
+                'MatKhau_confirmation' => [
+                    'required',
+                    'same:MatKhau'
+                ]
+            ]
+        );
+
+        $khachHang = KhachHang::where('Email', $request->Email)
+            ->where('SoDienThoai', $request->SoDienThoai)
+            ->where('NgaySinh', $request->NgaySinh)
+            ->first();
+
+        if (!$khachHang) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Thông tin xác thực không đúng.'
+            ], 404);
+        }
+
+        $khachHang->MatKhau = bcrypt($request->MatKhau);
+
+        $khachHang->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Đổi mật khẩu thành công.'
         ]);
     }
 }

@@ -152,9 +152,6 @@ export default function QuanLyLoaiVe() {
                 <div className="admin-hero-text">
                     <span className="admin-hero-eyebrow">Vận hành</span>
                     <h2 className="admin-hero-title">Quản lý loại vé</h2>
-                    <p className="admin-hero-sub">
-                        Thêm, chỉnh giá và bật/tắt các loại vé buffet.
-                    </p>
                 </div>
                 <div className="admin-hero-actions">
                     <button type="button" className="admin-btn admin-btn--light" onClick={openCreate}>
@@ -163,7 +160,7 @@ export default function QuanLyLoaiVe() {
                 </div>
             </header>
 
-            {/* Thanh công cụ lọc */}
+            {/* Thanh công cụ */}
             <div className="admin-toolbar">
                 <input
                     className="admin-input"

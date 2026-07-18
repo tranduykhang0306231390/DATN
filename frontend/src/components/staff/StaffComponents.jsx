@@ -10,7 +10,9 @@ export const fmtDate = (str) =>
 
 // ─── Hằng số dùng chung ──────────────────────────────────────────────────────
 export const TRANG_THAI_CONFIG = {
+    ChuaThanhToan: { badgeClass: 'badge badge-gold',    label: 'Đang phục vụ' },
     DaThanhToan: { badgeClass: 'badge badge-success', label: 'Đã thanh toán' },
+    
     DaHuy:       { badgeClass: 'badge badge-danger',  label: 'Đã hủy' },
 };
 

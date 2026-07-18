@@ -638,7 +638,7 @@
 
 .save-btn{
     margin-top:0px;
-    padding:10px 30px;
+    padding:0px 20px;
     font-family:var(--font-sans);
     font-size:14px;
     font-weight:600;
@@ -668,6 +668,80 @@
 }
 
 /* =====================================================
+   HỒ SƠ — CHẾ ĐỘ XEM / SỬA (VIEW & EDIT TOGGLE)
+===================================================== */
+
+.profile-header{
+    display:flex;
+    justify-content:flex-start;
+    align-items:center;
+    margin-bottom:20px;
+}
+
+.profile-view .row{
+    margin-bottom:18px;
+}
+.profile-view .col-md-6{
+    margin-bottom:1px;
+    overflow:hidden;
+}
+.profile-view label{
+    display:block;
+    font-size:13px;
+    color:var(--gray-600);
+    margin-bottom:4px;
+}
+
+.profile-value{
+    margin:0;
+    font-size:13px;
+    font-weight:600;
+    color:var(--ink);
+
+    word-break:break-word;
+    overflow-wrap:anywhere;
+}
+
+.form-actions{
+    display:flex;
+    justify-content:flex-end;
+    gap:10px;
+}
+
+.edit-btn,
+.cancel-btn{
+    border-radius:999px;
+    font-weight:600;
+    padding:5px 10px;
+    transition:.25s ease;
+    font-size: 15gpx;
+}
+
+.edit-btn{
+    border:2px solid var(--green-900);
+    background:var(--white);
+    color:var(--green-900);
+    padding:8px 18px;
+    font-weight:700;
+    font-size:13px;
+}
+
+.edit-btn:hover{
+    background:var(--green-900);
+    color:var(--white);
+}
+
+.cancel-btn{
+    border:1px solid var(--gray-300);
+    background:var(--white);
+    color:var(--gray-600);
+}
+
+.cancel-btn:hover{
+    background:var(--bg);
+}
+
+/* =====================================================
    BỐ CỤC HỖ TRỢ (LAYOUT HELPERS)
 ===================================================== */
 
@@ -675,18 +749,6 @@
     display:flex;
     gap:18px;
     align-items:flex-start;
-}
-
-/* TRÁI / PHẢI */
-.member-card-left{
-    text-align:left;
-    flex:1;
-}
-
-.member-card-right{
-    min-width:210px;
-    flex-basis:320px;
-    flex-shrink:0;
 }
 
 /* =====================================================
@@ -723,7 +785,11 @@
     .summary-card,
     .history-btn,
     .save-btn,
+    .edit-btn,
+    .cancel-btn,
     .progress-bar-fill{
         transition:none;
     }
+
+
 }

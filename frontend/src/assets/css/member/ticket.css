@@ -1,4 +1,3 @@
-
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap');
 
 :root{
@@ -31,7 +30,7 @@
 
 .ticket-header h2{
  margin:0;
- font:800 32px "Nunito",sans-serif;
+ font:800 px "Nunito",sans-serif;
  color:var(--emerald-dark);
 }
 
@@ -54,96 +53,100 @@
  font-weight:700;
 }
 
+/* ============================
+   VÉ - THU NHỎ 50%
+============================ */
+
 .vip-ticket{
  position:relative;
  background:linear-gradient(135deg,#0b2d22,#124b34);
  border:1px solid rgba(200,161,74,.45);
- border-radius:22px;
+ border-radius:11px;        /* 22px -> 11px */
  overflow:hidden;
- padding:26px;
+ padding:13px;               /* 26px -> 13px */
  color:#fff;
  height:100%;
  transition:.35s;
- box-shadow:0 12px 28px rgba(0,0,0,.12);
+ box-shadow:0 6px 14px rgba(0,0,0,.12);
 }
 
 .vip-ticket:hover{
- transform:translateY(-8px);
- box-shadow:0 24px 45px rgba(0,0,0,.18);
+ transform:translateY(-4px);
+ box-shadow:0 12px 22px rgba(0,0,0,.18);
 }
 
 .vip-ticket::before{
  content:"";
  position:absolute;
  inset:0 0 auto 0;
- height:5px;
+ height:3px;                 /* 5px -> 3px */
  background:linear-gradient(90deg,#9b7b2d,var(--gold),#f3df9d,var(--gold),#9b7b2d);
 }
 
 .vip-ticket::after{
  content:"";
  position:absolute;
- left:-13px;
+ left:-7px;                  /* -13px -> -7px */
  top:50%;
  transform:translateY(-50%);
- width:26px;
- height:26px;
+ width:13px;                 /* 26px -> 13px */
+ height:13px;
  border-radius:50%;
  background:var(--bg);
- box-shadow:calc(100% + 390px) 0 0 var(--bg);
+ box-shadow:calc(100% + 195px) 0 0 var(--bg); /* 390px -> 195px */
 }
 
 .ticket-watermark{
  position:absolute;
- right:8px;
- bottom:-8px;
- font:900 58px "Nunito";
+ right:4px;                  /* 8px -> 4px */
+ bottom:-4px;                /* -8px -> -4px */
+ font:900 29px "Nunito";     /* 58px -> 29px */
  color:rgba(255,255,255,.04);
 }
 
 .ticket-brand{
  color:var(--gold-light);
- font-size:12px;
- letter-spacing:3px;
+ font-size:9px;              /* 12px -> 9px (giữ tối thiểu để còn đọc được) */
+ letter-spacing:1.5px;       /* 3px -> 1.5px */
  font-weight:800;
 }
 
 .ticket-session{
  background:rgba(255,255,255,.08);
- padding:6px 12px;
+ padding:3px 6px;            /* 6px 12px -> 3px 6px */
  border-radius:999px;
- font-size:12px;
+ font-size:9px;              /* 12px -> 9px */
 }
 
 .ticket-name{
- margin:22px 0 18px;
- font:800 24px "Nunito";
+ margin:11px 0 9px;          /* 22px 0 18px -> 11px 0 9px */
+ font:800 13px "Nunito";     /* 24px -> 13px */
 }
 
 .ticket-detail{
  display:flex;
  flex-wrap:wrap;
- gap:10px;
+ gap:5px;                    /* 10px -> 5px */
 }
 
 .ticket-detail span{
  background:rgba(255,255,255,.08);
  color:#eee;
- padding:8px 14px;
+ padding:4px 7px;            /* 8px 14px -> 4px 7px */
  border-radius:999px;
- font-size:13px;
+ font-size:9px;              /* 13px -> 9px */
 }
 
 .ticket-bottom{
- margin-top:28px;
+ margin-top:14px;            /* 28px -> 14px */
  display:flex;
  justify-content:space-between;
  align-items:center;
- gap:15px;
+ gap:8px;                    /* 15px -> 8px */
 }
 
 .ticket-price{
- font:900 30px "Nunito";
+ font:900 16px "Nunito";     /* 30px -> 16px */
  color:var(--gold-light);
 }
 
@@ -154,22 +157,24 @@
  background:linear-gradient(135deg,var(--gold),#e2c46e);
  color:#222;
  font-weight:800;
- padding:10px 22px;
+ padding:6px 12px;           /* 10px 22px -> 6px 12px */
+ font-size:12px;
  transition:.25s;
 }
 
 .ticket-bottom button:hover,
 .btn-buy:hover{
- transform:translateY(-2px);
- box-shadow:0 10px 24px rgba(200,161,74,.35);
+ transform:translateY(-1px);
+ box-shadow:0 6px 14px rgba(200,161,74,.35);
 }
 
 .btn-view{
- border:2px solid var(--emerald);
+ border:1px solid var(--emerald); /* 2px -> 1px */
  color:var(--emerald);
  background:#fff;
  border-radius:999px;
- padding:10px 20px;
+ padding:6px 11px;           /* 10px 20px -> 6px 11px */
+ font-size:12px;
  font-weight:700;
 }
 

@@ -43,9 +43,16 @@ function MemberLayout() {
             <header className="member-header">
 
                 <div className="container member-header-content">
-
+                    
                     <div className="member-logo">
-
+                     <img
+                        src="http://127.0.0.1:8000/logo/logo.png"
+                        alt="BUFFET VIP"
+                        style={{
+                            width: "70px",
+                            height: "70px",
+                        }}
+                    />
                         BUFFET VIP
 
                     </div>
@@ -88,7 +95,7 @@ function MemberLayout() {
                         to="/member/ticket"
                         className={location.pathname === "/member/ticket" ? "active" : ""}
                     >
-                        Tham khảo vé
+                        Giá vé
                     </Link>
 
                     <Link

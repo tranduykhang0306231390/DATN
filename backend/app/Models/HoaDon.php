@@ -23,6 +23,7 @@ class HoaDon extends Model
         'MaQuyTacHienTai',
         'MaHangThanhVien',
         'MaVoucher',
+        'SoBan',
     ];
 
     public function chiTietHoaDon()
@@ -49,4 +50,5 @@ class HoaDon extends Model
             'MaVoucherKhachHang'
         );
     }
+    
 }

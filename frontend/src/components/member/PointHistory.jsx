@@ -1,18 +1,41 @@
 import { useEffect, useState } from "react";
 import { getPointHistory } from "../../api/authApi";
 import Swal from "sweetalert2";
-
+import { useNavigate } from "react-router-dom";
 function PointHistory() {
-
+    const navigate = useNavigate();
     const [history, setHistory] = useState([]);
 
     const [links, setLinks] = useState([]);
+    const [keyword, setKeyword] = useState("");
+
+    const [type, setType] = useState("all");
+
+    const [fromDate, setFromDate] = useState("");
+
+    const [toDate, setToDate] = useState("");
+
+    const [sort, setSort] = useState("latest");
 
     const loadHistory = async (page = 1) => {
 
         try {
 
-            const res = await getPointHistory(page);
+            const res = await getPointHistory({
+
+                page,
+
+                keyword,
+
+                type,
+
+                from: fromDate,
+
+                to: toDate,
+
+                sort
+
+            });
 
             setHistory(res.data.data);
 
@@ -33,19 +56,31 @@ function PointHistory() {
 
     useEffect(() => {
 
-        loadHistory();
+        const timer = setTimeout(() => {
 
-    }, []);
+            loadHistory();
+
+        }, 400);
+
+        return () => clearTimeout(timer);
+
+    }, [
+        keyword,
+        type,
+        fromDate,
+        toDate,
+        sort
+    ]);
 
     const getLoai = (loai) => {
 
         switch (loai) {
 
             case "CongDiemHoaDon":
-                return "🟢 Cộng điểm hóa đơn";
+                return " Cộng điểm hóa đơn";
 
             case "DoiVoucher":
-                return "🔴 Đổi voucher";
+                return " Đổi voucher";
 
             default:
                 return loai;
@@ -65,6 +100,140 @@ function PointHistory() {
             </div>
 
             <div className="card-body">
+                <div className="row g-3 mb-4">
+
+                    {/* Tìm kiếm */}
+
+                    <div className="col-lg-4">
+
+                        <div className="input-group">
+
+                            <span className="input-group-text bg-white">
+                                <i className="bi bi-search"></i>
+                            </span>
+
+                            <input
+                                type="text"
+                                className="form-control"
+                                placeholder="Tìm theo mã tham chiếu..."
+                                value={keyword}
+                                onChange={(e) => setKeyword(e.target.value)}
+                            />
+
+                        </div>
+
+                    </div>
+
+                    {/* Loại giao dịch */}
+
+                    <div className="col-lg-2">
+
+                        <select
+                            className="form-select"
+                            value={type}
+                            onChange={(e) => setType(e.target.value)}
+                        >
+
+                            <option value="all">Tất cả</option>
+
+                            <option value="CongDiemHoaDon">
+                                Cộng điểm
+                            </option>
+
+                            <option value="DoiVoucher">
+                                Đổi voucher
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                    {/* Từ ngày */}
+
+                    <div className="col-lg-2">
+
+                        <input
+                            type="date"
+                            className="form-control"
+                            value={fromDate}
+                            onChange={(e) => setFromDate(e.target.value)}
+                        />
+
+                    </div>
+
+                    {/* Đến ngày */}
+
+                    <div className="col-lg-2">
+
+                        <input
+                            type="date"
+                            className="form-control"
+                            value={toDate}
+                            onChange={(e) => setToDate(e.target.value)}
+                        />
+
+                    </div>
+
+                    {/* Sắp xếp */}
+
+                    <div className="col-lg-2">
+
+                        <select
+                            className="form-select"
+                            value={sort}
+                            onChange={(e) => setSort(e.target.value)}
+                        >
+
+                            <option value="latest">
+                                Mới nhất
+                            </option>
+
+                            <option value="oldest">
+                                Cũ nhất
+                            </option>
+
+                            <option value="point_desc">
+                                Điểm giảm dần
+                            </option>
+
+                            <option value="point_asc">
+                                Điểm tăng dần
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                </div>
+
+                <div className="d-flex justify-content-end mb-3">
+
+                    <button
+                        className="btn btn-outline-secondary"
+
+                        onClick={() => {
+
+                            setKeyword("");
+
+                            setType("all");
+
+                            setFromDate("");
+
+                            setToDate("");
+
+                            setSort("latest");
+
+                        }}
+
+                    >
+
+                        <i className="bi bi-arrow-counterclockwise me-2"></i>
+
+                        Đặt lại
+
+                    </button>
+
+                </div>
 
                 <table className="table table-hover">
 
@@ -155,8 +324,24 @@ function PointHistory() {
 
                                         <td>{item.SoDiemSau}</td>
 
-                                        <td>{item.MaThamChieu}</td>
-
+                                        <td>
+                                            {item.LoaiGiaoDich === "CongDiemHoaDon" ? (
+                                                <button
+                                                    className="btn btn-link p-0 fw-bold text-decoration-none"
+                                                    onClick={() =>
+                                                        navigate("/member/invoice", {
+                                                            state: {
+                                                                openInvoice: item.MaThamChieu
+                                                            }
+                                                        })
+                                                    }
+                                                >
+                                                    {item.MaThamChieu}
+                                                </button>
+                                            ) : (
+                                                item.MaThamChieu
+                                            )}
+                                        </td>
                                     </tr>
 
                                 ))
@@ -189,7 +374,7 @@ function PointHistory() {
 
                                                 const page = new URL(link.url).searchParams.get("page");
 
-                                                loadHistory(page);
+                                                loadHistory(Number(page));
 
                                             }
 

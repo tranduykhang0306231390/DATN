@@ -215,9 +215,6 @@ export default function QuanLyUuDai() {
                 <div className="admin-hero-text">
                     <span className="admin-hero-eyebrow">Ưu đãi &amp; Voucher</span>
                     <h2 className="admin-hero-title">Quản lý ưu đãi</h2>
-                    <p className="admin-hero-sub">
-                        Tạo và điều chỉnh các ưu đãi để khách đổi điểm lấy voucher.
-                    </p>
                 </div>
                 <div className="admin-hero-actions">
                     <button type="button" className="admin-btn admin-btn--light" onClick={openCreate}>
@@ -347,23 +344,6 @@ export default function QuanLyUuDai() {
                     >
                         ← Trước
                     </button>
-
-                    <div className="admin-page-numbers">
-                        {pageList.map((p, i) =>
-                            p === '…' ? (
-                                <span key={`dots-${i}`} className="admin-page-dots">…</span>
-                            ) : (
-                                <button
-                                    key={p}
-                                    className={`admin-btn admin-btn--sm ${p === pagination.current_page ? 'admin-btn--primary' : 'admin-btn--ghost'}`}
-                                    onClick={() => goToPage(p)}
-                                >
-                                    {p}
-                                </button>
-                            )
-                        )}
-                    </div>
-
                     <button
                         className="admin-btn admin-btn--ghost admin-btn--sm"
                         disabled={pagination.current_page >= pagination.last_page}
