@@ -8,10 +8,6 @@ const hoaDonApi = {
 
     // Danh sách bàn đang phục vụ
     banDangTreo: () => axiosClient.get("/quan-ly-hoa-don/ban-dang-treo"),
-<<<<<<< HEAD
-    // Thanh toán hóa đơn treo -> chốt + tích điểm
-    thanhToan: (maHD, data = {}) => axiosClient.patch(`/hoa-don/${maHD}/thanh-toan`, data),
-=======
 
     // 1. Mở bàn: { so_ban, chi_tiet }
     moBan: (payload) => axiosClient.post("/hoa-don", payload),
@@ -33,7 +29,6 @@ const hoaDonApi = {
     thanhToan: (maHD, payload) => axiosClient.patch(`/hoa-don/${maHD}/thanh-toan`, payload),
 
     chiTietHoaDon: (maHD) => axiosClient.get(`/hoa-don/${maHD}`),
->>>>>>> origin/KhoiNguyen_QuanLyBanner
 };
 
 export default hoaDonApi;
@@ -41,9 +36,4 @@ export default hoaDonApi;
 export const quanLyHoaDonApi = {
     danhSach: (params) => axiosClient.get("/quan-ly-hoa-don", { params }),
     chiTiet: (maHD) => axiosClient.get(`/quan-ly-hoa-don/${maHD}`),
-<<<<<<< HEAD
-    
 };
-=======
-};
->>>>>>> origin/KhoiNguyen_QuanLyBanner

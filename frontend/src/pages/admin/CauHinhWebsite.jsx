@@ -1,12 +1,12 @@
 // src/pages/admin/CauHinhWebsite.jsx
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Swal from 'sweetalert2';
 import '../../assets/css/admin.css';
 import webSettingApi from '../../api/webSettingApi';
+import { getBackendAssetUrl } from '../../utils/apiUrl';
 
 const EMPTY = {
     TenWebsite: '',
-    Logo: '',
     DiaChi: '',
     EmailLienHe: '',
     SoDienThoai: '',
@@ -20,6 +20,12 @@ export default function CauHinhWebsite() {
     const [formError, setFormError] = useState('');
     const [logoLoi, setLogoLoi] = useState(false);
 
+    // Logo hiện có trên server + logo mới chọn từ máy (chưa lưu)
+    const [existingLogo, setExistingLogo] = useState('');
+    const [logoFile, setLogoFile] = useState(null);
+    const [previewUrl, setPreviewUrl] = useState('');
+    const fileInputRef = useRef(null);
+
     useEffect(() => {
         webSettingApi
             .getAdmin()
@@ -28,21 +34,36 @@ export default function CauHinhWebsite() {
                     const d = res.data.data;
                     setForm({
                         TenWebsite: d.TenWebsite ?? '',
-                        Logo: d.Logo ?? '',
                         DiaChi: d.DiaChi ?? '',
                         EmailLienHe: d.EmailLienHe ?? '',
                         SoDienThoai: d.SoDienThoai ?? '',
                         NoiDungWebsite: d.NoiDungWebsite ?? '',
                     });
+                    setExistingLogo(d.Logo ?? '');
                 }
             })
             .catch(() => setFormError('Không tải được cấu hình website.'))
             .finally(() => setLoading(false));
     }, []);
 
+    useEffect(() => {
+        if (!logoFile) {
+            setPreviewUrl('');
+            return undefined;
+        }
+
+        const url = URL.createObjectURL(logoFile);
+        setPreviewUrl(url);
+        return () => URL.revokeObjectURL(url);
+    }, [logoFile]);
+
     const setField = (key, value) => {
         setForm((f) => ({ ...f, [key]: value }));
-        if (key === 'Logo') setLogoLoi(false);
+    };
+
+    const handleLogoChange = (e) => {
+        setLogoFile(e.target.files?.[0] || null);
+        setLogoLoi(false);
     };
 
     const handleSubmit = async () => {
@@ -52,8 +73,22 @@ export default function CauHinhWebsite() {
         }
         setSaving(true);
         setFormError('');
+
+        const formData = new FormData();
+        formData.append('TenWebsite', form.TenWebsite);
+        formData.append('DiaChi', form.DiaChi || '');
+        formData.append('EmailLienHe', form.EmailLienHe || '');
+        formData.append('SoDienThoai', form.SoDienThoai || '');
+        formData.append('NoiDungWebsite', form.NoiDungWebsite || '');
+        if (logoFile) formData.append('Logo', logoFile);
+
         try {
-            await webSettingApi.update(form);
+            const res = await webSettingApi.update(formData);
+            if (res.data?.data?.Logo !== undefined) {
+                setExistingLogo(res.data.data.Logo ?? '');
+            }
+            setLogoFile(null);
+            if (fileInputRef.current) fileInputRef.current.value = '';
             Swal.fire({
                 icon: 'success',
                 title: 'Đã lưu cấu hình',
@@ -101,19 +136,20 @@ export default function CauHinhWebsite() {
                         </div>
 
                         <div className="admin-field admin-field--full">
-                            <label>
-                                Logo{' '}
-                                <span style={{ color: '#94a3b8', fontWeight: 400 }}>
-                                    (đường dẫn ảnh)
-                                </span>
-                            </label>
+                            <label>Logo</label>
                             <input
+                                ref={fileInputRef}
+                                type="file"
+                                accept="image/*"
                                 className="admin-input"
-                                value={form.Logo}
-                                onChange={(e) => setField('Logo', e.target.value)}
-                                placeholder="https://... hoặc /images/logo.png"
+                                onChange={handleLogoChange}
                             />
-                            {form.Logo && (
+                            {!logoFile && existingLogo && (
+                                <span style={{ fontSize: 12, color: '#64748b' }}>
+                                    Đang dùng logo hiện tại. Chọn ảnh mới nếu muốn thay đổi.
+                                </span>
+                            )}
+                            {(previewUrl || existingLogo) && (
                                 <div
                                     style={{
                                         marginTop: 10,
@@ -127,12 +163,12 @@ export default function CauHinhWebsite() {
                                 >
                                     {logoLoi ? (
                                         <span style={{ fontSize: 13, color: '#dc2626' }}>
-                                            Không tải được ảnh từ đường dẫn này.
+                                            Không tải được ảnh xem trước.
                                         </span>
                                     ) : (
                                         <>
                                             <img
-                                                src={`http://127.0.0.1:8000/logo/${form.Logo}`}
+                                                src={previewUrl || getBackendAssetUrl(`logo/${existingLogo}`)}
                                                 alt="Logo"
                                                 onError={() => setLogoLoi(true)}
                                                 style={{

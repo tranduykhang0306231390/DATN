@@ -25,7 +25,7 @@ export default function LichSuHang() {
         await Promise.resolve();
         setLoading(true);
         lichSuHangApi
-            .getAll({ ma_khach_hang: search, page, per_page: 10 })
+            .getAll({ keyword: search, page, per_page: 10 })
             .then((res) => {
                 if (res.data?.success) {
                     setList(res.data.data);
@@ -59,7 +59,7 @@ export default function LichSuHang() {
             <div className="admin-toolbar">
                 <input
                     className="admin-input"
-                    placeholder="Tìm theo mã khách hàng (VD: KH001)…"
+                    placeholder="Tìm theo tên, SĐT hoặc mã khách hàng…"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && applyFilter()}

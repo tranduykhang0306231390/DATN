@@ -1,13 +1,14 @@
 // src/pages/admin/QuanLyBanner.jsx
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import Swal from 'sweetalert2';
 import '../../assets/css/admin.css';
 import bannerApi from '../../api/bannerApi';
 import Modal from '../../components/admin/Modal';
+import { getBackendAssetUrl } from '../../utils/apiUrl';
 
-const EMPTY_FORM = { TieuDe: '', HinhAnh: '', Link: '', ThuTu: 1 };
+const EMPTY_FORM = { TieuDe: '', Link: '', ThuTu: 1 };
 
-const anhSrc = (b) => b.Link || `/banner/${b.HinhAnh}`;
+const anhSrc = (b) => b.Link || getBackendAssetUrl(`banner/${b.HinhAnh}`);
 
 export default function QuanLyBanner() {
     const [list, setList] = useState([]);
@@ -19,6 +20,23 @@ export default function QuanLyBanner() {
     const [saving, setSaving] = useState(false);
     const [formError, setFormError] = useState('');
     const [anhLoi, setAnhLoi] = useState(false);
+
+    // Ảnh chọn từ máy (chưa lưu) + ảnh hiện có khi sửa (nếu không chọn ảnh mới)
+    const [imageFile, setImageFile] = useState(null);
+    const [existingHinhAnh, setExistingHinhAnh] = useState('');
+    const [previewUrl, setPreviewUrl] = useState('');
+    const fileInputRef = useRef(null);
+
+    useEffect(() => {
+        if (!imageFile) {
+            setPreviewUrl('');
+            return undefined;
+        }
+
+        const url = URL.createObjectURL(imageFile);
+        setPreviewUrl(url);
+        return () => URL.revokeObjectURL(url);
+    }, [imageFile]);
 
     const loadList = useCallback(() => {
         setLoading(true);
@@ -36,6 +54,9 @@ export default function QuanLyBanner() {
     const openCreate = () => {
         setEditing(null);
         setForm({ ...EMPTY_FORM, ThuTu: list.length + 1 });
+        setImageFile(null);
+        setExistingHinhAnh('');
+        if (fileInputRef.current) fileInputRef.current.value = '';
         setFormError(''); setAnhLoi(''); setModalOpen(true);
     };
 
@@ -43,21 +64,28 @@ export default function QuanLyBanner() {
         setEditing(b.MaBanner);
         setForm({
             TieuDe: b.TieuDe ?? '',
-            HinhAnh: b.HinhAnh ?? '',
             Link: b.Link ?? '',
             ThuTu: Number(b.ThuTu) || 1,
         });
+        setImageFile(null);
+        setExistingHinhAnh(b.HinhAnh ?? '');
+        if (fileInputRef.current) fileInputRef.current.value = '';
         setFormError(''); setAnhLoi(false); setModalOpen(true);
     };
 
     const setField = (key, value) => {
         setForm((f) => ({ ...f, [key]: value }));
-        if (key === 'HinhAnh' || key === 'Link') setAnhLoi(false);
+        if (key === 'Link') setAnhLoi(false);
+    };
+
+    const handleFileChange = (e) => {
+        setImageFile(e.target.files?.[0] || null);
+        setAnhLoi(false);
     };
 
     const handleSubmit = async () => {
-        if (!form.HinhAnh.trim()) {
-            setFormError('Vui lòng nhập tên file ảnh.');
+        if (!imageFile && !form.Link.trim() && !existingHinhAnh) {
+            setFormError('Vui lòng chọn ảnh từ máy hoặc nhập đường dẫn ảnh.');
             return;
         }
         if (!form.TieuDe.trim()) {
@@ -65,10 +93,16 @@ export default function QuanLyBanner() {
             return;
         }
         setSaving(true); setFormError('');
-        const payload = { ...form, ThuTu: Number(form.ThuTu) };
+
+        const formData = new FormData();
+        formData.append('TieuDe', form.TieuDe);
+        formData.append('Link', form.Link || '');
+        formData.append('ThuTu', String(Number(form.ThuTu)));
+        if (imageFile) formData.append('HinhAnh', imageFile);
+
         try {
-            if (editing) await bannerApi.update(editing, payload);
-            else await bannerApi.create(payload);
+            if (editing) await bannerApi.update(editing, formData);
+            else await bannerApi.create(formData);
             setModalOpen(false);
             loadList();
             Swal.fire({
@@ -216,14 +250,20 @@ export default function QuanLyBanner() {
                 {formError && <div className="admin-form-error">{formError}</div>}
 
                 <div className="admin-form">
-                    <div className="admin-field">
-                        <label>Tên file ảnh</label>
+                    <div className="admin-field admin-field--full">
+                        <label>Ảnh banner</label>
                         <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept="image/*"
                             className="admin-input"
-                            value={form.HinhAnh}
-                            onChange={(e) => setField('HinhAnh', e.target.value)}
-                            placeholder="banner1.jpg"
+                            onChange={handleFileChange}
                         />
+                        {editing && !imageFile && existingHinhAnh && (
+                            <span style={{ fontSize: 12, color: '#64748b' }}>
+                                Đang dùng ảnh hiện tại ({existingHinhAnh}). Chọn ảnh mới nếu muốn thay đổi.
+                            </span>
+                        )}
                     </div>
 
                     <div className="admin-field">
@@ -235,18 +275,16 @@ export default function QuanLyBanner() {
                         />
                     </div>
 
-                    <div className="admin-field admin-field--full">
+                    <div className="admin-field">
                         <label>
-                            Đường dẫn ảnh{' '}
-                            <span style={{ color: '#94a3b8', fontWeight: 400 }}>
-                                (để trống sẽ tự dùng /banner/&lt;tên file&gt;)
-                            </span>
+                            Hoặc dán URL ảnh{' '}
+                            <span style={{ color: '#94a3b8', fontWeight: 400 }}>(tùy chọn)</span>
                         </label>
                         <input
                             className="admin-input"
                             value={form.Link}
                             onChange={(e) => setField('Link', e.target.value)}
-                            placeholder="/banner/banner1.jpg"
+                            placeholder="https://... (bỏ qua nếu đã chọn ảnh từ máy)"
                         />
                     </div>
 
@@ -266,16 +304,20 @@ export default function QuanLyBanner() {
                         </span>
                     </div>
 
-                    {(form.Link || form.HinhAnh) && (
+                    {(previewUrl || form.Link || existingHinhAnh) && (
                         <div className="admin-field admin-field--full">
                             <div style={{ padding: 10, background: '#f5f6fb', borderRadius: 10 }}>
                                 {anhLoi ? (
                                     <span style={{ fontSize: 13, color: '#dc2626' }}>
-                                        Không tải được ảnh. Kiểm tra file có nằm trong <b>public/banner/</b> không.
+                                        Không tải được ảnh xem trước.
                                     </span>
                                 ) : (
                                     <img
-                                        src={form.Link || `/banner/${form.HinhAnh}`}
+                                        src={
+                                            previewUrl
+                                            || form.Link
+                                            || getBackendAssetUrl(`banner/${existingHinhAnh}`)
+                                        }
                                         alt="Xem trước"
                                         onError={() => setAnhLoi(true)}
                                         style={{ width: '100%', maxHeight: 170, objectFit: 'cover', borderRadius: 8 }}

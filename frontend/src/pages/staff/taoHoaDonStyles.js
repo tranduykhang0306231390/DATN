@@ -15,7 +15,11 @@ export const ovl = {
     width: '100vw', height: '100vh',
     background: 'rgba(0,0,0,.45)',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
-    zIndex: 9999, padding: 20, boxSizing: 'border-box',
+    /*
+     * Thấp hơn z-index mặc định của SweetAlert2 (.swal2-container: 1060)
+     * để hộp thoại xác nhận/thành công của Swal luôn hiện phía trên modal này.
+     */
+    zIndex: 1000, padding: 20, boxSizing: 'border-box',
 };
 
 export const box = {

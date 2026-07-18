@@ -233,18 +233,16 @@ export default function QuanLyPhanHoi() {
                         >
                             Đóng
                         </button>
-                        <button
-                            type="button"
-                            className="admin-btn admin-btn--primary"
-                            onClick={handleSubmit}
-                            disabled={saving}
-                        >
-                            {saving
-                                ? 'Đang gửi…'
-                                : current?.TrangThaiXuLy === 'DaXuLy'
-                                    ? 'Cập nhật phản hồi'
-                                    : 'Gửi phản hồi'}
-                        </button>
+                        {current?.TrangThaiXuLy !== 'DaXuLy' && (
+                            <button
+                                type="button"
+                                className="admin-btn admin-btn--primary"
+                                onClick={handleSubmit}
+                                disabled={saving}
+                            >
+                                {saving ? 'Đang gửi…' : 'Gửi phản hồi'}
+                            </button>
+                        )}
                     </>
                 }
             >
@@ -305,6 +303,7 @@ export default function QuanLyPhanHoi() {
                                 value={traLoi}
                                 onChange={(e) => setTraLoi(e.target.value)}
                                 placeholder="VD: Cảm ơn quý khách đã đánh giá. Nhà hàng sẽ cải thiện…"
+                                readOnly={current.TrangThaiXuLy === 'DaXuLy'}
                             />
                         </div>
                     </>

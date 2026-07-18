@@ -62,8 +62,8 @@ class WebSettingController extends Controller
 
                 'Logo' => [
                     'nullable',
-                    'string',
-                    'max:255',
+                    'image',
+                    'max:4096',
                 ],
 
                 'DiaChi' => [
@@ -96,8 +96,11 @@ class WebSettingController extends Controller
                 'TenWebsite.max' =>
                     'Tên website không được vượt quá 150 ký tự.',
 
+                'Logo.image' =>
+                    'File tải lên phải là ảnh.',
+
                 'Logo.max' =>
-                    'Đường dẫn logo không được vượt quá 255 ký tự.',
+                    'Ảnh logo không được vượt quá 4MB.',
 
                 'DiaChi.max' =>
                     'Địa chỉ không được vượt quá 255 ký tự.',
@@ -113,7 +116,7 @@ class WebSettingController extends Controller
             ]
         );
 
-        $setting = DB::transaction(function () use ($data) {
+        $setting = DB::transaction(function () use ($data, $request) {
             /*
              * Khóa bản ghi cấu hình hiện tại để tránh hai Admin
              * cập nhật đồng thời và ghi đè dữ liệu của nhau.
@@ -131,18 +134,22 @@ class WebSettingController extends Controller
             );
 
             $setting->Logo =
-                $data['Logo'] ?? null;
+                $this->handleLogoUpload($request, $setting->Logo);
 
+            /*
+             * DiaChi, EmailLienHe, SoDienThoai là NOT NULL trong database,
+             * nên khi admin để trống phải lưu chuỗi rỗng thay vì null.
+             */
             $setting->DiaChi =
-                $data['DiaChi'] ?? null;
+                $data['DiaChi'] ?? '';
 
             $setting->EmailLienHe =
                 isset($data['EmailLienHe'])
                     ? strtolower($data['EmailLienHe'])
-                    : null;
+                    : '';
 
             $setting->SoDienThoai =
-                $data['SoDienThoai'] ?? null;
+                $data['SoDienThoai'] ?? '';
 
             $setting->NoiDungWebsite =
                 $data['NoiDungWebsite'] ?? null;
@@ -177,7 +184,6 @@ class WebSettingController extends Controller
 
         foreach (
             [
-                'Logo',
                 'DiaChi',
                 'EmailLienHe',
                 'SoDienThoai',
@@ -199,5 +205,24 @@ class WebSettingController extends Controller
         if ($normalized !== []) {
             $request->merge($normalized);
         }
+    }
+
+    /**
+     * Lưu file logo được tải lên vào public/logo, trả về tên file.
+     * Nếu không có file mới (giữ logo hiện tại), trả lại giá trị hiện có.
+     */
+    private function handleLogoUpload(Request $request, ?string $current = null): ?string
+    {
+        if (!$request->hasFile('Logo')) {
+            return $current;
+        }
+
+        $file = $request->file('Logo');
+
+        $filename = 'logo_' . time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+
+        $file->move(public_path('logo'), $filename);
+
+        return $filename;
     }
 }

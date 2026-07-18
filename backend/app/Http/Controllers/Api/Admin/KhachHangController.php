@@ -420,19 +420,20 @@ class KhachHangController extends Controller
                 'hm.TenHang as TenHangMoi',
             ]);
 
-        $maKhachHang = trim(
+        $keyword = trim(
             (string) $request->query(
-                'ma_khach_hang',
+                'keyword',
                 ''
             )
         );
 
-        if ($maKhachHang !== '') {
-            $query->where(
-                'ls.MaKhachHang',
-                'like',
-                "%{$maKhachHang}%"
-            );
+        if ($keyword !== '') {
+            $query->where(function ($subQuery) use ($keyword) {
+                $subQuery
+                    ->where('kh.HoTen', 'like', "%{$keyword}%")
+                    ->orWhere('kh.SoDienThoai', 'like', "%{$keyword}%")
+                    ->orWhere('ls.MaKhachHang', 'like', "%{$keyword}%");
+            });
         }
 
         $query->orderByDesc('ls.MaLichSuHang');
@@ -476,19 +477,20 @@ class KhachHangController extends Controller
                 'kh.HoTen as TenKhachHang',
             ]);
 
-        $maKhachHang = trim(
+        $keyword = trim(
             (string) $request->query(
-                'ma_khach_hang',
+                'keyword',
                 ''
             )
         );
 
-        if ($maKhachHang !== '') {
-            $query->where(
-                'ls.MaKhachHang',
-                'like',
-                "%{$maKhachHang}%"
-            );
+        if ($keyword !== '') {
+            $query->where(function ($subQuery) use ($keyword) {
+                $subQuery
+                    ->where('kh.HoTen', 'like', "%{$keyword}%")
+                    ->orWhere('kh.SoDienThoai', 'like', "%{$keyword}%")
+                    ->orWhere('ls.MaKhachHang', 'like', "%{$keyword}%");
+            });
         }
 
         $loaiGiaoDich = trim(

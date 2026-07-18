@@ -1182,6 +1182,7 @@ class HoaDonController extends Controller
             }
 
             $diemDaThuHoi = 0;
+            $haHangResult = null;
 
             if (
                 $hoaDon->MaKhachHang
@@ -1200,10 +1201,11 @@ class HoaDonController extends Controller
                         (int) $hoaDon->DiemTichLuy;
 
                     /*
-                     * Chỉ thu hồi điểm đã cộng.
-                     * Không tự hạ hạng thành viên.
+                     * Thu hồi điểm đã cộng. Nếu khách lên hạng nhờ chính số
+                     * điểm này, hoanDiem() sẽ tự hạ hạng lại và trả về
+                     * hạng mới để phản hồi cho nhân viên/admin biết.
                      */
-                    $this->diemService->hoanDiem(
+                    $haHangResult = $this->diemService->hoanDiem(
                         $khachHang,
                         $diemDaThuHoi,
                         $maHD
@@ -1250,6 +1252,12 @@ class HoaDonController extends Controller
 
                     'LyDoHuy' =>
                         $hoaDon->LyDoHuy,
+
+                    'DaHaHang' =>
+                        $haHangResult !== null,
+
+                    'TenHangMoi' =>
+                        $haHangResult['TenHangMoi'] ?? null,
                 ],
             ]);
         } catch (\Throwable $exception) {
@@ -1898,7 +1906,7 @@ class HoaDonController extends Controller
 
         return [
             'diemTichLuy' =>
-                $diemTichLuy,
+                $diemTichLuy['diem'],
 
             'maQuyTac' =>
                 $quyTac->MaQuyTac,

@@ -323,7 +323,7 @@ export default function QuanLyNhanVien() {
                             className="admin-input"
                             value={form.MatKhau}
                             onChange={(e) => setField('MatKhau', e.target.value)}
-                            placeholder={editing ? '••••••' : 'Tối thiểu 6 ký tự'}
+                            placeholder={editing ? '••••••' : 'Tối thiểu 8 ký tự'}
                             autoComplete="new-password"
                         />
                     </div>

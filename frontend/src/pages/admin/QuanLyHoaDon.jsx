@@ -15,13 +15,6 @@ const fmtDateTime = (s) => {
     return d.toLocaleString('vi-VN');
 };
 
-<<<<<<< HEAD
-const trangThaiLabel = (status) => ({
-    ChuaThanhToan: 'Chưa thanh toán',
-    DaThanhToan: 'Đã thanh toán',
-    DaHuy: 'Đã hủy',
-}[status] || 'Không xác định');
-=======
 // Cấu hình 3 trạng thái hóa đơn. Màu để inline vì admin.css chỉ có
 // admin-badge--on (xanh) và --off (xám), chưa có màu vàng cho "đang phục vụ".
 const TRANG_THAI = {
@@ -41,7 +34,6 @@ const TrangThaiBadge = ({ tt }) => (
         {trangThaiLabel(tt)}
     </span>
 );
->>>>>>> origin/KhoiNguyen_QuanLyBanner
 
 export default function QuanLyHoaDon() {
     const [list, setList] = useState([]);

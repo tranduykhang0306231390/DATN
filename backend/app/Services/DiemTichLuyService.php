@@ -119,8 +119,11 @@ class DiemTichLuyService
      * Thu hồi điểm đã cộng khi hủy hóa đơn.
      *
      * Giữ tên method cũ để tương thích với caller nếu luồng hủy được bật lại.
+     *
+     * @return array{MaHangThanhVienMoi: string, TenHangMoi: string}|null
+     *         Thông tin hạng mới nếu khách bị hạ hạng do hoàn điểm, null nếu không.
      */
-    public function hoanDiem(KhachHang $khachHang, int $soDiem, string $maThamChieu): void
+    public function hoanDiem(KhachHang $khachHang, int $soDiem, string $maThamChieu): ?array
     {
         $diemTruoc = $khachHang->TongDiem;
         $diemSau   = max(0, $diemTruoc - $soDiem);
@@ -146,7 +149,7 @@ class DiemTichLuyService
         // luôn việc lên hạng đó — khác với congDiem() chỉ tự động NÂNG,
         // hoanDiem() cần tự động HẠ vì đây là đảo ngược 1 giao dịch đã xảy
         // ra (hủy hóa đơn), không phải khách chủ động tiêu điểm.
-        $this->kiemTraHaHang($khachHang, $maThamChieu);
+        return $this->kiemTraHaHang($khachHang, $maThamChieu);
     }
 
     /**
@@ -210,15 +213,15 @@ class DiemTichLuyService
      * hợp khách chủ động tiêu điểm (đổi voucher), vì đó là lựa chọn của
      * khách chứ không phải đảo ngược một giao dịch đã xảy ra.
      */
-    private function kiemTraHaHang(KhachHang $khachHang, string $maThamChieu): void
+    private function kiemTraHaHang(KhachHang $khachHang, string $maThamChieu): ?array
     {
         $khachHang->refresh();
 
         $hangHienTai = HangThanhVien::find($khachHang->MaHangThanhVien);
-        if (!$hangHienTai) return;
+        if (!$hangHienTai) return null;
 
         $hangXungDang = $this->hangXungDangTheoDiem((int) $khachHang->TongDiem);
-        if (!$hangXungDang || $hangXungDang->ThuTuHang >= $hangHienTai->ThuTuHang) return;
+        if (!$hangXungDang || $hangXungDang->ThuTuHang >= $hangHienTai->ThuTuHang) return null;
 
         $maHangCu = $khachHang->MaHangThanhVien;
         $khachHang->update(['MaHangThanhVien' => $hangXungDang->MaHangThanhVien]);
@@ -247,6 +250,11 @@ class DiemTichLuyService
             tieuDe:  'Điều chỉnh hạng thành viên',
             noiDung: "Do hóa đơn {$maThamChieu} đã bị hủy và hoàn điểm, hạng của bạn được điều chỉnh về {$hangXungDang->TenHang}."
         );
+
+        return [
+            'MaHangThanhVienMoi' => $hangXungDang->MaHangThanhVien,
+            'TenHangMoi'         => $hangXungDang->TenHang,
+        ];
     }
 
     /**

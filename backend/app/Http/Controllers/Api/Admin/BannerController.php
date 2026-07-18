@@ -23,14 +23,21 @@ class BannerController extends Controller
     {
         $data = $this->validateData($request);
 
+        if (!$request->hasFile('HinhAnh') && empty($data['Link'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Vui lòng chọn ảnh từ máy hoặc nhập đường dẫn ảnh.',
+            ], 422);
+        }
+
         $last = Banner::orderBy('MaBanner', 'desc')->first();
         $so   = $last ? ((int) substr($last->MaBanner, 2)) + 1 : 1;
 
         $banner = new Banner();
         $banner->MaBanner  = 'BN' . str_pad($so, 3, '0', STR_PAD_LEFT);
         $banner->TieuDe    = $data['TieuDe'];
-        $banner->HinhAnh   = $data['HinhAnh'];
-        $banner->Link      = $data['Link'] ?: null;
+        $banner->HinhAnh   = $this->handleImageUpload($request);
+        $banner->Link      = $data['Link'] ?? null;
         $banner->ThuTu     = $data['ThuTu'];
         $banner->TrangThai = 1;
         $banner->save();
@@ -52,9 +59,20 @@ class BannerController extends Controller
 
         $data = $this->validateData($request);
 
+        if (
+            !$request->hasFile('HinhAnh')
+            && empty($data['Link'])
+            && empty($banner->HinhAnh)
+        ) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Vui lòng chọn ảnh từ máy hoặc nhập đường dẫn ảnh.',
+            ], 422);
+        }
+
         $banner->TieuDe  = $data['TieuDe'];
-        $banner->HinhAnh = $data['HinhAnh'];
-        $banner->Link    = $data['Link'] ?: null;
+        $banner->HinhAnh = $this->handleImageUpload($request, $banner->HinhAnh);
+        $banner->Link    = $data['Link'] ?? null;
         $banner->ThuTu   = $data['ThuTu'];
         $banner->save();
 
@@ -63,6 +81,25 @@ class BannerController extends Controller
             'message' => 'Cập nhật banner thành công',
             'data'    => $banner,
         ]);
+    }
+
+    /**
+     * Lưu file ảnh banner được tải lên vào public/banner, trả về tên file.
+     * Nếu không có file mới (đang sửa, giữ ảnh cũ), trả lại giá trị hiện có.
+     */
+    private function handleImageUpload(Request $request, ?string $current = null): string
+    {
+        if (!$request->hasFile('HinhAnh')) {
+            return $current ?? '';
+        }
+
+        $file = $request->file('HinhAnh');
+
+        $filename = 'banner_' . time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+
+        $file->move(public_path('banner'), $filename);
+
+        return $filename;
     }
 
     /**
@@ -103,9 +140,12 @@ class BannerController extends Controller
     {
         return $request->validate([
             'TieuDe'  => ['required', 'string', 'max:255'],
-            'HinhAnh' => ['required', 'string', 'max:255'],
+            'HinhAnh' => ['nullable', 'image', 'max:4096'],
             'Link'    => ['nullable', 'string', 'max:255'],
             'ThuTu'   => ['required', 'integer', 'min:1'],
+        ], [
+            'HinhAnh.image' => 'File tải lên phải là ảnh.',
+            'HinhAnh.max'   => 'Ảnh không được vượt quá 4MB.',
         ]);
     }
 }

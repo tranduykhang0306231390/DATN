@@ -1098,6 +1098,9 @@ export default function TaoHoaDon() {
                             }</b>`
                             : ''
                     ),
+
+                timer: 2500,
+                showConfirmButton: false,
             });
         } catch (requestError) {
             await Swal.fire({

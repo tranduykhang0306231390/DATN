@@ -49,7 +49,6 @@ export default function QuanLyHangThanhVien() {
     }, [search, page]);
 
     useEffect(() => {
-<<<<<<< HEAD
         hangThanhVienApi
             .getOptions()
             .then((res) => {
@@ -61,9 +60,6 @@ export default function QuanLyHangThanhVien() {
     useEffect(() => {
         const timeoutId = window.setTimeout(() => void loadList(), 0);
         return () => window.clearTimeout(timeoutId);
-=======
-        loadList();
->>>>>>> origin/KhoiNguyen_QuanLyBanner
     }, [loadList]);
 
     // Mỗi quy tắc chỉ gán được cho 1 hạng, nên phải nạp lại danh sách

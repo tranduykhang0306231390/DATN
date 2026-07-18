@@ -6,6 +6,7 @@ import lichSuDiemApi from '../../api/lichSuDiemApi';
 const LOAI_OPTIONS = [
     { value: 'CongDiemHoaDon', label: 'Cộng điểm hóa đơn' },
     { value: 'DoiVoucher', label: 'Đổi voucher' },
+    { value: 'HoanDiemHuyHD', label: 'Hoàn điểm do hủy hóa đơn' },
 ];
 
 const loaiLabel = (l) => LOAI_OPTIONS.find((o) => o.value === l)?.label || l;
@@ -23,7 +24,7 @@ export default function LichSuDiem() {
         await Promise.resolve();
         setLoading(true);
         lichSuDiemApi
-            .getAll({ ma_khach_hang: search, loai_giao_dich: loai, page, per_page: 10 })
+            .getAll({ keyword: search, loai_giao_dich: loai, page, per_page: 10 })
             .then((res) => {
                 if (res.data?.success) {
                     setList(res.data.data);
@@ -57,7 +58,7 @@ export default function LichSuDiem() {
             <div className="admin-toolbar">
                 <input
                     className="admin-input"
-                    placeholder="Tìm theo mã khách hàng (VD: KH001)…"
+                    placeholder="Tìm theo tên, SĐT hoặc mã khách hàng…"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && applyFilter()}

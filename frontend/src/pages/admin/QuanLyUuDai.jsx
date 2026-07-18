@@ -214,6 +214,31 @@ export default function QuanLyUuDai() {
         setPage(p);
     };
 
+    // Danh sách số trang hiển thị, rút gọn bằng "…" khi có nhiều trang.
+    const pageList = (() => {
+        const total = pagination.last_page;
+        const current = pagination.current_page;
+
+        if (total <= 7) {
+            return Array.from({ length: total }, (_, i) => i + 1);
+        }
+
+        const pages = [1];
+
+        if (current > 3) pages.push('…');
+
+        const start = Math.max(2, current - 1);
+        const end = Math.min(total - 1, current + 1);
+
+        for (let i = start; i <= end; i += 1) pages.push(i);
+
+        if (current < total - 2) pages.push('…');
+
+        pages.push(total);
+
+        return pages;
+    })();
+
     return (
         <div className="admin-page">
             <header className="admin-hero admin-hero--compact">
@@ -578,8 +603,4 @@ export default function QuanLyUuDai() {
             </Modal>
         </div>
     );
-<<<<<<< HEAD
 }
-=======
-} 
->>>>>>> origin/KhoiNguyen_QuanLyBanner
