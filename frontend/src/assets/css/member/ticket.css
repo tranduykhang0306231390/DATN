@@ -1,199 +1,217 @@
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap');
-
-:root{
- --emerald:#0B5D3B;
- --emerald-dark:#083C27;
- --gold:#C8A14A;
- --gold-light:#F6E7BE;
- --bg:#FFFCF7;
- --card:#FFFFFF;
- --border:#ECE5D8;
- --text:#1E2A24;
- --muted:#6F756F;
+.customer-app .customer-ticket-page {
+    width: min(calc(100% - 40px), var(--customer-container));
+    margin-inline: auto;
+    padding: clamp(38px, 6vw, 74px) 0;
 }
 
-.ticket-page{
- max-width:1300px;
- margin:0 auto;
- padding:20px 0 40px;
- font-family:"Be Vietnam Pro",sans-serif;
+.customer-app .customer-ticket-page__header {
+    display: flex;
+    gap: 24px;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 30px;
 }
 
-.ticket-header{
- display:flex;
- justify-content:space-between;
- align-items:center;
- margin-bottom:28px;
- padding-bottom:14px;
- border-bottom:2px solid var(--gold-light);
+.customer-app .customer-ticket-page__header span {
+    display: block;
+    margin-bottom: 7px;
+    color: var(--customer-purple);
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
 }
 
-.ticket-header h2{
- margin:0;
- font:800 px "Nunito",sans-serif;
- color:var(--emerald-dark);
+.customer-app .customer-ticket-page__header h1 {
+    margin: 0;
+    color: var(--customer-text);
+    font-size: clamp(28px, 4vw, 42px);
+    font-weight: 950;
 }
 
-.ticket-count{
- background:linear-gradient(135deg,var(--emerald),#16734b);
- color:#fff;
- padding:8px 18px;
- border-radius:999px;
- font-weight:700;
- box-shadow:0 8px 20px rgba(11,93,59,.18);
+.customer-app .customer-ticket-page__header p {
+    margin: 8px 0 0;
+    color: var(--customer-text-muted);
+    font-size: 14px;
 }
 
-.ticket-loading{
- min-height:300px;
- display:flex;
- justify-content:center;
- align-items:center;
- font-size:22px;
- color:var(--emerald);
- font-weight:700;
+.customer-app .customer-ticket-page__count {
+    flex: 0 0 auto;
+    padding: 9px 15px;
+    border-radius: var(--customer-radius-pill);
+    color: #fff;
+    background: linear-gradient(135deg, var(--customer-green), var(--customer-cyan));
+    font-size: 13px;
+    font-weight: 850;
 }
 
-/* ============================
-   VÉ - THU NHỎ 50%
-============================ */
-
-.vip-ticket{
- position:relative;
- background:linear-gradient(135deg,#0b2d22,#124b34);
- border:1px solid rgba(200,161,74,.45);
- border-radius:11px;        /* 22px -> 11px */
- overflow:hidden;
- padding:13px;               /* 26px -> 13px */
- color:#fff;
- height:100%;
- transition:.35s;
- box-shadow:0 6px 14px rgba(0,0,0,.12);
+.customer-app .customer-ticket-page__embedded-meta {
+    width: max-content;
+    max-width: 100%;
+    margin: 0 0 18px auto;
+    padding: 8px 13px;
+    border-radius: var(--customer-radius-pill);
+    color: var(--customer-green-dark);
+    background: var(--customer-green-light);
+    font-size: 12px;
+    font-weight: 850;
 }
 
-.vip-ticket:hover{
- transform:translateY(-4px);
- box-shadow:0 12px 22px rgba(0,0,0,.18);
+.customer-app .customer-ticket-page__grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px;
 }
 
-.vip-ticket::before{
- content:"";
- position:absolute;
- inset:0 0 auto 0;
- height:3px;                 /* 5px -> 3px */
- background:linear-gradient(90deg,#9b7b2d,var(--gold),#f3df9d,var(--gold),#9b7b2d);
+.customer-app .customer-ticket-card {
+    position: relative;
+    display: flex;
+    min-width: 0;
+    min-height: 250px;
+    flex-direction: column;
+    padding: 25px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: var(--customer-radius-lg);
+    color: #fff;
+    background:
+        radial-gradient(circle at 92% 12%, rgba(255, 200, 87, 0.28), transparent 28%),
+        linear-gradient(145deg, #003d2a, var(--customer-green-dark));
+    box-shadow: var(--customer-shadow-md);
+    transition: transform var(--customer-transition-fast), box-shadow var(--customer-transition-fast);
 }
 
-.vip-ticket::after{
- content:"";
- position:absolute;
- left:-7px;                  /* -13px -> -7px */
- top:50%;
- transform:translateY(-50%);
- width:13px;                 /* 26px -> 13px */
- height:13px;
- border-radius:50%;
- background:var(--bg);
- box-shadow:calc(100% + 195px) 0 0 var(--bg); /* 390px -> 195px */
+.customer-app .customer-ticket-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--customer-shadow-lg);
 }
 
-.ticket-watermark{
- position:absolute;
- right:4px;                  /* 8px -> 4px */
- bottom:-4px;                /* -8px -> -4px */
- font:900 29px "Nunito";     /* 58px -> 29px */
- color:rgba(255,255,255,.04);
+.customer-app .customer-ticket-card::before,
+.customer-app .customer-ticket-card::after {
+    position: absolute;
+    top: 50%;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--customer-bg);
+    content: "";
+    transform: translateY(-50%);
 }
 
-.ticket-brand{
- color:var(--gold-light);
- font-size:9px;              /* 12px -> 9px (giữ tối thiểu để còn đọc được) */
- letter-spacing:1.5px;       /* 3px -> 1.5px */
- font-weight:800;
+.customer-app .customer-ticket-card::before { left: -13px; }
+.customer-app .customer-ticket-card::after { right: -13px; }
+
+.customer-app .customer-ticket-card__watermark {
+    position: absolute;
+    right: -8px;
+    bottom: -10px;
+    color: rgba(255, 255, 255, 0.045);
+    font-size: 42px;
+    font-weight: 950;
+    white-space: nowrap;
+    pointer-events: none;
 }
 
-.ticket-session{
- background:rgba(255,255,255,.08);
- padding:3px 6px;            /* 6px 12px -> 3px 6px */
- border-radius:999px;
- font-size:9px;              /* 12px -> 9px */
+.customer-app .customer-ticket-card__top,
+.customer-app .customer-ticket-card__details,
+.customer-app .customer-ticket-card__bottom,
+.customer-app .customer-ticket-card h2 {
+    position: relative;
+    z-index: 1;
 }
 
-.ticket-name{
- margin:11px 0 9px;          /* 22px 0 18px -> 11px 0 9px */
- font:800 13px "Nunito";     /* 24px -> 13px */
+.customer-app .customer-ticket-card__top {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: space-between;
 }
 
-.ticket-detail{
- display:flex;
- flex-wrap:wrap;
- gap:5px;                    /* 10px -> 5px */
+.customer-app .customer-ticket-card__brand {
+    color: var(--customer-yellow);
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
 }
 
-.ticket-detail span{
- background:rgba(255,255,255,.08);
- color:#eee;
- padding:4px 7px;            /* 8px 14px -> 4px 7px */
- border-radius:999px;
- font-size:9px;              /* 13px -> 9px */
+.customer-app .customer-ticket-card__session {
+    padding: 6px 9px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: var(--customer-radius-pill);
+    color: rgba(255, 255, 255, 0.86);
+    background: rgba(255, 255, 255, 0.08);
+    font-size: 11px;
+    font-weight: 750;
 }
 
-.ticket-bottom{
- margin-top:14px;            /* 28px -> 14px */
- display:flex;
- justify-content:space-between;
- align-items:center;
- gap:8px;                    /* 15px -> 8px */
+.customer-app .customer-ticket-card h2 {
+    margin: 30px 0 14px;
+    color: #fff;
+    font-size: 21px;
+    font-weight: 900;
+    line-height: 1.25;
 }
 
-.ticket-price{
- font:900 16px "Nunito";     /* 30px -> 16px */
- color:var(--gold-light);
+.customer-app .customer-ticket-card__details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
 }
 
-.ticket-bottom button,
-.btn-buy{
- border:none;
- border-radius:999px;
- background:linear-gradient(135deg,var(--gold),#e2c46e);
- color:#222;
- font-weight:800;
- padding:6px 12px;           /* 10px 22px -> 6px 12px */
- font-size:12px;
- transition:.25s;
+.customer-app .customer-ticket-card__details span {
+    padding: 6px 9px;
+    border-radius: var(--customer-radius-pill);
+    color: rgba(255, 255, 255, 0.76);
+    background: rgba(255, 255, 255, 0.08);
+    font-size: 11px;
 }
 
-.ticket-bottom button:hover,
-.btn-buy:hover{
- transform:translateY(-1px);
- box-shadow:0 6px 14px rgba(200,161,74,.35);
+.customer-app .customer-ticket-card__bottom {
+    margin-top: auto;
+    padding-top: 24px;
+    color: var(--customer-yellow);
+    font-size: 24px;
+    font-weight: 950;
 }
 
-.btn-view{
- border:1px solid var(--emerald); /* 2px -> 1px */
- color:var(--emerald);
- background:#fff;
- border-radius:999px;
- padding:6px 11px;           /* 10px 20px -> 6px 11px */
- font-size:12px;
- font-weight:700;
+.customer-app .customer-ticket-page__skeleton {
+    min-height: 250px;
+    padding: 28px;
+    border-radius: var(--customer-radius-lg);
+    background: var(--customer-green-dark);
 }
 
-.btn-view:hover{
- background:var(--emerald);
- color:#fff;
+@media (max-width: 1024px) {
+    .customer-app .customer-ticket-page__grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
 }
 
-@media(max-width:768px){
- .ticket-header{
-  flex-direction:column;
-  align-items:flex-start;
-  gap:12px;
- }
- .ticket-bottom{
-  flex-direction:column;
-  align-items:flex-start;
- }
- .ticket-bottom button,.btn-buy,.btn-view{
-  width:100%;
- }
+@media (max-width: 768px) {
+    .customer-app .customer-ticket-page {
+        width: min(calc(100% - 28px), var(--customer-container));
+    }
+
+    .customer-app .customer-ticket-page__header {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 14px;
+    }
+}
+
+@media (max-width: 560px) {
+    .customer-app .customer-ticket-page__grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .customer-app .customer-ticket-card {
+        transition: none;
+    }
+
+    .customer-app .customer-ticket-card:hover {
+        transform: none;
+    }
 }

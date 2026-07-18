@@ -4,14 +4,22 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\KhachHang;
+use App\Models\HangThanhVien;
 use App\Models\NhanVien;
+use App\Services\PasswordResetTokenService;
+use App\Services\SequentialCodeService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
-use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
+    public function __construct(
+        private PasswordResetTokenService $passwordResetTokens,
+        private SequentialCodeService $codes
+    ) {}
+
     public function memberLogin(Request $request)
     {
         $request->validate(
@@ -27,24 +35,21 @@ class AuthController extends Controller
             ]
         );
 
-        $khachHang = KhachHang::where('Email', $request->email)->first();
-        if ($khachHang->TrangThai !== 'HoatDong') {
-            return response()->json([
-                'success' => false,
-                'message' => 'Tài khoản đã bị khóa.'
-            ], 403);
-        }
+        $khachHang = KhachHang::where(
+            'Email',
+            mb_strtolower(trim((string) $request->email))
+        )->first();
         if (!$khachHang) {
             return response()->json([
                 'success' => false,
-                'message' => 'Email không tồn tại'
+                'message' => 'Email hoặc mật khẩu không đúng.'
             ], 401);
         }
 
         if (!Hash::check($request->password, $khachHang->MatKhau)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Mật khẩu không đúng'
+                'message' => 'Email hoặc mật khẩu không đúng.'
             ], 401);
         }
 
@@ -81,24 +86,18 @@ class AuthController extends Controller
             ]
         );
 
-        $nhanVien = NhanVien::where('TenDangNhap', $request->username)->first();
-        if ($nhanVien->TrangThai !== 'HoatDong') {
-            return response()->json([
-                'success' => false,
-                'message' => 'Tài khoản đã bị khóa.'
-            ], 403);
-        }
+        $nhanVien = NhanVien::where('TenDangNhap', trim((string) $request->username))->first();
         if (!$nhanVien) {
             return response()->json([
                 'success' => false,
-                'message' => 'Tên đăng nhập không tồn tại'
+                'message' => 'Tên đăng nhập hoặc mật khẩu không đúng.'
             ], 401);
         }
 
         if (!Hash::check($request->password, $nhanVien->MatKhau)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Mật khẩu không đúng'
+                'message' => 'Tên đăng nhập hoặc mật khẩu không đúng.'
             ], 401);
         }
         if ($nhanVien->TrangThai !== 'HoatDong') {
@@ -143,7 +142,7 @@ class AuthController extends Controller
                 'success' => true,
                 'message' => 'Đăng xuất thành công'
             ]);
-        } catch (\Exception $e) {
+        } catch (\Exception) {
 
             return response()->json([
                 'success' => false,
@@ -170,7 +169,8 @@ class AuthController extends Controller
 
                 'SoDienThoai' => [
                     'required',
-                    'regex:/^(0)[0-9]{9}$/'
+                    'regex:/^(0)[0-9]{9}$/',
+                    'unique:khachhang,SoDienThoai'
                 ],
 
                 'NgaySinh' => [
@@ -225,27 +225,35 @@ class AuthController extends Controller
             ]
         );
 
-        $lastKH = KhachHang::orderBy('MaKhachHang', 'desc')->first();
+        $defaultRank = HangThanhVien::query()
+            ->orderBy('ThuTuHang')
+            ->orderBy('DiemToiThieu')
+            ->value('MaHangThanhVien');
 
-        if ($lastKH) {
-            $so = (int) substr($lastKH->MaKhachHang, 2) + 1;
-        } else {
-            $so = 1;
+        if (!$defaultRank) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Hệ thống chưa cấu hình hạng thành viên mặc định.',
+            ], 503);
         }
 
-        $maKH = 'KH' . str_pad($so, 3, '0', STR_PAD_LEFT);
-
-        $khachHang = KhachHang::create([
-            'MaKhachHang' => $maKH,
-            'HoTen' => $request->HoTen,
-            'Email' => $request->Email,
-            'SoDienThoai' => $request->SoDienThoai,
-            'NgaySinh' => $request->NgaySinh,
-            'GioiTinh' => $request->GioiTinh,
-            'MatKhau' => bcrypt($request->MatKhau),
-            'TongDiem' => 0,
-            'MaHangThanhVien' => 'HTV001'
-        ]);
+        $khachHang = DB::transaction(function () use ($request, $defaultRank) {
+            return KhachHang::create([
+                'MaKhachHang' => $this->codes->next(
+                    'khachhang',
+                    'MaKhachHang',
+                    'KH'
+                ),
+                'HoTen' => trim($request->HoTen),
+                'Email' => mb_strtolower(trim($request->Email)),
+                'SoDienThoai' => trim($request->SoDienThoai),
+                'NgaySinh' => $request->NgaySinh,
+                'GioiTinh' => $request->GioiTinh,
+                'MatKhau' => bcrypt($request->MatKhau),
+                'TongDiem' => 0,
+                'MaHangThanhVien' => $defaultRank,
+            ]);
+        });
 
         return response()->json([
             'success' => true,
@@ -286,17 +294,17 @@ class AuthController extends Controller
 
                 'GioiTinh' => [
                     'required',
-                    'in:Nam,Nữ'
+                    'in:Nam,Nu,Nữ'
                 ]
             ]
         );
 
         $khachHang->update([
-            'HoTen' => $request->HoTen,
-            'Email' => $request->Email,
-            'SoDienThoai' => $request->SoDienThoai,
+            'HoTen' => trim((string) $request->HoTen),
+            'Email' => mb_strtolower(trim((string) $request->Email)),
+            'SoDienThoai' => trim((string) $request->SoDienThoai),
             'NgaySinh' => $request->NgaySinh,
-            'GioiTinh' => $request->GioiTinh
+            'GioiTinh' => $request->GioiTinh === 'Nữ' ? 'Nu' : $request->GioiTinh
         ]);
 
         return response()->json([
@@ -341,7 +349,26 @@ class AuthController extends Controller
             ]
         );
 
-        if (!Hash::check($request->MatKhauHienTai, $khachHang->MatKhau)) {
+        $changeResult = DB::transaction(function () use ($khachHang, $request) {
+            $lockedCustomer = KhachHang::where('MaKhachHang', $khachHang->MaKhachHang)
+                ->lockForUpdate()
+                ->first();
+
+            if (!$lockedCustomer || !Hash::check($request->MatKhauHienTai, $lockedCustomer->MatKhau)) {
+                return 'incorrect_current';
+            }
+
+            if (Hash::check($request->MatKhauMoi, $lockedCustomer->MatKhau)) {
+                return 'same_password';
+            }
+
+            $lockedCustomer->MatKhau = Hash::make($request->MatKhauMoi);
+            $lockedCustomer->save();
+
+            return 'changed';
+        });
+
+        if ($changeResult === 'incorrect_current') {
             return response()->json([
                 'success' => false,
                 'message' => 'Mật khẩu hiện tại không đúng.',
@@ -351,7 +378,7 @@ class AuthController extends Controller
             ], 422);
         }
 
-        if (Hash::check($request->MatKhauMoi, $khachHang->MatKhau)) {
+        if ($changeResult === 'same_password') {
             return response()->json([
                 'success' => false,
                 'message' => 'Mật khẩu mới không được trùng mật khẩu hiện tại.',
@@ -361,12 +388,13 @@ class AuthController extends Controller
             ], 422);
         }
 
-        $khachHang->MatKhau = bcrypt($request->MatKhauMoi);
-        $khachHang->save();
+        $freshCustomer = KhachHang::findOrFail($khachHang->MaKhachHang);
+        $newToken = JWTAuth::fromUser($freshCustomer);
 
         return response()->json([
             'success' => true,
-            'message' => 'Đổi mật khẩu thành công.'
+            'message' => 'Đổi mật khẩu thành công.',
+            'token' => $newToken,
         ]);
     }
     public function forgotPassword(Request $request)
@@ -374,8 +402,8 @@ class AuthController extends Controller
         $request->validate(
             [
                 'Email' => 'required|email',
-                'SoDienThoai' => 'required',
-                'NgaySinh' => 'required|date'
+                'SoDienThoai' => ['required', 'regex:/^0[0-9]{9}$/'],
+                'NgaySinh' => ['required', 'date', 'before:today'],
             ],
             [
                 'Email.required' => 'Vui lòng nhập email.',
@@ -385,8 +413,8 @@ class AuthController extends Controller
             ]
         );
 
-        $khachHang = KhachHang::where('Email', $request->Email)
-            ->where('SoDienThoai', $request->SoDienThoai)
+        $khachHang = KhachHang::where('Email', mb_strtolower(trim((string) $request->Email)))
+            ->where('SoDienThoai', trim((string) $request->SoDienThoai))
             ->where('NgaySinh', $request->NgaySinh)
             ->first();
 
@@ -399,7 +427,9 @@ class AuthController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Xác thực thành công.'
+            'message' => 'Xác thực thành công.',
+            'reset_token' => $this->passwordResetTokens->create($khachHang),
+            'expires_in' => PasswordResetTokenService::TTL_MINUTES * 60,
         ]);
     }
     public function resetPassword(Request $request)
@@ -407,8 +437,9 @@ class AuthController extends Controller
         $request->validate(
             [
                 'Email' => 'required|email',
-                'SoDienThoai' => 'required',
-                'NgaySinh' => 'required|date',
+                'SoDienThoai' => ['required', 'regex:/^0[0-9]{9}$/'],
+                'NgaySinh' => ['required', 'date', 'before:today'],
+                'ResetToken' => ['required', 'string', 'max:2048'],
 
                 'MatKhau' => [
                     'required',
@@ -425,25 +456,57 @@ class AuthController extends Controller
             ]
         );
 
-        $khachHang = KhachHang::where('Email', $request->Email)
-            ->where('SoDienThoai', $request->SoDienThoai)
-            ->where('NgaySinh', $request->NgaySinh)
-            ->first();
+        $resetResult = DB::transaction(function () use ($request) {
+            $khachHang = KhachHang::where(
+                    'Email',
+                    mb_strtolower(trim((string) $request->Email))
+                )
+                ->where('SoDienThoai', trim((string) $request->SoDienThoai))
+                ->where('NgaySinh', $request->NgaySinh)
+                ->lockForUpdate()
+                ->first();
 
-        if (!$khachHang) {
+            if (!$khachHang) return 'customer_not_found';
+
+            if (!$this->passwordResetTokens->isValid($request->ResetToken, $khachHang)) {
+                return 'invalid_token';
+            }
+
+            if (Hash::check($request->MatKhau, $khachHang->MatKhau)) {
+                return 'same_password';
+            }
+
+            $khachHang->MatKhau = Hash::make($request->MatKhau);
+            $khachHang->save();
+
+            return 'changed';
+        });
+
+        if ($resetResult === 'customer_not_found') {
             return response()->json([
                 'success' => false,
                 'message' => 'Thông tin xác thực không đúng.'
             ], 404);
         }
 
-        $khachHang->MatKhau = bcrypt($request->MatKhau);
+        if ($resetResult === 'invalid_token') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Phiên đặt lại mật khẩu không hợp lệ hoặc đã hết hạn.'
+            ], 422);
+        }
 
-        $khachHang->save();
+        if ($resetResult === 'same_password') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Mật khẩu mới không được trùng mật khẩu hiện tại.',
+            ], 422);
+        }
 
         return response()->json([
             'success' => true,
             'message' => 'Đổi mật khẩu thành công.'
         ]);
     }
+
 }

@@ -1,117 +1,58 @@
+import Pagination from "../customer/ui/Pagination";
 import MyVoucherCard from "./MyVoucherCard";
+import VoucherGrid from "./VoucherGrid";
 
 function MyVoucherList({
     vouchers,
-    links,
-    onPageChange
+    page,
+    totalPages,
+    loading,
+    error,
+    onPageChange,
+    onRetry,
 }) {
-
-    const getLabel = (label) => {
-
-        if (label.includes("Previous")) return "«";
-
-        if (label.includes("Next")) return "»";
-
-        return label;
-
-    };
-
     return (
-
-        <div className="voucher-section">
-
-            <div className="section-header">
-
-                <h3>Voucher của tôi</h3>
-
-                <span>{vouchers.length} voucher</span>
-
+        <section
+            id="voucher-panel-mine"
+            className="reward-voucher-panel"
+            role="tabpanel"
+            aria-labelledby="voucher-tab-mine"
+        >
+            <div className="reward-voucher-panel__intro">
+                <div>
+                    <span>Ví phần thưởng</span>
+                    <h2>Voucher của tôi</h2>
+                    <p>Voucher đã dùng và hết hạn vẫn được giữ lại để bạn dễ theo dõi.</p>
+                </div>
             </div>
 
-            {
-                vouchers.length === 0 ? (
+            <VoucherGrid
+                items={vouchers}
+                loading={loading}
+                error={error}
+                onRetry={onRetry}
+                emptyTitle="Bạn chưa sở hữu voucher nào"
+                emptyDescription="Đổi một phần thưởng trong kho để voucher xuất hiện tại đây."
+            >
+                {vouchers.map((voucher) => (
+                    <MyVoucherCard
+                        key={voucher.MaVoucherKhachHang}
+                        voucher={voucher}
+                    />
+                ))}
+            </VoucherGrid>
 
-                    <div className="empty-voucher">
-
-                        Bạn chưa sở hữu voucher nào.
-
-                    </div>
-
-                ) : (
-
-                    <>
-
-                        <div className="voucher-grid">
-
-                            {
-                                vouchers.map((voucher) => (
-
-                                    <MyVoucherCard
-                                        key={voucher.MaVoucherKhachHang}
-                                        voucher={voucher}
-                                    />
-
-                                ))
-                            }
-
-                        </div>
-
-                        {/* Phân trang */}
-
-                        <div className="voucher-pagination">
-
-                            {
-
-                                links.map((link, index) => (
-
-                                    <button
-
-                                        key={index}
-
-                                        className={`page-btn ${
-                                            link.active ? "active" : ""
-                                        } ${
-                                            !link.url ? "disabled" : ""
-                                        }`}
-
-                                        disabled={!link.url}
-
-                                        onClick={() => {
-
-                                            if (link.url) {
-
-                                                const page = new URL(link.url)
-                                                    .searchParams
-                                                    .get("page");
-
-                                                onPageChange(Number(page));
-
-                                            }
-
-                                        }}
-
-                                    >
-
-                                        {getLabel(link.label)}
-
-                                    </button>
-
-                                ))
-
-                            }
-
-                        </div>
-
-                    </>
-
-                )
-
-            }
-
-        </div>
-
+            {vouchers.length > 0 && (
+                <Pagination
+                    currentPage={page}
+                    totalPages={totalPages}
+                    onPageChange={onPageChange}
+                    disabled={loading}
+                    ariaLabel="Phân trang voucher của tôi"
+                />
+            )}
+        </section>
     );
-
 }
 
 export default MyVoucherList;

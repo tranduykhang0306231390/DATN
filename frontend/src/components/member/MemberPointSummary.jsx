@@ -1,103 +1,56 @@
-import "../../assets/css/memberRank.css";
+import { FaCoins, FaReceipt, FaWallet } from "react-icons/fa";
+import {
+    formatMemberMoney,
+    formatMemberNumber,
+} from "../../utils/memberRank";
 
 function MemberPointSummary({ points }) {
-
     if (!points) return null;
 
-    const getRankName = (rank) => {
-
-        switch (rank) {
-
-            case "HTV001":
-                return "Đồng";
-
-            case "HTV002":
-                return "Bạc";
-
-            case "HTV003":
-                return "Vàng";
-
-            case "HTV004":
-                return "Kim Cương";
-
-            default:
-                return "Thành viên";
-        }
-
-    };
-
-    const cards = [
-
-     
-
+    const metrics = [
         {
-            title: "Tổng hóa đơn",
-            value: points.TongHoaDon.toLocaleString()
+            key: "earned",
+            label: "Điểm đã nhận",
+            value: formatMemberNumber(points.TongDiemNhan),
+            icon: FaCoins,
+            tone: "green",
         },
-
         {
-            title: "Tổng chi tiêu",
-            value: Number(points.TongChiTieu).toLocaleString() + " đ"
+            key: "used",
+            label: "Điểm đã sử dụng",
+            value: formatMemberNumber(points.TongDiemDaDung),
+            icon: FaWallet,
+            tone: "coral",
         },
-
         {
-            title: "Điểm đã nhận",
-            value: points.TongDiemNhan.toLocaleString()
+            key: "invoices",
+            label: "Tổng hóa đơn",
+            value: formatMemberNumber(points.TongHoaDon),
+            icon: FaReceipt,
+            tone: "cyan",
         },
-
-        
         {
-            title: "Hạng thành viên",
-            value: getRankName(points.HangThanhVien)
-        }
-
+            key: "spending",
+            label: "Tổng chi tiêu",
+            value: formatMemberMoney(points.TongChiTieu),
+            icon: FaWallet,
+            tone: "purple",
+        },
     ];
 
     return (
-
-        <div className="summary-section">
-
-            <h3 className="section-title">
-
-                Thống kê thành viên
-
-            </h3>
-
-            <div className="summary-grid">
-
-                {
-
-                    cards.map((item, index) => (
-
-                        <div
-                            className="summary-card"
-                            key={index}
-                        >
-
-                            <span>
-
-                                {item.title}
-
-                            </span>
-
-                            <h4>
-
-                                {item.value}
-
-                            </h4>
-
-                        </div>
-
-                    ))
-
-                }
-
+        <div className="member-points-summary">
+            <div className="member-points-summary__metrics">
+                {metrics.map(({ key, label, value, icon: Icon, tone }) => (
+                    <article key={key} className={`member-point-metric member-point-metric--${tone}`}>
+                        <Icon aria-hidden="true" />
+                        <span>{label}</span>
+                        <strong>{value}</strong>
+                    </article>
+                ))}
             </div>
-
         </div>
-
     );
-
 }
 
 export default MemberPointSummary;

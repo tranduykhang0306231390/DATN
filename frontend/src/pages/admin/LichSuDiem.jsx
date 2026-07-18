@@ -19,7 +19,8 @@ export default function LichSuDiem() {
     const [loai, setLoai] = useState('');
     const [page, setPage] = useState(1);
 
-    const loadList = useCallback(() => {
+    const loadList = useCallback(async () => {
+        await Promise.resolve();
         setLoading(true);
         lichSuDiemApi
             .getAll({ ma_khach_hang: search, loai_giao_dich: loai, page, per_page: 10 })
@@ -34,12 +35,13 @@ export default function LichSuDiem() {
     }, [search, loai, page]);
 
     useEffect(() => {
-        loadList();
+        const timeoutId = window.setTimeout(() => void loadList(), 0);
+        return () => window.clearTimeout(timeoutId);
     }, [loadList]);
 
     const applyFilter = () => {
-        setPage(1);
-        loadList();
+        if (page === 1) void loadList();
+        else setPage(1);
     };
 
     return (

@@ -6,10 +6,16 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\PhanHoiKhachHang;
 use App\Models\HoaDon;
+use App\Services\SequentialCodeService;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class PhanHoiKhachHangController extends Controller
 {
+    public function __construct(
+        private SequentialCodeService $codes
+    ) {}
+
     /**
      * Lấy phản hồi của hóa đơn
      * Chỉ trả về nếu hóa đơn thuộc về khách hàng đang đăng nhập.
@@ -65,6 +71,7 @@ class PhanHoiKhachHangController extends Controller
         // Lưu ý: đổi tên Model/khóa cho đúng với hệ thống của bạn nếu khác 'HoaDon' / 'MaKhachHang'
         $invoice = HoaDon::where('MaHoaDon', $maHoaDon)
             ->where('MaKhachHang', $khachHang->MaKhachHang)
+            ->where('TrangThai', 'DaThanhToan')
             ->first();
 
         if (!$invoice) {
@@ -89,21 +96,35 @@ class PhanHoiKhachHangController extends Controller
         // Sinh mã PH001 và tạo feedback trong 1 transaction có khóa dòng
         // để tránh 2 request cùng lúc sinh trùng mã (race condition)
         $feedback = DB::transaction(function () use ($request, $khachHang, $maHoaDon) {
-
-            $last = PhanHoiKhachHang::orderByDesc('MaPhanHoi')
+            $lockedInvoice = HoaDon::where('MaHoaDon', $maHoaDon)
+                ->where('MaKhachHang', $khachHang->MaKhachHang)
+                ->where('TrangThai', 'DaThanhToan')
                 ->lockForUpdate()
                 ->first();
 
-            if ($last) {
-                $number = intval(substr($last->MaPhanHoi, 2)) + 1;
-            } else {
-                $number = 1;
+            if (!$lockedInvoice) {
+                throw ValidationException::withMessages([
+                    'MaHoaDon' => ['Hóa đơn không hợp lệ hoặc chưa thanh toán.'],
+                ]);
             }
 
-            $maPhanHoi = 'PH' . str_pad($number, 3, '0', STR_PAD_LEFT);
+            $alreadyExists = PhanHoiKhachHang::where('MaHoaDon', $maHoaDon)
+                ->where('MaKhachHang', $khachHang->MaKhachHang)
+                ->lockForUpdate()
+                ->exists();
+
+            if ($alreadyExists) {
+                throw ValidationException::withMessages([
+                    'MaHoaDon' => ['Hóa đơn này đã được đánh giá.'],
+                ]);
+            }
 
             return PhanHoiKhachHang::create([
-                'MaPhanHoi' => $maPhanHoi,
+                'MaPhanHoi' => $this->codes->next(
+                    'phanhoikhachhang',
+                    'MaPhanHoi',
+                    'PH'
+                ),
                 'DiemDanhGia' => $request->DiemDanhGia,
                 'NoiDungCuaKhachHang' => $request->NoiDungCuaKhachHang,
                 'ThoiGian' => now(),

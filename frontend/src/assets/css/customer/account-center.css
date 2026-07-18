@@ -1,0 +1,137 @@
+.customer-app .account-center-page {
+    position: relative;
+    min-height: 70vh;
+    padding: clamp(28px, 4vw, 48px) 0 64px;
+}
+
+.customer-app .account-center-page > .customer-shell > .customer-section-heading {
+    margin-bottom: 24px;
+}
+
+.customer-app .account-center-layout {
+    display: grid;
+    grid-template-columns: 238px minmax(0, 1fr);
+    gap: clamp(20px, 3vw, 34px);
+    align-items: start;
+}
+
+.customer-app .account-center-content {
+    min-width: 0;
+    scroll-margin-top: 92px;
+}
+
+.customer-app .account-center-content :where(
+    .transaction-results-anchor,
+    .reward-voucher-catalogue
+) {
+    scroll-margin-top: 92px;
+}
+
+.customer-app .account-center-content .transaction-results-anchor {
+    top: 0;
+}
+
+.customer-app .account-center-loading,
+.customer-app .rank-overview-panel {
+    display: grid;
+    gap: 24px;
+}
+
+.customer-app .account-center-loading > *,
+.customer-app .rank-overview-panel > .member-rank-section {
+    min-width: 0;
+}
+
+.customer-app .member-rank-section--membership-card > .member-loyalty-card {
+    width: 100%;
+}
+
+.customer-app .member-rank-section--point-summary > .customer-section-heading {
+    margin-bottom: 18px;
+}
+
+.customer-app .rank-overview-panel .member-tier-benefits-grid {
+    margin-top: 18px;
+}
+
+.customer-app .member-tier-benefits-disclosure {
+    margin-top: 16px;
+    border: 1px solid var(--customer-border);
+    border-radius: var(--customer-radius-md);
+    background: rgba(255, 255, 255, 0.64);
+}
+
+.customer-app .member-tier-benefits-disclosure > summary {
+    padding: 14px 16px;
+    color: var(--customer-green-dark);
+    font-weight: 850;
+    cursor: pointer;
+}
+
+.customer-app .member-tier-benefits-disclosure[open] > summary {
+    border-bottom: 1px solid var(--customer-border);
+}
+
+.customer-app .member-tier-benefits-disclosure .member-tier-benefits-grid {
+    padding: 16px;
+    margin-top: 0;
+}
+
+.customer-app .account-center-content .customer-ticket-page {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+}
+
+.customer-app .account-center-content .customer-ticket-page__header {
+    margin-bottom: 22px;
+    padding: 18px 20px;
+    border: 1px solid var(--customer-border);
+    border-radius: var(--customer-radius-md);
+    background: rgba(255, 255, 255, 0.72);
+}
+
+.customer-app .account-center-content .customer-ticket-page__header h1 {
+    font-size: clamp(24px, 3vw, 32px);
+}
+
+@media (max-width: 1024px) {
+    .customer-app .account-center-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .customer-app .account-center-content {
+        scroll-margin-top: 148px;
+    }
+
+    .customer-app .account-center-content :where(
+        .transaction-results-anchor,
+        .reward-voucher-catalogue
+    ) {
+        scroll-margin-top: 148px;
+    }
+}
+
+@media (max-width: 768px) {
+    .customer-app .account-center-page {
+        padding-top: 22px;
+    }
+
+    .customer-app .account-center-page > .customer-shell > .customer-section-heading {
+        margin-bottom: 18px;
+    }
+
+    .customer-app .account-center-loading,
+    .customer-app .rank-overview-panel {
+        gap: 18px;
+    }
+
+}
+
+@media (max-width: 420px) {
+    .customer-app .account-center-page {
+        padding-top: 16px;
+        padding-bottom: 44px;
+    }
+}

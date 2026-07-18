@@ -10,15 +10,22 @@ use App\Models\HoaDon;
 use App\Models\ChiTietHoaDon;
 use App\Models\KhachHang;
 use App\Models\LoaiVe;
+use App\Models\UuDai;
 use App\Models\VoucherKhachHang;
 use App\Services\DiemTichLuyService;
+use App\Services\SequentialCodeService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class HoaDonController extends Controller
 {
     public function __construct(
-        private DiemTichLuyService $diemService
+        private DiemTichLuyService $diemService,
+        private SequentialCodeService $codes
     ) {}
 
     /* ==================================================================
@@ -30,33 +37,46 @@ class HoaDonController extends Controller
     {
         $request->validate([
             'so_ban'               => 'required|integer|min:1|max:20',
-            'chi_tiet'             => 'required|array|min:1',
-            'chi_tiet.*.MaLoaiVe'  => 'required|string|exists:loaive,MaLoaiVe',
-            'chi_tiet.*.SoLuong'   => 'required|integer|min:1',
-            'ma_khach_hang'        => 'nullable|string|exists:khachhang,MaKhachHang',
-            'vouchers_ap_dung'     => 'nullable|array',
+            'chi_tiet'             => 'required|array|min:1|max:50',
+            'chi_tiet.*.MaLoaiVe'  => 'required|string|max:20|distinct|exists:loaive,MaLoaiVe',
+            'chi_tiet.*.SoLuong'   => 'required|integer|min:1|max:100',
+            'ma_khach_hang'        => 'nullable|string|max:20|exists:khachhang,MaKhachHang',
+            'vouchers_ap_dung'     => 'nullable|array|max:10',
+            'vouchers_ap_dung.*'   => 'string|max:20|distinct|exists:voucherkhachhang,MaVoucherKhachHang',
         ]);
-
-        // Một bàn chỉ được có 1 hóa đơn đang treo
-        $daCo = HoaDon::where('SoBan', $request->so_ban)
-            ->where('TrangThai', 'ChuaThanhToan')
-            ->exists();
-        if ($daCo) {
-            return response()->json([
-                'success' => false,
-                'message' => "Bàn {$request->so_ban} đang có hóa đơn chưa thanh toán.",
-            ], 422);
-        }
 
         DB::beginTransaction();
         try {
+            // Mọi luồng mở bàn đều khóa cùng một tập loại vé theo cùng thứ tự.
+            // Ngoài việc lấy giá nhất quán, đây là mutex bằng row-lock giúp hai
+            // request không thể đồng thời tạo hóa đơn treo cho cùng một bàn,
+            // kể cả khi bàn đó chưa có dòng hóa đơn nào để lock.
+            $ticketTypes = LoaiVe::query()
+                ->orderBy('MaLoaiVe')
+                ->lockForUpdate()
+                ->get()
+                ->keyBy('MaLoaiVe');
+
+            $daCo = HoaDon::where('SoBan', $request->so_ban)
+                ->where('TrangThai', 'ChuaThanhToan')
+                ->lockForUpdate()
+                ->exists();
+
+            if ($daCo) {
+                DB::rollBack();
+                return response()->json([
+                    'success' => false,
+                    'message' => "Bàn {$request->so_ban} đang có hóa đơn chưa thanh toán.",
+                ], 422);
+            }
+
             $nhanVien = auth('nhanvien')->user();
 
             $tongTienGoc = 0;
             $chiTietData = [];
 
             foreach ($request->chi_tiet as $item) {
-                $loaiVe = LoaiVe::find($item['MaLoaiVe']);
+                $loaiVe = $ticketTypes->get($item['MaLoaiVe']);
                 if (!$loaiVe || $loaiVe->TrangThai !== 'HoatDong') {
                     DB::rollBack();
                     return response()->json([
@@ -80,12 +100,74 @@ class HoaDonController extends Controller
             }
 
             $khachHang = $request->ma_khach_hang
-                ? KhachHang::find($request->ma_khach_hang)
+                ? KhachHang::where('MaKhachHang', $request->ma_khach_hang)
+                    ->lockForUpdate()
+                    ->first()
                 : null;
 
-            $lastHD = HoaDon::orderBy('MaHoaDon', 'desc')->first();
-            $soHD   = $lastHD ? ((int) substr($lastHD->MaHoaDon, 2)) + 1 : 1;
-            $maHD   = 'HD' . str_pad($soHD, 3, '0', STR_PAD_LEFT);
+            if ($khachHang && $khachHang->TrangThai !== 'HoatDong') {
+                DB::rollBack();
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tài khoản khách hàng đang bị khóa.',
+                ], 422);
+            }
+
+            $requestedVoucherIds = collect($request->input('vouchers_ap_dung', []))
+                ->map(fn ($id) => trim((string) $id))
+                ->filter()
+                ->unique()
+                ->values();
+
+            if ($requestedVoucherIds->isNotEmpty()) {
+                if (!$khachHang) {
+                    DB::rollBack();
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Cần chọn khách hàng trước khi áp dụng voucher.',
+                    ], 422);
+                }
+
+                [$validVouchers, $invalidVoucherIds] = $this->lockAndValidateVouchers(
+                    $requestedVoucherIds,
+                    $khachHang->MaKhachHang
+                );
+                $incompatibleVoucherIds = $this->findIncompatibleVoucherIds($validVouchers);
+
+                $reservedVoucherIds = HoaDon::query()
+                    ->where('MaKhachHang', $khachHang->MaKhachHang)
+                    ->where('TrangThai', 'ChuaThanhToan')
+                    ->whereNotNull('MaVoucher')
+                    ->pluck('MaVoucher')
+                    ->flatMap(fn ($ids) => explode(',', $ids))
+                    ->map(fn ($id) => trim((string) $id))
+                    ->filter()
+                    ->unique();
+
+                $alreadyReserved = $requestedVoucherIds->intersect($reservedVoucherIds)->values();
+                if (
+                    $invalidVoucherIds->isNotEmpty()
+                    || $alreadyReserved->isNotEmpty()
+                    || $incompatibleVoucherIds->isNotEmpty()
+                ) {
+                    DB::rollBack();
+                    return response()->json([
+                        'success' => false,
+                        'message' => $incompatibleVoucherIds->isNotEmpty()
+                            ? 'Có voucher cùng nhóm không được phép dùng chung.'
+                            : ($alreadyReserved->isNotEmpty()
+                                ? 'Voucher đã được giữ cho một hóa đơn chưa thanh toán khác.'
+                                : 'Có voucher không còn đủ điều kiện áp dụng.'),
+                        'invalid_vouchers' => $invalidVoucherIds
+                            ->merge($alreadyReserved)
+                            ->merge($incompatibleVoucherIds)
+                            ->unique()
+                            ->values(),
+                    ], 409);
+                }
+            }
+
+            $maHD = $this->codes->next('hoadon', 'MaHoaDon', 'HD');
 
             HoaDon::create([
                 'MaHoaDon'        => $maHD,
@@ -99,17 +181,21 @@ class HoaDonController extends Controller
                 'MaQuyTacHienTai' => null,
                 'MaHangThanhVien' => $khachHang?->MaHangThanhVien,
                 'MaVoucher'       => $request->filled('vouchers_ap_dung')
-                    ? implode(',', $request->vouchers_ap_dung)
+                    ? $requestedVoucherIds->implode(',')
                     : null,
                 'SoBan'           => $request->so_ban,
             ]);
 
-            $lastCT = ChiTietHoaDon::orderBy('MaChiTietHD', 'desc')->first();
-            $soCT   = $lastCT ? ((int) substr($lastCT->MaChiTietHD, 4)) + 1 : 1;
+            $detailCodes = $this->codes->nextBatch(
+                'chitiethoadon',
+                'MaChiTietHD',
+                'CTHD',
+                count($chiTietData)
+            );
 
-            foreach ($chiTietData as $ct) {
+            foreach ($chiTietData as $index => $ct) {
                 ChiTietHoaDon::create([
-                    'MaChiTietHD' => 'CTHD' . str_pad($soCT++, 3, '0', STR_PAD_LEFT),
+                    'MaChiTietHD' => $detailCodes[$index],
                     'SoLuong'     => $ct['SoLuong'],
                     'DonGia'      => $ct['DonGia'],
                     'MaHoaDon'    => $maHD,
@@ -124,11 +210,16 @@ class HoaDonController extends Controller
                 'message' => "Đã mở bàn {$request->so_ban}",
                 'data'    => ['MaHoaDon' => $maHD, 'SoBan' => $request->so_ban],
             ]);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             DB::rollBack();
+            Log::error('Không thể mở hóa đơn', [
+                'staff_id' => auth('nhanvien')->id(),
+                'table' => $request->so_ban,
+                'exception' => $e,
+            ]);
             return response()->json([
                 'success' => false,
-                'message' => 'Có lỗi xảy ra: ' . $e->getMessage(),
+                'message' => 'Không thể mở hóa đơn lúc này. Vui lòng thử lại.',
             ], 500);
         }
     }
@@ -136,9 +227,13 @@ class HoaDonController extends Controller
     /* ==================================================================
      *  THANH TOÁN HÓA ĐƠN TREO
      * ================================================================== */
-    public function thanhToan(string $maHD)
+    public function thanhToan(Request $request, string $maHD)
     {
-        $hoaDon = HoaDon::with('chiTietHoaDon')->find($maHD);
+        $request->validate([
+            'continue_without_invalid_vouchers' => ['sometimes', 'boolean'],
+        ]);
+
+        $hoaDon = HoaDon::find($maHD);
 
         if (!$hoaDon) {
             return response()->json(['success' => false, 'message' => 'Không tìm thấy hóa đơn'], 404);
@@ -152,23 +247,79 @@ class HoaDonController extends Controller
 
         DB::beginTransaction();
         try {
+            // Đọc lại và khóa hóa đơn trong transaction. Request thanh toán thứ
+            // hai sẽ chờ request đầu và nhìn thấy trạng thái đã cập nhật.
+            $hoaDon = HoaDon::with('chiTietHoaDon')
+                ->where('MaHoaDon', $maHD)
+                ->lockForUpdate()
+                ->first();
+
+            if (!$hoaDon || $hoaDon->TrangThai !== 'ChuaThanhToan') {
+                DB::rollBack();
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Hóa đơn này đã được thanh toán hoặc không hợp lệ.',
+                ], 422);
+            }
+
             $tongTienGoc = $hoaDon->chiTietHoaDon->sum(fn ($ct) => $ct->DonGia * $ct->SoLuong);
 
             $khachHang = $hoaDon->MaKhachHang
-                ? KhachHang::with(['hangThanhVien.quyTac'])->find($hoaDon->MaKhachHang)
+                ? KhachHang::with(['hangThanhVien.quyTac'])
+                    ->where('MaKhachHang', $hoaDon->MaKhachHang)
+                    ->lockForUpdate()
+                    ->first()
                 : null;
 
             $tongGiam      = 0;
             $maVoucherList = [];
 
+            if (
+                !$khachHang
+                && $hoaDon->MaVoucher
+                && !$request->boolean('continue_without_invalid_vouchers')
+            ) {
+                DB::rollBack();
+                return response()->json([
+                    'success' => false,
+                    'code' => 'VOUCHERS_INVALID',
+                    'message' => 'Hóa đơn có voucher nhưng không còn thông tin khách hàng hợp lệ.',
+                    'invalid_vouchers' => collect(explode(',', $hoaDon->MaVoucher))
+                        ->map(fn ($id) => trim((string) $id))
+                        ->filter()
+                        ->values(),
+                ], 409);
+            }
+
             if ($khachHang && $hoaDon->MaVoucher) {
-                $vouchers = VoucherKhachHang::with('uuDai')
-                    ->whereIn('MaVoucherKhachHang', explode(',', $hoaDon->MaVoucher))
-                    ->where('MaKhachHang', $khachHang->MaKhachHang)
-                    ->where('TrangThai', 'ChuaSuDung')
-                    ->where('NgayHetHan', '>=', now()->format('Y-m-d'))
-                    ->get()
-                    ->sortBy('uuDai.ThuTuApDung');
+                $requestedVoucherIds = collect(explode(',', $hoaDon->MaVoucher))
+                    ->map(fn ($id) => trim($id))
+                    ->filter()
+                    ->unique()
+                    ->values();
+
+                [$vouchers, $invalidVoucherIds] = $this->lockAndValidateVouchers(
+                    $requestedVoucherIds,
+                    $khachHang->MaKhachHang
+                );
+                $incompatibleVoucherIds = $this->findIncompatibleVoucherIds($vouchers);
+                $unavailableVoucherIds = $invalidVoucherIds
+                    ->merge($incompatibleVoucherIds)
+                    ->unique()
+                    ->values();
+
+                if (
+                    $unavailableVoucherIds->isNotEmpty()
+                    && !$request->boolean('continue_without_invalid_vouchers')
+                ) {
+                    DB::rollBack();
+                    return response()->json([
+                        'success' => false,
+                        'code' => 'VOUCHERS_INVALID',
+                        'message' => 'Một số voucher không còn hiệu lực hoặc không thể dùng chung. Hãy xác nhận số tiền trước khi thanh toán tiếp.',
+                        'invalid_vouchers' => $unavailableVoucherIds,
+                    ], 409);
+                }
 
                 $nhomDaSuDung = [];
                 foreach ($vouchers as $v) {
@@ -178,7 +329,11 @@ class HoaDonController extends Controller
                     }
 
                     $nhom = $v->uuDai->NhomUuDai;
-                    if (isset($nhomDaSuDung[$nhom]) && !$v->uuDai->CoTheDungChung) {
+                    $coTheDungChung = in_array($v->uuDai->CoTheDungChung, [1, '1', true], true);
+                    if (
+                        array_key_exists($nhom, $nhomDaSuDung)
+                        && (!$nhomDaSuDung[$nhom] || !$coTheDungChung)
+                    ) {
                         continue;
                     }
 
@@ -196,7 +351,7 @@ class HoaDonController extends Controller
                     }
 
                     $tongGiam += $giamVoucher;
-                    $nhomDaSuDung[$nhom] = true;
+                    $nhomDaSuDung[$nhom] = ($nhomDaSuDung[$nhom] ?? true) && $coTheDungChung;
                     $maVoucherList[]     = $v->MaVoucherKhachHang;
                 }
             }
@@ -208,7 +363,13 @@ class HoaDonController extends Controller
 
             if ($khachHang) {
                 $quyTac = $khachHang->hangThanhVien->quyTac ?? null;
-                if ($quyTac && $quyTac->TrangThai === 'HoatDong') {
+                $today = now()->toDateString();
+                $quyTacDangApDung = $quyTac
+                    && $quyTac->TrangThai === 'HoatDong'
+                    && (!$quyTac->NgayApDung || $quyTac->NgayApDung <= $today)
+                    && (!$quyTac->NgayHetHan || $quyTac->NgayHetHan >= $today);
+
+                if ($quyTacDangApDung) {
                     $diemTichLuy = $this->diemService->tinhDiem(
                         $quyTac,
                         (float) $tongThanhToan,
@@ -249,13 +410,113 @@ class HoaDonController extends Controller
                     'DiemTichLuy'   => $diemTichLuy,
                 ],
             ]);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             DB::rollBack();
+            Log::error('Không thể thanh toán hóa đơn', [
+                'invoice_id' => $maHD,
+                'staff_id' => auth('nhanvien')->id(),
+                'exception' => $e,
+            ]);
             return response()->json([
                 'success' => false,
-                'message' => 'Có lỗi xảy ra: ' . $e->getMessage(),
+                'message' => 'Không thể thanh toán hóa đơn lúc này. Vui lòng thử lại.',
             ], 500);
         }
+    }
+
+    /**
+     * Khóa toàn bộ voucher và ưu đãi liên quan rồi kiểm tra lại điều kiện tại
+     * thời điểm thao tác. Trả về voucher hợp lệ theo thứ tự áp dụng ổn định và
+     * danh sách mã không hợp lệ để caller không âm thầm thay đổi số tiền.
+     *
+     * @param Collection<int, string> $requestedIds
+     * @return array{0: Collection<int, VoucherKhachHang>, 1: Collection<int, string>}
+     */
+    private function lockAndValidateVouchers(Collection $requestedIds, string $customerId): array
+    {
+        $voucherRows = VoucherKhachHang::query()
+            ->whereIn('MaVoucherKhachHang', $requestedIds)
+            ->orderBy('MaVoucherKhachHang')
+            ->lockForUpdate()
+            ->get();
+
+        $offers = UuDai::query()
+            ->whereIn('MaUuDai', $voucherRows->pluck('MaUuDai')->unique())
+            ->orderBy('MaUuDai')
+            ->lockForUpdate()
+            ->get()
+            ->keyBy('MaUuDai');
+
+        $today = now()->toDateString();
+        $validVouchers = $voucherRows
+            ->filter(function ($voucher) use ($customerId, $offers, $today) {
+                $offer = $offers->get($voucher->MaUuDai);
+                if (!$offer) return false;
+
+                $isOfferInDateRange = !empty($offer->NgayBatDau)
+                    && !empty($offer->NgayKetThuc)
+                    && $offer->NgayBatDau <= $today
+                    && $offer->NgayKetThuc >= $today;
+
+                $isVoucherInDateRange = !empty($voucher->NgayHetHan)
+                    && $voucher->NgayHetHan >= $today;
+
+                if (
+                    $voucher->MaKhachHang !== $customerId
+                    || $voucher->TrangThai !== 'ChuaSuDung'
+                    || !$isVoucherInDateRange
+                    || $offer->TrangThai !== 'HoatDong'
+                    || !$isOfferInDateRange
+                ) {
+                    return false;
+                }
+
+                $voucher->setRelation('uuDai', $offer);
+                return true;
+            })
+            ->sort(function ($left, $right) {
+                $order = ((int) $left->uuDai->ThuTuApDung)
+                    <=> ((int) $right->uuDai->ThuTuApDung);
+
+                return $order !== 0
+                    ? $order
+                    : strcmp($left->MaVoucherKhachHang, $right->MaVoucherKhachHang);
+            })
+            ->values();
+
+        $validIds = $validVouchers->pluck('MaVoucherKhachHang');
+        $invalidIds = $requestedIds->diff($validIds)->values();
+
+        return [$validVouchers, $invalidIds];
+    }
+
+    /** @return Collection<int, string> */
+    private function findIncompatibleVoucherIds(Collection $vouchers): Collection
+    {
+        $groupShareability = [];
+        $incompatibleIds = collect();
+
+        foreach ($vouchers as $voucher) {
+            $group = $voucher->uuDai->NhomUuDai;
+            $isShareable = in_array(
+                $voucher->uuDai->CoTheDungChung,
+                [1, '1', true],
+                true
+            );
+
+            if (
+                array_key_exists($group, $groupShareability)
+                && (!$groupShareability[$group] || !$isShareable)
+            ) {
+                $incompatibleIds->push($voucher->MaVoucherKhachHang);
+                continue;
+            }
+
+            $groupShareability[$group] = ($groupShareability[$group] ?? true)
+                && $isShareable;
+        }
+
+        return $incompatibleIds->values();
     }
 
     /* ==================================================================
@@ -279,35 +540,58 @@ class HoaDonController extends Controller
      * ================================================================== */
     public function index(Request $request)
     {
+        $filters = $request->validate([
+            'tu_ngay' => ['nullable', 'date'],
+            'den_ngay' => ['nullable', 'date'],
+            'trang_thai' => ['nullable', Rule::in(['ChuaThanhToan', 'DaThanhToan', 'DaHuy'])],
+            'keyword' => ['nullable', 'string', 'max:100'],
+            'per_page' => ['nullable', 'integer', 'between:1,100'],
+            'page' => ['nullable', 'integer', 'min:1'],
+        ]);
+
+        if (
+            !empty($filters['tu_ngay'])
+            && !empty($filters['den_ngay'])
+            && $filters['den_ngay'] < $filters['tu_ngay']
+        ) {
+            throw ValidationException::withMessages([
+                'den_ngay' => ['Ngày kết thúc phải từ ngày bắt đầu trở đi.'],
+            ]);
+        }
+
         $query = HoaDon::with([
                 'khachHang:MaKhachHang,HoTen,SoDienThoai',
                 'nhanVien:MaNhanVien,HoTen',
                 'chiTietHoaDon.loaiVe:MaLoaiVe,TenLoaiVe',
             ])
-            ->orderBy('NgayLap', 'desc');
+            ->orderBy('NgayLap', 'desc')
+            ->orderByRaw('CAST(SUBSTRING(MaHoaDon, 3) AS UNSIGNED) DESC');
 
-        if ($request->filled('tu_ngay')) {
-            $query->whereDate('NgayLap', '>=', $request->tu_ngay);
+        if (!empty($filters['tu_ngay'])) {
+            $query->whereDate('NgayLap', '>=', $filters['tu_ngay']);
         }
-        if ($request->filled('den_ngay')) {
-            $query->whereDate('NgayLap', '<=', $request->den_ngay);
+        if (!empty($filters['den_ngay'])) {
+            $query->whereDate('NgayLap', '<=', $filters['den_ngay']);
         }
-        if ($request->filled('trang_thai')) {
-            $query->where('TrangThai', $request->trang_thai);
+        if (!empty($filters['trang_thai'])) {
+            $query->where('TrangThai', $filters['trang_thai']);
         }
-        if ($request->filled('keyword')) {
-            $kw = $request->keyword;
-            $query->whereHas('khachHang', fn ($q) =>
-                $q->where('HoTen', 'like', "%{$kw}%")
-                  ->orWhere('SoDienThoai', 'like', "%{$kw}%")
-            );
+        if ($kw = trim((string) ($filters['keyword'] ?? ''))) {
+            $query->where(function ($searchQuery) use ($kw) {
+                $searchQuery->where('MaHoaDon', 'like', "%{$kw}%")
+                    ->orWhere('SoBan', 'like', "%{$kw}%")
+                    ->orWhereHas('khachHang', fn ($customerQuery) =>
+                        $customerQuery->where('HoTen', 'like', "%{$kw}%")
+                            ->orWhere('SoDienThoai', 'like', "%{$kw}%")
+                    );
+            });
         }
 
-        $hoaDons = $query->paginate($request->get('per_page', 10));
+        $hoaDons = $query->paginate($filters['per_page'] ?? 10);
 
         $tongDoanhThu = HoaDon::where('TrangThai', 'DaThanhToan')
-            ->when($request->filled('tu_ngay'),  fn ($q) => $q->whereDate('NgayLap', '>=', $request->tu_ngay))
-            ->when($request->filled('den_ngay'), fn ($q) => $q->whereDate('NgayLap', '<=', $request->den_ngay))
+            ->when(!empty($filters['tu_ngay']),  fn ($q) => $q->whereDate('NgayLap', '>=', $filters['tu_ngay']))
+            ->when(!empty($filters['den_ngay']), fn ($q) => $q->whereDate('NgayLap', '<=', $filters['den_ngay']))
             ->sum('TongTien');
 
         return response()->json([

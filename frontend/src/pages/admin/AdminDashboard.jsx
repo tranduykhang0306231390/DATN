@@ -1,28 +1,11 @@
 // src/pages/admin/AdminDashboard.jsx
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import '../../assets/css/admin.css';
 import { ADMIN_MENU } from '../../components/admin/adminMenu';
 import DashboardSection from '../../components/admin/DashboardSection';
+import { getStoredObject } from '../../utils/storage';
 
 export default function AdminDashboard() {
-    const navigate = useNavigate();
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    const [dangDangXuat, setDangDangXuat] = useState(false);
-
-    const handleLogout = () => {
-        if (dangDangXuat) return;
-        if (!window.confirm('Đăng xuất khỏi tài khoản?')) return;
-
-        setDangDangXuat(true);
-        // Đăng xuất thuần phía client: xóa phiên và quay về trang đăng nhập.
-        // Khi bạn muốn hủy token phía server, có thể gọi thêm axiosClient.post('/logout').
-        localStorage.removeItem('token');
-        localStorage.removeItem('role');
-        localStorage.removeItem('user');
-        navigate('/staff/login', { replace: true });
-    };
-
+    const user = getStoredObject('user');
     return (
         <div className="admin-page">
             {/* Lời chào */}

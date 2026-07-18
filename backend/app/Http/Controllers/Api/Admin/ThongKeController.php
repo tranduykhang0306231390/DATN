@@ -4,8 +4,10 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class ThongKeController extends Controller
 {
@@ -53,8 +55,21 @@ class ThongKeController extends Controller
      */
     public function chiTiet(Request $request)
     {
-        $denNgay = $request->query('den_ngay') ?: now()->toDateString();
-        $tuNgay  = $request->query('tu_ngay') ?: now()->subDays(29)->toDateString();
+        $filters = $request->validate([
+            'tu_ngay' => ['nullable', 'date'],
+            'den_ngay' => ['nullable', 'date'],
+        ]);
+
+        $denNgay = Carbon::parse($filters['den_ngay'] ?? now())->toDateString();
+        $tuNgay = isset($filters['tu_ngay'])
+            ? Carbon::parse($filters['tu_ngay'])->toDateString()
+            : Carbon::parse($denNgay)->subDays(29)->toDateString();
+
+        if ($tuNgay > $denNgay) {
+            throw ValidationException::withMessages([
+                'den_ngay' => ['Ngày kết thúc phải từ ngày bắt đầu trở đi.'],
+            ]);
+        }
 
         // ── Tổng hợp trong khoảng ──────────────────────────────────
         $hoaDonQuery = DB::table('hoadon')

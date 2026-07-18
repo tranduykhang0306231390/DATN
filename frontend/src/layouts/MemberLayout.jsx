@@ -1,142 +1,91 @@
-import { Outlet, Link, useNavigate, useLocation } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { Outlet, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
-import "../assets/css/memberLayout.css";
-import Footer from "../components/public/Footer";
+
+import { logoutSession } from "../api/authApi";
 import NotificationBell from "../components/member/NotificationBell";
+import CustomerLayout from "../components/customer/layout/CustomerLayout";
+import { resetSessionVerificationCache } from "../services/sessionService";
+import {
+    clearAuthSession,
+    CUSTOMER_USER_UPDATED_EVENT,
+    getStoredCustomerUser,
+} from "../utils/customerSession";
+
 function MemberLayout() {
-
     const navigate = useNavigate();
-    const location = useLocation();
+    const [user, setUser] = useState(() => getStoredCustomerUser());
+    const [isLoggingOut, setIsLoggingOut] = useState(false);
+    const logoutPendingRef = useRef(false);
 
-    const user = JSON.parse(localStorage.getItem("user"));
+    useEffect(() => {
+        const handleUserUpdate = (event) => {
+            setUser(event.detail || getStoredCustomerUser());
+        };
+        const handleStorage = (event) => {
+            if (event.key === "user") setUser(getStoredCustomerUser());
+        };
 
-    const handleLogout = () => {
+        window.addEventListener(CUSTOMER_USER_UPDATED_EVENT, handleUserUpdate);
+        window.addEventListener("storage", handleStorage);
 
-        Swal.fire({
+        return () => {
+            window.removeEventListener(CUSTOMER_USER_UPDATED_EVENT, handleUserUpdate);
+            window.removeEventListener("storage", handleStorage);
+        };
+    }, []);
 
+    const handleLogout = async () => {
+        if (logoutPendingRef.current) return;
+        logoutPendingRef.current = true;
+
+        const result = await Swal.fire({
             title: "Đăng xuất",
             text: "Bạn có muốn đăng xuất không?",
             icon: "question",
             showCancelButton: true,
             confirmButtonText: "Đăng xuất",
-            cancelButtonText: "Hủy"
-
-        }).then((result) => {
-
-            if (result.isConfirmed) {
-
-                localStorage.clear();
-                navigate("/");
-
-            }
-
+            cancelButtonText: "Hủy",
         });
 
+        if (!result.isConfirmed) {
+            logoutPendingRef.current = false;
+            return;
+        }
+
+        setIsLoggingOut(true);
+        let serverLogoutFailed = false;
+
+        try {
+            await logoutSession();
+        } catch {
+            serverLogoutFailed = true;
+        } finally {
+            clearAuthSession();
+            resetSessionVerificationCache();
+            navigate("/", { replace: true });
+        }
+
+        if (serverLogoutFailed) {
+            void Swal.fire({
+                icon: "info",
+                title: "Đã đăng xuất trên thiết bị",
+                text: "Không thể kết nối máy chủ để thu hồi phiên, nhưng dữ liệu đăng nhập cục bộ đã được xóa.",
+            });
+        }
     };
 
     return (
-
-        <>
-
-            {/* HEADER */}
-
-            <header className="member-header">
-
-                <div className="container member-header-content">
-                    
-                    <div className="member-logo">
-                     <img
-                        src="http://127.0.0.1:8000/logo/logo.png"
-                        alt="BUFFET VIP"
-                        style={{
-                            width: "70px",
-                            height: "70px",
-                        }}
-                    />
-                        BUFFET VIP
-
-                    </div>
-
-                    <div className="member-user">
-
-                        <NotificationBell />
-
-                        <span>
-                            Xin chào, <strong>{user?.HoTen}</strong>
-                        </span>
-
-                        <button
-                            className="btn btn-outline-light btn-sm ms-3"
-                            onClick={handleLogout}
-                        >
-                            Đăng xuất
-                        </button>
-
-                    </div>
-
-                </div>
-
-            </header>
-
-            {/* MENU */}
-
-            <nav className="member-menu">
-
-                <div className="container">
-
-                    <Link
-                        to="/member/home"
-                        className={location.pathname === "/member/home" ? "active" : ""}
-                    >
-                        Trang chủ
-                    </Link>
-
-                    <Link
-                        to="/member/ticket"
-                        className={location.pathname === "/member/ticket" ? "active" : ""}
-                    >
-                        Giá vé
-                    </Link>
-
-                    <Link
-                        to="/member/rank"
-                        className={location.pathname === "/member/rank" ? "active" : ""}
-                    >
-                        Hạng thành viên
-                    </Link>
-
-                    <Link
-                        to="/member/voucher"
-                        className={location.pathname === "/member/voucher" ? "active" : ""}
-                    >
-                        Kho Voucher
-                    </Link>
-
-                    <Link
-                        to="/member/invoice"
-                        className={location.pathname === "/member/invoice" ? "active" : ""}
-                    >
-                        Lịch sử giao dịch
-                    </Link>
-
-                </div>
-
-            </nav>
-
-            {/* CONTENT */}
-
-            <main className="member-content">
-
-                <Outlet />
-
-            </main>
-
-            <Footer />
-
-        </>
-
+        <CustomerLayout
+            isAuthenticated
+            user={user}
+            notificationSlot={<NotificationBell />}
+            onLogout={handleLogout}
+            isLoggingOut={isLoggingOut}
+        >
+            <Outlet />
+        </CustomerLayout>
     );
-
 }
 
 export default MemberLayout;

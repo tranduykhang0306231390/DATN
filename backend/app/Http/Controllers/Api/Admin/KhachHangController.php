@@ -5,12 +5,18 @@ namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\KhachHang;
+use App\Services\SequentialCodeService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 
 class KhachHangController extends Controller
 {
+    public function __construct(
+        private SequentialCodeService $codes
+    ) {}
+
     /**
      * Danh sách hạng để chọn khi sửa khách hàng.
      * Đăng ký route này TRƯỚC route /khach-hang/{ma}.
@@ -95,23 +101,30 @@ class KhachHangController extends Controller
 
         $data = $request->validate([
             'HoTen'           => ['required', 'string', 'max:100'],
-            'NgaySinh'        => ['nullable', 'date'],
+            'NgaySinh'        => ['nullable', 'date', 'before:today'],
             'GioiTinh'        => ['nullable', Rule::in(['Nam', 'Nu'])],
-            'Email'           => ['nullable', 'email', 'max:100', Rule::unique('khachhang', 'Email')->ignore($ma, 'MaKhachHang')],
-            'SoDienThoai'     => ['required', 'string', 'max:15', Rule::unique('khachhang', 'SoDienThoai')->ignore($ma, 'MaKhachHang')],
+            'Email'           => ['required', 'email', 'max:100', Rule::unique('khachhang', 'Email')->ignore($ma, 'MaKhachHang')],
+            'SoDienThoai'     => ['required', 'regex:/^0[0-9]{9}$/', Rule::unique('khachhang', 'SoDienThoai')->ignore($ma, 'MaKhachHang')],
             'MaHangThanhVien' => ['required', 'exists:hangthanhvien,MaHangThanhVien'],
+            'LyDoThayDoi'     => ['nullable', 'string', 'max:255'],
         ]);
 
-        $oldHang = $kh->MaHangThanhVien;
         $newHang = $data['MaHangThanhVien'];
 
         DB::beginTransaction();
         try {
-            $kh->HoTen           = $data['HoTen'];
+            $kh = KhachHang::where('MaKhachHang', $ma)->lockForUpdate()->first();
+            if (!$kh) {
+                DB::rollBack();
+                return response()->json(['success' => false, 'message' => 'Không tìm thấy khách hàng'], 404);
+            }
+
+            $oldHang = $kh->MaHangThanhVien;
+            $kh->HoTen           = trim($data['HoTen']);
             $kh->NgaySinh        = $data['NgaySinh'] ?: null;
             $kh->GioiTinh        = $data['GioiTinh'] ?: null;
-            $kh->Email           = $data['Email'] ?: null;
-            $kh->SoDienThoai     = $data['SoDienThoai'];
+            $kh->Email           = strtolower(trim($data['Email']));
+            $kh->SoDienThoai     = trim($data['SoDienThoai']);
             $kh->MaHangThanhVien = $newHang;
             $kh->save();
 
@@ -122,28 +135,33 @@ class KhachHangController extends Controller
                     ->where('TrangThai', 'DaThanhToan')
                     ->sum('TongTien');
 
-                $lastLS = DB::table('lichsuhangthanhvien')->orderBy('MaLichSuHang', 'desc')->first();
-                $soLS   = $lastLS ? ((int) substr($lastLS->MaLichSuHang, 3)) + 1 : 1;
-                $maLS   = 'LSH' . str_pad($soLS, 3, '0', STR_PAD_LEFT);
-
                 DB::table('lichsuhangthanhvien')->insert([
-                    'MaLichSuHang'           => $maLS,
+                    'MaLichSuHang'           => $this->codes->next(
+                        'lichsuhangthanhvien',
+                        'MaLichSuHang',
+                        'LSH'
+                    ),
                     'MaKhachHang'            => $ma,
                     'MaHangThanhVienCu'      => $oldHang,
                     'MaHangThanhVienMoi'     => $newHang,
                     'ThoiGianThayDoi'        => now(),
-                    'LyDoThayDoi'            => $request->input('LyDoThayDoi') ?: 'Điều chỉnh thủ công bởi quản trị viên',
+                    'LyDoThayDoi'            => $data['LyDoThayDoi'] ?? 'Điều chỉnh thủ công bởi quản trị viên',
                     'DiemTaiThoiDiemTH'      => (string) $kh->TongDiem,
                     'TongChiTieuTaiThoiDiem' => $tongChiTieu,
                 ]);
             }
 
             DB::commit();
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             DB::rollBack();
+            Log::error('Không thể cập nhật khách hàng', [
+                'customer_id' => $ma,
+                'staff_id' => auth('nhanvien')->id(),
+                'exception' => $e,
+            ]);
             return response()->json([
                 'success' => false,
-                'message' => 'Có lỗi khi cập nhật: ' . $e->getMessage(),
+                'message' => 'Không thể cập nhật khách hàng lúc này. Vui lòng thử lại.',
             ], 500);
         }
 
@@ -165,8 +183,19 @@ class KhachHangController extends Controller
             return response()->json(['success' => false, 'message' => 'Không tìm thấy khách hàng'], 404);
         }
 
-        $kh->TrangThai = $kh->TrangThai === 'HoatDong' ? 'TamKhoa' : 'HoatDong';
-        $kh->save();
+        $kh = DB::transaction(function () use ($ma) {
+            $kh = KhachHang::where('MaKhachHang', $ma)->lockForUpdate()->first();
+            if (!$kh) return null;
+
+            $kh->TrangThai = $kh->TrangThai === 'HoatDong' ? 'TamKhoa' : 'HoatDong';
+            $kh->save();
+
+            return $kh;
+        });
+
+        if (!$kh) {
+            return response()->json(['success' => false, 'message' => 'Không tìm thấy khách hàng'], 404);
+        }
 
         return response()->json([
             'success' => true,
@@ -228,7 +257,9 @@ class KhachHangController extends Controller
             $query->where('ls.LoaiGiaoDich', $loai);
         }
 
-        $query->orderBy('ls.MaGiaoDichDiem', 'desc');
+        $query->orderByRaw(
+            'CAST(SUBSTRING(ls.MaGiaoDichDiem, 4) AS UNSIGNED) DESC'
+        );
 
         $perPage   = max(1, min(100, (int) $request->query('per_page', 10)));
         $paginator = $query->paginate($perPage);

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\LoaiVe;
+use Illuminate\Support\Facades\DB;
 
 class TicketController extends Controller
 {
@@ -27,10 +28,19 @@ class TicketController extends Controller
      */
     public function hot()
     {
-        $tickets = LoaiVe::where("TrangThai", "HoatDong")
-            ->orderByDesc("GiaVe")
+        $sales = DB::table('chitiethoadon as detail')
+            ->join('hoadon as invoice', 'detail.MaHoaDon', '=', 'invoice.MaHoaDon')
+            ->where('invoice.TrangThai', 'DaThanhToan')
+            ->groupBy('detail.MaLoaiVe')
+            ->selectRaw('detail.MaLoaiVe, SUM(detail.SoLuong) AS SoLuongDaBan');
+
+        $tickets = LoaiVe::query()
+            ->leftJoinSub($sales, 'sales', 'loaive.MaLoaiVe', '=', 'sales.MaLoaiVe')
+            ->where('loaive.TrangThai', 'HoatDong')
+            ->orderByRaw('COALESCE(sales.SoLuongDaBan, 0) DESC')
+            ->orderByDesc('loaive.GiaVe')
             ->take(4)
-            ->get();
+            ->get('loaive.*');
 
         return response()->json([
             "success" => true,

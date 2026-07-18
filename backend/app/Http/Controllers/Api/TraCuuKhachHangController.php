@@ -16,12 +16,12 @@ class TraCuuKhachHangController extends Controller
      */
     public function lookup(Request $request)
     {
-        $request->validate([
-            'so_dien_thoai' => 'required|string'
+        $data = $request->validate([
+            'so_dien_thoai' => ['required', 'string', 'regex:/^0[0-9]{9}$/'],
         ]);
 
         $khachHang = KhachHang::with('hangThanhVien')
-            ->where('SoDienThoai', $request->so_dien_thoai)
+            ->where('SoDienThoai', trim($data['so_dien_thoai']))
             ->where('TrangThai', 'HoatDong')
             ->first();
 
@@ -32,11 +32,18 @@ class TraCuuKhachHangController extends Controller
             ], 404);
         }
 
+        $today = now()->toDateString();
         $vouchers = VoucherKhachHang::with('uuDai')
             ->where('MaKhachHang', $khachHang->MaKhachHang)
             ->where('TrangThai', 'ChuaSuDung')
-            ->where('NgayHetHan', '>=', now()->format('Y-m-d'))
+            ->where('NgayHetHan', '>=', $today)
+            ->whereHas('uuDai', function ($query) use ($today) {
+                $query->where('TrangThai', 'HoatDong')
+                    ->whereDate('NgayBatDau', '<=', $today)
+                    ->whereDate('NgayKetThuc', '>=', $today);
+            })
             ->get()
+            ->filter(fn ($voucher) => $voucher->uuDai !== null)
             ->map(fn($v) => [
                 'MaVoucherKhachHang' => $v->MaVoucherKhachHang,
                 'TenUuDai'           => $v->uuDai->TenUuDai,

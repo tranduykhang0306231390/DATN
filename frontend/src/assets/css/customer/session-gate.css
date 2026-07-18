@@ -1,0 +1,102 @@
+.customer-app.customer-session-boundary {
+    display: grid;
+    width: 100%;
+    min-height: 100vh;
+    min-height: 100svh;
+    place-items: center;
+    padding: 24px;
+    color: #17221d;
+    background:
+        radial-gradient(circle at 18% 18%, rgba(117, 89, 255, 0.18), transparent 30%),
+        radial-gradient(circle at 82% 78%, rgba(37, 191, 211, 0.18), transparent 30%),
+        #f3f7f5;
+    font-family: "Be Vietnam Pro", Inter, "Segoe UI", sans-serif;
+    text-align: center;
+}
+
+.customer-app.customer-session-boundary,
+.customer-app.customer-session-boundary * {
+    box-sizing: border-box;
+}
+
+.customer-app .customer-session-boundary__card {
+    width: min(520px, 100%);
+    padding: clamp(28px, 6vw, 48px);
+    border: 1px solid rgba(0, 64, 44, 0.1);
+    border-radius: 24px;
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 24px 70px rgba(31, 76, 58, 0.14);
+}
+
+.customer-app .customer-session-boundary__spinner {
+    display: inline-block;
+    width: 42px;
+    height: 42px;
+    margin-bottom: 18px;
+    border: 4px solid #d6f0e5;
+    border-top-color: #00754a;
+    border-radius: 50%;
+    animation: customer-session-spin 700ms linear infinite;
+}
+
+.customer-app .customer-session-boundary__eyebrow {
+    margin: 0 0 8px;
+    color: #00754a;
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.customer-app .customer-session-boundary__card h1 {
+    margin: 0;
+    color: #17221d;
+    font-size: clamp(24px, 4vw, 34px);
+    font-weight: 900;
+    line-height: 1.2;
+}
+
+.customer-app .customer-session-boundary__card > p:last-of-type {
+    margin: 12px 0 0;
+    color: #68766f;
+}
+
+.customer-app .customer-session-boundary__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 24px;
+}
+
+.customer-app .customer-session-boundary__actions button {
+    min-height: 44px;
+    padding: 10px 18px;
+    border: 1px solid #00754a;
+    border-radius: 999px;
+    color: #fff;
+    background: #00754a;
+    font: inherit;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.customer-app .customer-session-boundary__actions button.is-secondary {
+    color: #004f35;
+    background: #fff;
+}
+
+.customer-app .customer-session-boundary__actions button:focus-visible {
+    outline: 3px solid rgba(117, 89, 255, 0.48);
+    outline-offset: 3px;
+}
+
+@keyframes customer-session-spin {
+    to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .customer-app .customer-session-boundary__spinner {
+        animation: none;
+    }
+}

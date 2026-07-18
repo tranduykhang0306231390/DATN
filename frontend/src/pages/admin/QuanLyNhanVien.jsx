@@ -4,6 +4,7 @@ import Swal from 'sweetalert2';
 import '../../assets/css/admin.css';
 import nhanVienApi from '../../api/nhanVienApi';
 import Modal from '../../components/admin/Modal';
+import { getStoredObject } from '../../utils/storage';
 
 const vaiTroLabel = (v) => (v === 'Admin' ? 'Admin' : 'Nhân viên');
 
@@ -16,7 +17,7 @@ const EMPTY_FORM = {
 };
 
 export default function QuanLyNhanVien() {
-    const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+    const currentUser = getStoredObject('user');
 
     const [list, setList] = useState([]);
     const [pagination, setPagination] = useState({ current_page: 1, last_page: 1, total: 0 });
@@ -35,7 +36,8 @@ export default function QuanLyNhanVien() {
     const [saving, setSaving] = useState(false);
     const [formError, setFormError] = useState('');
 
-    const loadList = useCallback(() => {
+    const loadList = useCallback(async () => {
+        await Promise.resolve();
         setLoading(true);
         nhanVienApi
             .getAll({ search, vai_tro: vaiTro, trang_thai: trangThai, page, per_page: 10 })
@@ -50,7 +52,8 @@ export default function QuanLyNhanVien() {
     }, [search, vaiTro, trangThai, page]);
 
     useEffect(() => {
-        loadList();
+        const timeoutId = window.setTimeout(() => void loadList(), 0);
+        return () => window.clearTimeout(timeoutId);
     }, [loadList]);
 
     const openCreate = () => {
@@ -138,8 +141,8 @@ export default function QuanLyNhanVien() {
     };
 
     const applyFilter = () => {
-        setPage(1);
-        loadList();
+        if (page === 1) void loadList();
+        else setPage(1);
     };
 
     return (

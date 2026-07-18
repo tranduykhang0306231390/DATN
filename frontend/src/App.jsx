@@ -1,62 +1,74 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { lazy, Suspense } from "react";
+import {
+    BrowserRouter,
+    Navigate,
+    Route,
+    Routes,
+    useLocation,
+} from "react-router-dom";
 
 // ================= PUBLIC PAGES =================
-import Home from "./pages/Home";
-import LoginMember from "./pages/auth/LoginMember";
-import LoginStaff from "./pages/auth/LoginStaff";
-import Register from "./pages/auth/Register";
-import ForgotPassword from "./pages/auth/ForgotPassword";
-import ResetPassword from "./pages/auth/ResetPassword";
+const Home = lazy(() => import("./pages/Home"));
+const LoginMember = lazy(() => import("./pages/auth/LoginMember"));
+const LoginStaff = lazy(() => import("./pages/auth/LoginStaff"));
+const Register = lazy(() => import("./pages/auth/Register"));
+const ForgotPassword = lazy(() => import("./pages/auth/ForgotPassword"));
+const ResetPassword = lazy(() => import("./pages/auth/ResetPassword"));
+const NotFound = lazy(() => import("./pages/NotFound"));
 // ================= MEMBER =================
-import MemberLayout from "./layouts/MemberLayout";
-import MemberHome from "./pages/member/MemberHome";
-import MemberRank from "./pages/member/MemberRank";
-import Ticket from "./pages/member/Ticket";
-import Voucher from "./pages/member/Voucher";
-import Invoice from "./pages/member/Invoice";
+const MemberLayout = lazy(() => import("./layouts/MemberLayout"));
+const MemberRank = lazy(() => import("./pages/member/MemberRank"));
 
 // ================= STAFF =================
-import StaffLayout from "./layouts/StaffLayout";
-import StaffDashboard from "./pages/staff/StaffDashboard";
-import TaoHoaDon from "./pages/staff/TaoHoaDon";
-import QuanLyHoaDon from "./pages/staff/QuanLyHoaDon"
-
-
+const StaffLayout = lazy(() => import("./layouts/StaffLayout"));
+const StaffDashboard = lazy(() => import("./pages/staff/StaffDashboard"));
+const TaoHoaDon = lazy(() => import("./pages/staff/TaoHoaDon"));
+const QuanLyHoaDon = lazy(() => import("./pages/staff/QuanLyHoaDon"));
 
 // ================= ADMIN =================
-import AdminLayout from './layouts/AdminLayout';
-import AdminDashboard from "./pages/admin/AdminDashboard";
-import QuanLyUuDai from './pages/admin/QuanLyUuDai';
-import QuanLyLoaiVe from './pages/admin/QuanLyLoaiVe';
-import QuanLyQuyTac from './pages/admin/QuanLyQuyTac';
-import QuanLyHangThanhVien from './pages/admin/QuanLyHangThanhVien';
-import QuanLyNhanVien from './pages/admin/QuanLyNhanVien';
-import QuanLyKhachHang from './pages/admin/QuanLyKhachHang';
-import LichSuQuyTac from './pages/admin/LichSuQuyTac';
-import LichSuHang from './pages/admin/LichSuHang';
-import LichSuDiem from './pages/admin/LichSuDiem';
-import QuanLyThongBao from './pages/admin/QuanLyThongBao';
-import QuanLyPhanHoi from './pages/admin/QuanLyPhanHoi';
-import ThongKe from "./pages/admin/ThongKe";
-import QuanLyHoaDonAdmin from "./pages/admin/QuanLyHoaDon";
-import CauHinhWebsite from "./pages/admin/CauHinhWebsite";
-
-
-
+const AdminLayout = lazy(() => import("./layouts/AdminLayout"));
+const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
+const QuanLyUuDai = lazy(() => import("./pages/admin/QuanLyUuDai"));
+const QuanLyLoaiVe = lazy(() => import("./pages/admin/QuanLyLoaiVe"));
+const QuanLyQuyTac = lazy(() => import("./pages/admin/QuanLyQuyTac"));
+const QuanLyHangThanhVien = lazy(() => import("./pages/admin/QuanLyHangThanhVien"));
+const QuanLyNhanVien = lazy(() => import("./pages/admin/QuanLyNhanVien"));
+const QuanLyKhachHang = lazy(() => import("./pages/admin/QuanLyKhachHang"));
+const LichSuQuyTac = lazy(() => import("./pages/admin/LichSuQuyTac"));
+const LichSuHang = lazy(() => import("./pages/admin/LichSuHang"));
+const LichSuDiem = lazy(() => import("./pages/admin/LichSuDiem"));
+const QuanLyThongBao = lazy(() => import("./pages/admin/QuanLyThongBao"));
+const QuanLyPhanHoi = lazy(() => import("./pages/admin/QuanLyPhanHoi"));
+const ThongKe = lazy(() => import("./pages/admin/ThongKe"));
+const QuanLyHoaDonAdmin = lazy(() => import("./pages/admin/QuanLyHoaDon"));
+const CauHinhWebsite = lazy(() => import("./pages/admin/CauHinhWebsite"));
 
 // ================= PROTECTED ROUTES =================
 import {
     MemberRoute,
     StaffRoute,
     AdminRoute,
+    GuestRoute,
 } from "./routes/ProtectedRoute";
-;
-import PublicLayout from "./layouts/PublicLayout";
+const PublicLayout = lazy(() => import("./layouts/PublicLayout"));
+
+const routeFallback = (
+    <div role="status" aria-live="polite" style={{ padding: "2rem", textAlign: "center" }}>
+        Đang tải trang…
+    </div>
+);
+
+function MemberLegacyRedirect({ to }) {
+    const location = useLocation();
+
+    return <Navigate to={to} replace state={location.state} />;
+}
 
 function App() {
     return (
         <BrowserRouter>
-            <Routes>
+            <Suspense fallback={routeFallback}>
+                <Routes>
 
                 {/* ---------------- PUBLIC ROUTES ---------------- */}
                 <Route element={<PublicLayout />}>
@@ -66,20 +78,22 @@ function App() {
                         element={<Home />}
                     />
 
+                    <Route path="*" element={<NotFound />} />
+
                 </Route>
 
-                <Route path="/login" element={<LoginMember />} />
-                <Route path="/member/login" element={<LoginMember />} />
-                <Route path="/register" element={<Register />} />
-                <Route path="/staff/login" element={<LoginStaff />} />
+                <Route path="/login" element={<GuestRoute><LoginMember /></GuestRoute>} />
+                <Route path="/member/login" element={<GuestRoute><LoginMember /></GuestRoute>} />
+                <Route path="/register" element={<GuestRoute><Register /></GuestRoute>} />
+                <Route path="/staff/login" element={<GuestRoute><LoginStaff /></GuestRoute>} />
                 <Route
                     path="/forgot-password"
-                    element={<ForgotPassword />}
+                    element={<GuestRoute><ForgotPassword /></GuestRoute>}
                 />
 
                 <Route
                     path="/reset-password"
-                    element={<ResetPassword />}
+                    element={<GuestRoute><ResetPassword /></GuestRoute>}
                 />
                 {/* ---------------- MEMBER ROUTES ---------------- */}
                 <Route
@@ -90,12 +104,21 @@ function App() {
                         </MemberRoute>
                     }
                 >
-                    <Route index element={<MemberHome />} />
-                    <Route path="home" element={<MemberHome />} />
+                    <Route index element={<MemberLegacyRedirect to="/member/rank" />} />
+                    <Route path="home" element={<MemberLegacyRedirect to="/member/rank" />} />
                     <Route path="rank" element={<MemberRank />} />
-                    <Route path="ticket" element={<Ticket />} />
-                    <Route path="voucher" element={<Voucher />} />
-                    <Route path="invoice" element={<Invoice />} />
+                    <Route
+                        path="ticket"
+                        element={<MemberLegacyRedirect to="/member/rank?tab=tickets" />}
+                    />
+                    <Route
+                        path="voucher"
+                        element={<MemberLegacyRedirect to="/member/rank?tab=vouchers" />}
+                    />
+                    <Route
+                        path="invoice"
+                        element={<MemberLegacyRedirect to="/member/rank?tab=transactions" />}
+                    />
                 </Route>
 
                 {/* ---------------- STAFF ROUTES ---------------- */}
@@ -251,7 +274,8 @@ function App() {
 
 
                 </Route>
-            </Routes>
+                </Routes>
+            </Suspense>
         </BrowserRouter>
     );
 }

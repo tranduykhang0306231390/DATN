@@ -3,6 +3,15 @@ import { useState } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import Swal from "sweetalert2";
 import { STAFF_MENU } from "../components/staff/staffMenu";
+import { logoutSession } from "../api/authApi";
+
+const getStoredUser = () => {
+    try {
+        return JSON.parse(localStorage.getItem("user") || "{}") || {};
+    } catch {
+        return {};
+    }
+};
 
 // Mục "Tổng quan" đứng đầu, các nhóm còn lại lấy từ STAFF_MENU
 const DASHBOARD_ITEM = {
@@ -14,14 +23,37 @@ const DASHBOARD_ITEM = {
 // Gộp phẳng để tra tên trang cho breadcrumb
 const FLAT_ITEMS = [DASHBOARD_ITEM, ...STAFF_MENU.flatMap((s) => s.items)];
 
+function StaffNavItem({ item, sidebarOpen, currentPath, onNavigate }) {
+    const active = currentPath === item.path;
+
+    return (
+        <div
+            style={{
+                ...styles.navItem,
+                background: active ? "#3b82f6" : "transparent",
+                color: active ? "#fff" : "#cbd5e1",
+                justifyContent: sidebarOpen ? "flex-start" : "center",
+            }}
+            onClick={() => onNavigate(item.path)}
+            title={!sidebarOpen ? item.label : ""}
+        >
+            <span style={styles.navIcon}>{item.icon}</span>
+            {sidebarOpen && <span style={styles.navLabel}>{item.label}</span>}
+        </div>
+    );
+}
+
 export default function StaffLayout() {
     const [sidebarOpen, setSidebarOpen] = useState(true);
+    const [loggingOut, setLoggingOut] = useState(false);
     const navigate = useNavigate();
     const location = useLocation();
-    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    const user = getStoredUser();
     const role = localStorage.getItem("role");
 
     const handleLogout = async () => {
+        if (loggingOut) return;
+
         const result = await Swal.fire({
             title: "Đăng xuất?",
             text: "Bạn có chắc muốn đăng xuất không?",
@@ -32,30 +64,19 @@ export default function StaffLayout() {
             confirmButtonColor: "#dc2626",
         });
         if (result.isConfirmed) {
-            localStorage.removeItem("token");
-            localStorage.removeItem("user");
-            localStorage.removeItem("role");
-            navigate("/staff/login", { replace: true });
+            setLoggingOut(true);
+            try {
+                await logoutSession();
+            } catch {
+                // Vẫn xóa phiên cục bộ nếu token đã hết hạn hoặc mạng bị gián đoạn.
+            } finally {
+                localStorage.removeItem("token");
+                localStorage.removeItem("user");
+                localStorage.removeItem("role");
+                navigate("/staff/login", { replace: true });
+                setLoggingOut(false);
+            }
         }
-    };
-
-    const NavItem = ({ item }) => {
-        const active = location.pathname === item.path;
-        return (
-            <div
-                style={{
-                    ...styles.navItem,
-                    background: active ? "#3b82f6" : "transparent",
-                    color: active ? "#fff" : "#cbd5e1",
-                    justifyContent: sidebarOpen ? "flex-start" : "center",
-                }}
-                onClick={() => navigate(item.path)}
-                title={!sidebarOpen ? item.label : ""}
-            >
-                <span style={styles.navIcon}>{item.icon}</span>
-                {sidebarOpen && <span style={styles.navLabel}>{item.label}</span>}
-            </div>
-        );
     };
 
     return (
@@ -74,7 +95,12 @@ export default function StaffLayout() {
 
                 {/* Menu */}
                 <nav style={styles.nav}>
-                    <NavItem item={DASHBOARD_ITEM} />
+                    <StaffNavItem
+                        item={DASHBOARD_ITEM}
+                        sidebarOpen={sidebarOpen}
+                        currentPath={location.pathname}
+                        onNavigate={navigate}
+                    />
 
                     {STAFF_MENU.map((section) => (
                         <div key={section.key} style={styles.navGroup}>
@@ -82,7 +108,13 @@ export default function StaffLayout() {
                                 <div style={styles.navGroupTitle}>{section.title}</div>
                             )}
                             {section.items.map((item) => (
-                                <NavItem key={item.path} item={item} />
+                                <StaffNavItem
+                                    key={item.path}
+                                    item={item}
+                                    sidebarOpen={sidebarOpen}
+                                    currentPath={location.pathname}
+                                    onNavigate={navigate}
+                                />
                             ))}
                         </div>
                     ))}
@@ -122,8 +154,12 @@ export default function StaffLayout() {
                             "Tổng quan"}
                     </div>
 
-                    <button style={styles.btnLogout} onClick={handleLogout}>
-                        🚪 Đăng xuất
+                    <button
+                        style={styles.btnLogout}
+                        onClick={handleLogout}
+                        disabled={loggingOut}
+                    >
+                        🚪 {loggingOut ? "Đang đăng xuất..." : "Đăng xuất"}
                     </button>
                 </header>
 

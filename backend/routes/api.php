@@ -4,15 +4,14 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\MemberPointController;
 use App\Http\Controllers\Api\MemberHistoryController;
+use App\Http\Controllers\Api\MemberRankController;
 use App\Http\Controllers\Api\HoaDonController;
 use App\Http\Controllers\Api\BannerController;
 use App\Http\Controllers\Api\TicketController;
 use App\Http\Controllers\Api\VoucherController;
-use App\Http\Controllers\Api\MemberVoucherController;
 use App\Http\Controllers\Api\HoaDonKhachHangController;
 use App\Http\Controllers\Api\LoaiVeController;
 use App\Http\Controllers\Api\TraCuuKhachHangController;
-use App\Http\Controllers\Api\QuanLyHoaDonController;
 use App\Http\Controllers\Api\PhanHoiKhachHangController;
 use App\Http\Controllers\Api\Admin\UuDaiController;
 use App\Http\Controllers\Api\Admin\QuyTacController;
@@ -38,17 +37,21 @@ use App\Http\Controllers\Api\NotificationController;
 |--------------------------------------------------------------------------
 */
 
-Route::post('/member/login', [AuthController::class, 'memberLogin']);
-Route::post('/member/register', [AuthController::class, 'register']);
-Route::post('/staff/login', [AuthController::class, 'staffLogin']);
+Route::post('/member/login', [AuthController::class, 'memberLogin'])
+    ->middleware('throttle:10,1');
+Route::post('/member/register', [AuthController::class, 'register'])
+    ->middleware('throttle:5,1');
+Route::post('/staff/login', [AuthController::class, 'staffLogin'])
+    ->middleware('throttle:10,1');
 Route::post('/logout', [AuthController::class, 'logout']);
 Route::get('/banner', [BannerController::class, 'index']);
 Route::get('/tickets', [TicketController::class, 'index']);
 Route::get('/tickets/hot', [TicketController::class, 'hot']);
 Route::get('/web-setting', [WebSettingController::class, 'show']); 
-Route::put('/web-setting', [WebSettingController::class, 'update']);
-Route::post('/member/forgot-password', [AuthController::class, 'forgotPassword']);
-Route::post('/member/reset-password', [AuthController::class, 'resetPassword']);
+Route::post('/member/forgot-password', [AuthController::class, 'forgotPassword'])
+    ->middleware('throttle:5,1');
+Route::post('/member/reset-password', [AuthController::class, 'resetPassword'])
+    ->middleware('throttle:5,1');
 /*
 |--------------------------------------------------------------------------
 | MEMBER
@@ -60,6 +63,7 @@ Route::middleware('member')->prefix('member')->group(function () {
     // ===== Thông tin khách hàng =====
     Route::get('/profile', [AuthController::class, 'memberProfile']);
     Route::get('/points', [MemberPointController::class, 'index']);
+    Route::get('/ranks', [MemberRankController::class, 'index']);
     Route::get('/history', [MemberHistoryController::class, 'index']);
     Route::put('/profile', [AuthController::class, 'updateMemberProfile']);
     Route::put('/change-password', [AuthController::class, 'changePassword']);
@@ -112,9 +116,8 @@ Route::middleware('member')->prefix('member')->group(function () {
 
 // Các API nhân viên khác...
 
-Route::middleware('auth:nhanvien')->group(function () {
+Route::middleware('staff')->group(function () {
 
-    Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/profile', [AuthController::class, 'staffProfile']);
 
     // Loại vé
@@ -130,7 +133,6 @@ Route::middleware('auth:nhanvien')->group(function () {
     Route::get('/quan-ly-hoa-don',               [HoaDonController::class, 'index']);
     Route::get('/quan-ly-hoa-don/ban-dang-treo', [HoaDonController::class, 'banDangTreo']);
     Route::get('/quan-ly-hoa-don/{maHD}',        [HoaDonController::class, 'show']);
-    Route::post('/hoa-don',                       [HoaDonController::class, 'store']);
     Route::patch('/hoa-don/{maHD}/thanh-toan',   [HoaDonController::class, 'thanhToan']);
      
   

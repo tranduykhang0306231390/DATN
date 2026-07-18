@@ -3,12 +3,18 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Services\SequentialCodeService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 
 class ThongBaoController extends Controller
 {
+    public function __construct(
+        private SequentialCodeService $codes
+    ) {}
+
     /**
      * Dữ liệu phụ cho form gửi: danh sách hạng thành viên.
      */
@@ -92,41 +98,51 @@ class ThongBaoController extends Controller
         }
 
         // Sinh mã tiếp theo
-        $last = DB::table('thongbao')->orderBy('MaThongBao', 'desc')->first();
-        $so   = $last ? ((int) substr($last->MaThongBao, 2)) + 1 : 1;
-
-        $rows = [];
-        $now  = now();
-        foreach ($danhSach as $maKH) {
-            $rows[] = [
-                'MaThongBao'  => 'TB' . str_pad($so++, 3, '0', STR_PAD_LEFT),
-                'TieuDe'      => $data['TieuDe'],
-                'NoiDung'     => $data['NoiDung'],
-                'ThoiGian'    => $now,
-                'TrangThai'   => 'ChuaDoc',
-                'MaKhachHang' => $maKH,
-            ];
-        }
-
-        DB::beginTransaction();
         try {
+            $soLuong = DB::transaction(function () use ($danhSach, $data) {
+                $codes = $this->codes->nextBatch(
+                    'thongbao',
+                    'MaThongBao',
+                    'TB',
+                    $danhSach->count()
+                );
+                $rows = [];
+                $now = now();
+
+                foreach ($danhSach->values() as $index => $maKH) {
+                    $rows[] = [
+                        'MaThongBao'  => $codes[$index],
+                        'TieuDe'      => $data['TieuDe'],
+                        'NoiDung'     => $data['NoiDung'],
+                        'ThoiGian'    => $now,
+                        'TrangThai'   => 'ChuaDoc',
+                        'MaKhachHang' => $maKH,
+                    ];
+                }
+
             // Chèn theo lô để nhanh khi gửi hàng loạt
             foreach (array_chunk($rows, 200) as $chunk) {
                 DB::table('thongbao')->insert($chunk);
             }
-            DB::commit();
-        } catch (\Exception $e) {
-            DB::rollBack();
+
+                return count($rows);
+            });
+        } catch (\Throwable $e) {
+            Log::error('Không thể gửi thông báo hàng loạt', [
+                'staff_id' => auth('nhanvien')->id(),
+                'recipient_count' => $danhSach->count(),
+                'exception' => $e,
+            ]);
             return response()->json([
                 'success' => false,
-                'message' => 'Có lỗi khi gửi thông báo: ' . $e->getMessage(),
+                'message' => 'Không thể gửi thông báo lúc này. Vui lòng thử lại.',
             ], 500);
         }
 
         return response()->json([
             'success' => true,
-            'message' => 'Đã gửi thông báo tới ' . count($rows) . ' khách hàng',
-            'data'    => ['so_luong' => count($rows)],
+            'message' => 'Đã gửi thông báo tới ' . $soLuong . ' khách hàng',
+            'data'    => ['so_luong' => $soLuong],
         ], 201);
     }
 }

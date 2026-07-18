@@ -8,8 +8,6 @@ const fmtMoney = (n) =>
 
 const fmtNum = (n) => new Intl.NumberFormat('vi-VN').format(n || 0);
 
-const fmtNgay = (s) => (s || '').slice(5); // MM-DD cho gọn
-
 const dateStr = (offsetDays = 0) => {
     const d = new Date();
     d.setDate(d.getDate() - offsetDays);
@@ -30,7 +28,8 @@ export default function ThongKe() {
     const [tuNgay, setTuNgay] = useState(dateStr(29));
     const [denNgay, setDenNgay] = useState(dateStr(0));
 
-    const loadData = useCallback(() => {
+    const loadData = useCallback(async () => {
+        await Promise.resolve();
         setLoading(true);
         thongKeApi
             .chiTiet({ tu_ngay: tuNgay, den_ngay: denNgay })
@@ -42,7 +41,8 @@ export default function ThongKe() {
     }, [tuNgay, denNgay]);
 
     useEffect(() => {
-        loadData();
+        const timeoutId = window.setTimeout(() => void loadData(), 0);
+        return () => window.clearTimeout(timeoutId);
     }, [loadData]);
 
     const chonKhoang = (days) => {
@@ -51,11 +51,9 @@ export default function ThongKe() {
     };
 
     const th = data?.tong_hop;
-    const theoNgay = data?.theo_ngay || [];
     const topVe = data?.top_loai_ve || [];
     const phanBo = data?.phan_bo_hang || [];
 
-    const maxDoanhThu = Math.max(...theoNgay.map((d) => Number(d.doanh_thu)), 1);
     const maxVe = Math.max(...topVe.map((v) => Number(v.so_luong)), 1);
     const tongKhach = phanBo.reduce((s, h) => s + Number(h.so_khach), 0) || 1;
 

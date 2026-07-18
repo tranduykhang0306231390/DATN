@@ -1,16 +1,21 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { staffLogin } from "../../api/authApi";
 import Swal from "sweetalert2";
-import "../../assets/css/auth.css";
+import "../../assets/css/staff-auth.css";
 
 function LoginStaff() {
 
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
+    const [submitting, setSubmitting] = useState(false);
+    const submittingRef = useRef(false);
 
     const handleLogin = async (e) => {
 
         e.preventDefault();
+        if (submittingRef.current) return;
+        submittingRef.current = true;
+        setSubmitting(true);
 
         try {
 
@@ -61,12 +66,15 @@ function LoginStaff() {
                 text: "Sai tài khoản hoặc mật khẩu"
             });
 
+        } finally {
+            submittingRef.current = false;
+            setSubmitting(false);
         }
 
     };
 
     return (
-        <div className="auth-container">
+        <div className="staff-auth auth-container">
 
             <div className="auth-card">
 
@@ -129,8 +137,9 @@ function LoginStaff() {
                     <button
                         className="auth-btn"
                         type="submit"
+                        disabled={submitting}
                     >
-                        Đăng nhập
+                        {submitting ? "Đang đăng nhập…" : "Đăng nhập"}
                     </button>
 
                 </form>

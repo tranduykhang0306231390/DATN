@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\HoaDon;
-use Illuminate\Http\Request;
+use App\Models\LichSuGiaoDichDiem;
 
 class MemberPointController extends Controller
 {
@@ -12,25 +12,25 @@ class MemberPointController extends Controller
     {
         $user = auth('khachhang')->user();
 
-        $tongHoaDon = HoaDon::where(
-            'MaKhachHang',
-            $user->MaKhachHang
-        )->count();
+        $paidInvoices = HoaDon::query()
+            ->where('MaKhachHang', $user->MaKhachHang)
+            ->where('TrangThai', 'DaThanhToan');
 
-        $tongChiTieu = HoaDon::where(
-            'MaKhachHang',
-            $user->MaKhachHang
-        )->sum('TongTien');
+        $tongHoaDon = (clone $paidInvoices)->count();
+        $tongChiTieu = (clone $paidInvoices)->sum('TongTien');
 
-        $tongDiemNhan = HoaDon::where(
-            'MaKhachHang',
-            $user->MaKhachHang
-        )->sum('DiemTichLuy');
+        $pointTotals = LichSuGiaoDichDiem::query()
+            ->where('MaKhachHang', $user->MaKhachHang)
+            ->selectRaw(
+                'COALESCE(SUM(CASE WHEN SoDiemSau > SoDiemTruoc THEN SoDiemSau - SoDiemTruoc ELSE 0 END), 0) AS TongDiemNhan'
+            )
+            ->selectRaw(
+                'COALESCE(SUM(CASE WHEN SoDiemSau < SoDiemTruoc THEN SoDiemTruoc - SoDiemSau ELSE 0 END), 0) AS TongDiemDaDung'
+            )
+            ->first();
 
-        $tongDiemDaDung = HoaDon::where(
-            'MaKhachHang',
-            $user->MaKhachHang
-        )->sum('DiemSuDung');
+        $tongDiemNhan = (int) ($pointTotals?->TongDiemNhan ?? 0);
+        $tongDiemDaDung = (int) ($pointTotals?->TongDiemDaDung ?? 0);
 
         return response()->json([
 

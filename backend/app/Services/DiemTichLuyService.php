@@ -8,12 +8,16 @@ use App\Models\KhachHang;
 use App\Models\HangThanhVien;
 use App\Models\LichSuGiaoDichDiem;
 use App\Models\LichSuHangThanhVien;
-use App\Models\Thongbao;
+use App\Models\ThongBao;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class DiemTichLuyService
 {
+    public function __construct(
+        private SequentialCodeService $codes
+    ) {}
+
     /**
      *   1. Điểm cơ bản = floor(TongThanhToan / SoTienQuyDoi) * SoDiemNhan
      *   2. Nếu TongThanhToan >= GiaTriHoaDonToiThieu  -> nhân HeSoNhanDiem
@@ -108,7 +112,9 @@ class DiemTichLuyService
     }
 
     /**
-     * Hoàn điểm khi hủy hóa đơn
+     * Thu hồi điểm đã cộng khi hủy hóa đơn.
+     *
+     * Giữ tên method cũ để tương thích với caller nếu luồng hủy được bật lại.
      */
     public function hoanDiem(KhachHang $khachHang, int $soDiem, string $maThamChieu): void
     {
@@ -128,8 +134,8 @@ class DiemTichLuyService
 
         $this->taoThongBao(
             maKH:    $khachHang->MaKhachHang,
-            tieuDe:  'Hóa đơn bị hủy',
-            noiDung: "Hóa đơn {$maThamChieu} đã bị hủy. {$soDiem} điểm đã được hoàn lại."
+            tieuDe:  'Điều chỉnh điểm do hủy hóa đơn',
+            noiDung: "Hóa đơn {$maThamChieu} đã bị hủy. {$soDiem} điểm tích lũy đã được thu hồi."
         );
     }
 
@@ -159,11 +165,12 @@ class DiemTichLuyService
             ->sum('TongTien');
 
         // Lịch sử thay đổi hạng
-        $lastLSH = LichSuHangThanhVien::orderBy('MaLichSuHang', 'desc')->first();
-        $soLSH   = $lastLSH ? ((int) substr($lastLSH->MaLichSuHang, 3)) + 1 : 1;
-
         LichSuHangThanhVien::create([
-            'MaLichSuHang'           => 'LSH' . str_pad($soLSH, 3, '0', STR_PAD_LEFT),
+            'MaLichSuHang'           => $this->codes->next(
+                'lichsuhangthanhvien',
+                'MaLichSuHang',
+                'LSH'
+            ),
             'MaKhachHang'            => $khachHang->MaKhachHang,
             'MaHangThanhVienCu'      => $maHangCu,
             'MaHangThanhVienMoi'     => $hangMoi->MaHangThanhVien,
@@ -191,18 +198,19 @@ class DiemTichLuyService
         string $maKH,
         string $maThamChieu
     ): void {
-        $last  = LichSuGiaoDichDiem::orderBy('MaGiaoDichDiem', 'desc')->first();
-        $soGDD = $last ? ((int) substr($last->MaGiaoDichDiem, 3)) + 1 : 1;
-
         LichSuGiaoDichDiem::create([
-            'MaGiaoDichDiem'   => 'GDD' . str_pad($soGDD, 3, '0', STR_PAD_LEFT),
+            'MaGiaoDichDiem'   => $this->codes->next(
+                'lichsugiaodichdiem',
+                'MaGiaoDichDiem',
+                'GDD'
+            ),
             'LoaiGiaoDich'     => $loai,
             'SoDiem'           => $soDiem,
             'SoDiemTruoc'      => $truoc,
             'SoDiemSau'        => $sau,
             'MaKhachHang'      => $maKH,
             'MaThamChieu'      => $maThamChieu,
-            'ThoiGianGiaoDich' => now()->format('Y-m-d'),
+            'ThoiGianGiaoDich' => now(),
         ]);
     }
 
@@ -211,11 +219,8 @@ class DiemTichLuyService
      */
     private function taoThongBao(string $maKH, string $tieuDe, string $noiDung): void
     {
-        $last = Thongbao::orderBy('MaThongBao', 'desc')->first();
-        $soTB = $last ? ((int) substr($last->MaThongBao, 2)) + 1 : 1;
-
-        Thongbao::create([
-            'MaThongBao'  => 'TB' . str_pad($soTB, 3, '0', STR_PAD_LEFT),
+        ThongBao::create([
+            'MaThongBao'  => $this->codes->next('thongbao', 'MaThongBao', 'TB'),
             'TieuDe'      => $tieuDe,
             'NoiDung'     => $noiDung,
             'ThoiGian'    => now(),

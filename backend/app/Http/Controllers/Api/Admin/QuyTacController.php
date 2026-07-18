@@ -5,12 +5,18 @@ namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\QuyTacTichDiem;
+use App\Services\SequentialCodeService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 
 class QuyTacController extends Controller
 {
+    public function __construct(
+        private SequentialCodeService $codes
+    ) {}
+
     /**
      * Danh sách quy tắc (tìm theo mã + lọc trạng thái + phân trang).
      * params: search, trang_thai, per_page, page
@@ -61,21 +67,21 @@ class QuyTacController extends Controller
     {
         $data = $this->validateData($request);
 
-        $last = QuyTacTichDiem::orderBy('MaQuyTac', 'desc')->first();
-        $so   = $last ? ((int) substr($last->MaQuyTac, 2)) + 1 : 1;
-        $maQT = 'QT' . str_pad($so, 3, '0', STR_PAD_LEFT);
+        $qt = DB::transaction(function () use ($data) {
+            $qt = new QuyTacTichDiem();
+            $qt->MaQuyTac     = $this->codes->next('quytactichdiem', 'MaQuyTac', 'QT');
+            $qt->SoTienQuyDoi = $data['SoTienQuyDoi'];
+            $qt->SoDiemNhan   = $data['SoDiemNhan'];
+            $qt->NgayApDung   = $data['NgayApDung'];
+            $qt->NgayHetHan   = $data['NgayHetHan'] ?: null;
+            $qt->TrangThai    = 'HoatDong';
+            $qt->GiaTriHoaDonToiThieu = $data['GiaTriHoaDonToiThieu'] ?? 0;
+            $qt->HeSoNhanDiem         = $data['HeSoNhanDiem'] ?? 1;
+            $qt->NhanDoiSinhNhat      = (int) ($data['NhanDoiSinhNhat'] ?? 0);
+            $qt->save();
 
-        $qt = new QuyTacTichDiem();
-        $qt->MaQuyTac     = $maQT;
-        $qt->SoTienQuyDoi = $data['SoTienQuyDoi'];
-        $qt->SoDiemNhan   = $data['SoDiemNhan'];
-        $qt->NgayApDung   = $data['NgayApDung'];
-        $qt->NgayHetHan   = $data['NgayHetHan'] ?: null;
-        $qt->TrangThai    = 'HoatDong';
-        $qt->GiaTriHoaDonToiThieu = $data['GiaTriHoaDonToiThieu'] ?? 0;
-        $qt->HeSoNhanDiem         = $data['HeSoNhanDiem'] ?? 1;
-        $qt->NhanDoiSinhNhat      = (int) ($data['NhanDoiSinhNhat'] ?? 0);
-        $qt->save();
+            return $qt;
+        });
 
         return response()->json([
             'success' => true,
@@ -98,13 +104,20 @@ class QuyTacController extends Controller
 
         $data = $this->validateData($request);
 
-        $oldTien = $qt->SoTienQuyDoi;
-        $oldDiem = $qt->SoDiemNhan;
         $newTien = $data['SoTienQuyDoi'];
         $newDiem = $data['SoDiemNhan'];
 
         DB::beginTransaction();
         try {
+            $qt = QuyTacTichDiem::where('MaQuyTac', $ma)->lockForUpdate()->first();
+            if (!$qt) {
+                DB::rollBack();
+                return response()->json(['success' => false, 'message' => 'Không tìm thấy quy tắc'], 404);
+            }
+
+            $oldTien = $qt->SoTienQuyDoi;
+            $oldDiem = $qt->SoDiemNhan;
+
             $qt->SoTienQuyDoi = $newTien;
             $qt->SoDiemNhan   = $newDiem;
             $qt->NgayApDung   = $data['NgayApDung'];
@@ -116,12 +129,12 @@ class QuyTacController extends Controller
 
             // Chỉ ghi lịch sử khi mức quy đổi (tiền hoặc điểm) thực sự thay đổi
             if ((float) $oldTien != (float) $newTien || (int) $oldDiem != (int) $newDiem) {
-                $lastLS = DB::table('lichsuthaydoiquytac')->orderBy('MaLichSuQuyTac', 'desc')->first();
-                $soLS   = $lastLS ? ((int) substr($lastLS->MaLichSuQuyTac, 4)) + 1 : 1;
-                $maLS   = 'LSQT' . str_pad($soLS, 3, '0', STR_PAD_LEFT);
-
                 DB::table('lichsuthaydoiquytac')->insert([
-                    'MaLichSuQuyTac'  => $maLS,
+                    'MaLichSuQuyTac'  => $this->codes->next(
+                        'lichsuthaydoiquytac',
+                        'MaLichSuQuyTac',
+                        'LSQT'
+                    ),
                     'MaQuyTac'        => $ma,
                     'SoTienQuyDoiCu'  => $oldTien,
                     'SoDiemNhanCu'    => $oldDiem,
@@ -129,16 +142,21 @@ class QuyTacController extends Controller
                     'SoDiemNhanMoi'   => $newDiem,
                     'MaNhanVien'      => auth('nhanvien')->user()->MaNhanVien,
                     'GhiChu'          => $request->input('GhiChu') ?: null,
-                    'ThoiGian'        => now()->toDateString(),
+                    'ThoiGian'        => now(),
                 ]);
             }
 
             DB::commit();
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             DB::rollBack();
+            Log::error('Không thể cập nhật quy tắc tích điểm', [
+                'rule_id' => $ma,
+                'staff_id' => auth('nhanvien')->id(),
+                'exception' => $e,
+            ]);
             return response()->json([
                 'success' => false,
-                'message' => 'Có lỗi khi cập nhật: ' . $e->getMessage(),
+                'message' => 'Không thể cập nhật quy tắc lúc này. Vui lòng thử lại.',
             ], 500);
         }
 
@@ -160,8 +178,19 @@ class QuyTacController extends Controller
             return response()->json(['success' => false, 'message' => 'Không tìm thấy quy tắc'], 404);
         }
 
-        $qt->TrangThai = $qt->TrangThai === 'HoatDong' ? 'NgungApDung' : 'HoatDong';
-        $qt->save();
+        $qt = DB::transaction(function () use ($ma) {
+            $qt = QuyTacTichDiem::where('MaQuyTac', $ma)->lockForUpdate()->first();
+            if (!$qt) return null;
+
+            $qt->TrangThai = $qt->TrangThai === 'HoatDong' ? 'NgungApDung' : 'HoatDong';
+            $qt->save();
+
+            return $qt;
+        });
+
+        if (!$qt) {
+            return response()->json(['success' => false, 'message' => 'Không tìm thấy quy tắc'], 404);
+        }
 
         return response()->json([
             'success' => true,
@@ -211,6 +240,7 @@ class QuyTacController extends Controller
             'GiaTriHoaDonToiThieu' => ['nullable', 'numeric', 'min:0'],
             'HeSoNhanDiem'         => ['nullable', 'numeric', 'min:1'],
             'NhanDoiSinhNhat'      => ['nullable', 'boolean'],
+            'GhiChu'               => ['nullable', 'string', 'max:255'],
         ]);
     }
 }

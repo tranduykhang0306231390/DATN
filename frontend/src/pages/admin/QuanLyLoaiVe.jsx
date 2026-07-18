@@ -47,7 +47,8 @@ export default function QuanLyLoaiVe() {
     const [saving, setSaving] = useState(false);
     const [formError, setFormError] = useState('');
 
-    const loadList = useCallback(() => {
+    const loadList = useCallback(async () => {
+        await Promise.resolve();
         setLoading(true);
         loaiVeApi
             .getAll({
@@ -69,7 +70,8 @@ export default function QuanLyLoaiVe() {
     }, [search, buoiAn, loaiNgay, trangThai, page]);
 
     useEffect(() => {
-        loadList();
+        const timeoutId = window.setTimeout(() => void loadList(), 0);
+        return () => window.clearTimeout(timeoutId);
     }, [loadList]);
 
     const openCreate = () => {
@@ -142,8 +144,8 @@ export default function QuanLyLoaiVe() {
     };
 
     const applyFilter = () => {
-        setPage(1);
-        loadList();
+        if (page === 1) void loadList();
+        else setPage(1);
     };
 
     return (

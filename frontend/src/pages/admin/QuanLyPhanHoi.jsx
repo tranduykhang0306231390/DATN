@@ -22,7 +22,6 @@ const Sao = ({ diem }) => (
 export default function QuanLyPhanHoi() {
     const [list, setList] = useState([]);
     const [pagination, setPagination] = useState({ current_page: 1, last_page: 1, total: 0 });
-    const [thongKe, setThongKe] = useState(null);
     const [loading, setLoading] = useState(true);
 
     // Bộ lọc
@@ -38,7 +37,8 @@ export default function QuanLyPhanHoi() {
     const [saving, setSaving] = useState(false);
     const [formError, setFormError] = useState('');
 
-    const loadList = useCallback(() => {
+    const loadList = useCallback(async () => {
+        await Promise.resolve();
         setLoading(true);
         phanHoiApi
             .getAll({ search, trang_thai: trangThai, diem, page, per_page: 10 })
@@ -46,7 +46,6 @@ export default function QuanLyPhanHoi() {
                 if (res.data?.success) {
                     setList(res.data.data);
                     setPagination(res.data.pagination);
-                    setThongKe(res.data.thong_ke);
                 }
             })
             .catch(() => setList([]))
@@ -54,7 +53,8 @@ export default function QuanLyPhanHoi() {
     }, [search, trangThai, diem, page]);
 
     useEffect(() => {
-        loadList();
+        const timeoutId = window.setTimeout(() => void loadList(), 0);
+        return () => window.clearTimeout(timeoutId);
     }, [loadList]);
 
     const openTraLoi = (ph) => {
@@ -91,8 +91,8 @@ export default function QuanLyPhanHoi() {
     };
 
     const applyFilter = () => {
-        setPage(1);
-        loadList();
+        if (page === 1) void loadList();
+        else setPage(1);
     };
 
     return (

@@ -1,141 +1,183 @@
-import "../../assets/css/memberRank.css";
+import { FaCrown, FaExclamationTriangle, FaLock, FaStar } from "react-icons/fa";
+import EmptyState from "../customer/ui/EmptyState";
+import StatusBadge from "../customer/ui/StatusBadge";
+import { formatMemberNumber } from "../../utils/memberRank";
+import MemberRankBadge from "./MemberRankBadge";
 
-function MemberProgress({ points }) {
+const EMPTY_STATE_CONTENT = {
+    "no-config": {
+        title: "Chưa có cấu hình hạng thành viên",
+        description: "Hệ thống chưa cung cấp các mốc hạng. Điểm hiện tại của bạn không bị thay đổi.",
+    },
+    "no-rank": {
+        title: "Tài khoản chưa được gán hạng",
+        description: "Thông tin điểm vẫn được giữ nguyên, nhưng chưa thể tính tiến trình thăng hạng.",
+    },
+    "unknown-rank": {
+        title: "Không tìm thấy cấu hình của hạng hiện tại",
+        description: "Mã hạng tài khoản chưa khớp với danh sách cấu hình đang hoạt động.",
+    },
+};
 
-    if (!points) return null;
+function MemberProgress({ membership }) {
+    if (!membership) return null;
 
-    const rankConfig = {
+    const emptyContent = EMPTY_STATE_CONTENT[membership.status];
 
-        HTV001: {
-            name: "Đồng",
-            min: 0,
-            max: 1000,
-            next: "Bạc"
-        },
-
-        HTV002: {
-            name: "Bạc",
-            min: 1000,
-            max: 3000,
-            next: "Vàng"
-        },
-
-        HTV003: {
-            name: "Vàng",
-            min: 3000,
-            max: 5000,
-            next: "Kim Cương"
-        },
-
-        HTV004: {
-            name: "Kim Cương",
-            min: 5000,
-            max: 5000,
-            next: null
-        }
-
-    };
-
-    const current = rankConfig[points.HangThanhVien];
-
-    if (!current) return null;
-
-    const currentPoint = points.TongDiem;
-
-    let percent = 100;
-
-    let remain = 0;
-
-    if (current.max > current.min) {
-
-        percent = ((currentPoint - current.min) / (current.max - current.min)) * 100;
-
-        percent = Math.max(0, Math.min(percent, 100));
-
-        remain = current.max - currentPoint;
-
+    if (emptyContent) {
+        return (
+            <EmptyState
+                title={emptyContent.title}
+                description={emptyContent.description}
+                icon={<FaLock />}
+                as="h3"
+            />
+        );
     }
 
+    const {
+        currentTier,
+        nextTier,
+        currentIndex,
+        ranks,
+        currentPoints,
+        currentThreshold,
+        nextThreshold,
+        percentage,
+        remainingPoints,
+        isHighestTier,
+        hasReachedNextThreshold,
+        hasEqualThresholds,
+        hasInvalidThresholdOrder,
+        status,
+    } = membership;
+    const roundedPercentage = Math.round(percentage);
+    const hasValidProgress = status !== "invalid-threshold" && status !== "no-points";
+
     return (
-
-        <div className="member-progress">
-
-            <div className="progress-header">
-
+        <section className="member-progress-card" aria-labelledby="membership-progress-title">
+            <div className="member-progress-card__header">
                 <div>
-
-                    <h4>
-
-                        Tiến trình thăng hạng
-
-                    </h4>
-
-                    <p>
-
-                        Hạng hiện tại: <strong>{current.name}</strong>
-
-                    </p>
-
+                    <span className="member-progress-card__eyebrow">Hành trình của bạn</span>
+                    <h3 id="membership-progress-title">Tiến trình thăng hạng</h3>
                 </div>
-
-                <div className="progress-point">
-
-                    {currentPoint.toLocaleString()} điểm
-
-                </div>
-
+                {isHighestTier ? (
+                    <StatusBadge tone="purple" icon={<FaCrown />}>
+                        Hạng cao nhất
+                    </StatusBadge>
+                ) : (
+                    <StatusBadge tone="warning" icon={<FaStar />}>
+                        {roundedPercentage}% hoàn thành
+                    </StatusBadge>
+                )}
             </div>
 
-            <div className="progress-bar-wrapper">
-
-                <div
-                    className="progress-bar-fill"
-                    style={{
-
-                        width: `${percent}%`
-
-                    }}
-                >
-
+            <div className="member-progress-card__tiers">
+                <div>
+                    <small>Hạng hiện tại</small>
+                    <MemberRankBadge
+                        tier={currentTier}
+                        index={currentIndex}
+                        total={ranks.length}
+                        size="small"
+                    />
                 </div>
-
+                <span aria-hidden="true">→</span>
+                <div className="member-progress-card__next-tier">
+                    <small>{isHighestTier ? "Trạng thái" : "Hạng kế tiếp"}</small>
+                    {nextTier ? (
+                        <MemberRankBadge
+                            tier={nextTier}
+                            index={currentIndex + 1}
+                            total={ranks.length}
+                            size="small"
+                        />
+                    ) : (
+                        <strong>Đã hoàn tất hành trình</strong>
+                    )}
+                </div>
             </div>
 
-            <div className="progress-boundaries" aria-hidden="true">
+            <div
+                className={`member-progress-track ${isHighestTier ? "is-complete" : ""}`}
+                role="progressbar"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                aria-valuenow={hasValidProgress ? roundedPercentage : 0}
+                aria-label={
+                    isHighestTier
+                        ? "Bạn đã đạt hạng thành viên cao nhất"
+                        : `Tiến trình từ hạng ${currentTier?.TenHang || "hiện tại"} đến hạng ${nextTier?.TenHang || "kế tiếp"}`
+                }
+                aria-valuetext={
+                    hasValidProgress
+                        ? `${roundedPercentage}% hoàn thành`
+                        : "Chưa đủ dữ liệu để tính tiến trình"
+                }
+            >
+                <span
+                    className="member-progress-track__fill"
+                    style={{ "--member-progress-scale": percentage / 100 }}
+                />
+            </div>
+
+            <div className="member-progress-card__boundaries">
                 <span>
-                    <strong>{current.name}</strong>
-                    {current.min.toLocaleString()} điểm
+                    <strong>{currentTier?.TenHang || "Hạng hiện tại"}</strong>
+                    {formatMemberNumber(currentThreshold)} điểm
                 </span>
-                <span className="progress-boundary-end">
-                    <strong>{current.next || current.name}</strong>
-                    {current.max.toLocaleString()} điểm
+                <span>
+                    <strong>{nextTier?.TenHang || currentTier?.TenHang || "Hạng cao nhất"}</strong>
+                    {formatMemberNumber(nextThreshold ?? currentThreshold)} điểm
                 </span>
             </div>
 
-            {
-
-                current.next ?
-
-                    <p className="progress-text">
-
-                        Còn <strong>{remain.toLocaleString()}</strong> điểm để đạt hạng <strong>{current.next}</strong>
-
+            <div className="member-progress-card__message">
+                {status === "no-points" && (
+                    <p>
+                        <FaExclamationTriangle aria-hidden="true" />
+                        Chưa có dữ liệu điểm để tính tiến trình.
                     </p>
-
-                :
-
-                    <p className="progress-text">
-
-                        Bạn đã đạt hạng thành viên cao nhất.
-
+                )}
+                {status === "invalid-threshold" && (
+                    <p>
+                        <FaExclamationTriangle aria-hidden="true" />
+                        Cấu hình ngưỡng điểm chưa đầy đủ nên chưa thể tính tiến trình.
                     </p>
-
-            }
-
-        </div>
-
+                )}
+                {hasEqualThresholds && !isHighestTier && (
+                    <p>
+                        <FaExclamationTriangle aria-hidden="true" />
+                        Hai hạng đang có cùng ngưỡng điểm; tiến trình được chuẩn hóa an toàn.
+                    </p>
+                )}
+                {hasInvalidThresholdOrder && !isHighestTier && (
+                    <p>
+                        <FaExclamationTriangle aria-hidden="true" />
+                        Ngưỡng điểm của hạng kế tiếp đang thấp hơn hạng hiện tại; tiến trình được giới hạn an toàn trong khoảng 0–100%.
+                    </p>
+                )}
+                {isHighestTier && (
+                    <p className="is-celebration">
+                        <FaCrown aria-hidden="true" />
+                        Bạn đã đạt hạng cao nhất. Hãy tiếp tục tận hưởng các quyền lợi hiện có.
+                    </p>
+                )}
+                {!isHighestTier && hasReachedNextThreshold && (
+                    <p className="is-ready">
+                        <FaStar aria-hidden="true" />
+                        Bạn đã đủ ngưỡng điểm của hạng {nextTier?.TenHang}. Hạng chính thức vẫn do hệ thống xác nhận.
+                    </p>
+                )}
+                {!isHighestTier && !hasReachedNextThreshold && remainingPoints !== null && (
+                    <p>
+                        Còn <strong>{formatMemberNumber(remainingPoints)} điểm</strong> để đạt hạng <strong>{nextTier?.TenHang}</strong>.
+                        Điểm hiện tại: <strong>{formatMemberNumber(currentPoints)}</strong>.
+                    </p>
+                )}
+            </div>
+        </section>
     );
-
 }
 
 export default MemberProgress;

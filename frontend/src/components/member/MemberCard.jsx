@@ -1,70 +1,88 @@
-import "../../assets/css/memberRank.css";
+import { FaCalendarAlt, FaHistory, FaIdCard, FaStar } from "react-icons/fa";
+import {
+    formatMemberDate,
+    formatMemberNumber,
+    getTierTone,
+} from "../../utils/memberRank";
+import MemberRankBadge from "./MemberRankBadge";
 
-function MemberCard({ user, points, onShowHistory }) {
+function MemberCard({ user, points, membership, onShowHistory }) {
+    if (!user || !points || !membership) return null;
 
-    const getRankName = (rank) => {
-
-        switch (rank) {
-            case "HTV001":
-                return "ĐỒNG";
-            case "HTV002":
-                return "BẠC";
-            case "HTV003":
-                return "VÀNG";
-            case "HTV004":
-                return "KIM CƯƠNG";
-            default:
-                return "THÀNH VIÊN";
-        }
-
-    };
-
-    if (!user || !points) return null;
+    const currentTier = membership.currentTier;
+    const tone = currentTier
+        ? getTierTone(membership.currentIndex, membership.ranks.length)
+        : "green";
 
     return (
+        <article className={`member-loyalty-card member-loyalty-card--${tone}`}>
+            <div className="member-loyalty-card__shape member-loyalty-card__shape--one" aria-hidden="true" />
+            <div className="member-loyalty-card__shape member-loyalty-card__shape--two" aria-hidden="true" />
 
-        <div className="member-card">
+            <div className="member-loyalty-card__content">
+                <div className="member-loyalty-card__brand">
+                    <span>BUFFET VIP</span>
+                    <small>Vibrant Rewards Club</small>
+                </div>
 
-            <div className="member-card-overlay">
+                <div className="member-loyalty-card__identity">
+                    <p>Thành viên</p>
+                    <h2>{user.HoTen || "—"}</h2>
+                    {user.MaKhachHang && (
+                        <span>
+                            <FaIdCard aria-hidden="true" />
+                            {user.MaKhachHang}
+                        </span>
+                    )}
+                </div>
 
-                <div className="member-card-header">
-                    <div>
-                        <h4>BUFFET VIP</h4>
-                        <span>MEMBERSHIP CARD</span>
+                <div className="member-loyalty-card__rank">
+                    {currentTier ? (
+                        <MemberRankBadge
+                            tier={currentTier}
+                            index={membership.currentIndex}
+                            total={membership.ranks.length}
+                        />
+                    ) : (
+                        <span className="member-loyalty-card__unknown-rank">
+                            {points.HangThanhVien || "Chưa có hạng"}
+                        </span>
+                    )}
+                </div>
+
+                <div className="member-loyalty-card__footer">
+                    <div className="member-loyalty-card__points" aria-label={`Điểm hiện có: ${formatMemberNumber(points.TongDiem)}`}>
+                        <FaStar aria-hidden="true" />
+                        <span>
+                            <small>Điểm hiện có</small>
+                            <strong>{formatMemberNumber(points.TongDiem)}</strong>
+                        </span>
                     </div>
-                </div>
 
-                <div className="member-card-body">
-                    <h2>{user.HoTen}</h2>
-                </div>
+                    {user.NgayDangKy && (
+                        <div className="member-loyalty-card__joined">
+                            <FaCalendarAlt aria-hidden="true" />
+                            <span>
+                                <small>Tham gia</small>
+                                <strong>{formatMemberDate(user.NgayDangKy)}</strong>
+                            </span>
+                        </div>
+                    )}
 
-                <div className="member-card-footer">
-                    <div>
-                        <small>HẠNG THÀNH VIÊN</small>
-                        <h5>{getRankName(points.HangThanhVien)}</h5>
-                    </div>
-                    <div>
-                        <small>ĐIỂM HIỆN TẠI</small>
-                        <h5>{points.TongDiem.toLocaleString()}</h5>
-                    </div>
+                    {onShowHistory && (
+                        <button
+                            type="button"
+                            className="member-loyalty-card__history"
+                            onClick={onShowHistory}
+                        >
+                            <FaHistory aria-hidden="true" />
+                            Lịch sử hạng
+                        </button>
+                    )}
                 </div>
-
-                <div className="member-card-actions">
-                    <button
-                        type="button"
-                        className="history-btn"
-                        onClick={onShowHistory}
-                    >
-                        📜 Xem lịch sử hạng
-                    </button>
-                </div>
-
             </div>
-
-        </div>
-
+        </article>
     );
-
 }
 
 export default MemberCard;

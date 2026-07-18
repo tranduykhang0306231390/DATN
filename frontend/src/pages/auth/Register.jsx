@@ -1,301 +1,289 @@
-import { useState } from "react";
-import { registerMember } from "../../api/authApi";
+import { useRef, useState } from "react";
+import { FaGift } from "react-icons/fa";
+import { Link, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
-import { useNavigate } from "react-router-dom";
-import "../../assets/css/auth.css";
-import { FaEye, FaEyeSlash, FaGift, FaPercent, FaStar, FaCrown, FaUtensils } from "react-icons/fa";
+
+import { registerMember } from "../../api/authApi";
+import {
+    AuthMessage,
+    CustomerAuthLayout,
+    PasswordField,
+} from "../../components/customer/auth";
+import {
+    getAuthRequestMessage,
+    getPasswordStrength,
+    MEMBER_NAME_PATTERN,
+    normalizeFieldErrors,
+    PASSWORD_PATTERN,
+    PHONE_PATTERN,
+} from "../../utils/auth";
+import { getPreviousLocalCalendarDate } from "../../utils/customerDate";
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const INITIAL_FORM = {
+    HoTen: "",
+    NgaySinh: "",
+    GioiTinh: "Nam",
+    Email: "",
+    SoDienThoai: "",
+    MatKhau: "",
+    MatKhau_confirmation: "",
+};
 
 function Register() {
     const navigate = useNavigate();
+    const submittingRef = useRef(false);
+    const [form, setForm] = useState(INITIAL_FORM);
+    const [fieldErrors, setFieldErrors] = useState({});
+    const [generalError, setGeneralError] = useState("");
+    const [submitting, setSubmitting] = useState(false);
+    const maxBirthDate = getPreviousLocalCalendarDate();
+    const strength = getPasswordStrength(form.MatKhau);
 
-    const [formData, setFormData] = useState({
-        HoTen: "",
-        NgaySinh: "",
-        GioiTinh: "Nam",
-        Email: "",
-        SoDienThoai: "",
-        MatKhau: ""
-    });
-
-    const [confirmPassword, setConfirmPassword] = useState("");
-    const [showPassword, setShowPassword] = useState(false);
-    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
-    const handleChange = (e) => {
-        setFormData({
-            ...formData,
-            [e.target.name]: e.target.value
-        });
+    const updateField = (field, value) => {
+        setForm((current) => ({ ...current, [field]: value }));
+        setFieldErrors((current) => ({ ...current, [field]: "" }));
+        setGeneralError("");
     };
 
-    const getPasswordStrength = (password) => {
-        let score = 0;
+    const validate = () => {
+        const errors = {};
+        const fullName = form.HoTen.trim();
+        const email = form.Email.trim();
+        const phone = form.SoDienThoai.trim();
 
-        if (password.length >= 8) score++;
-        if (/[A-Z]/.test(password)) score++;
-        if (/[a-z]/.test(password)) score++;
-        if (/[0-9]/.test(password)) score++;
-        if (/[@$!%*#?&]/.test(password)) score++;
+        if (!fullName) errors.HoTen = "Họ tên không được để trống.";
+        else if (fullName.length < 3) errors.HoTen = "Họ tên phải từ 3 ký tự.";
+        else if (fullName.length > 100) errors.HoTen = "Họ tên không quá 100 ký tự.";
+        else if (!MEMBER_NAME_PATTERN.test(fullName)) errors.HoTen = "Họ tên chỉ gồm chữ cái và khoảng trắng.";
 
-        if (score <= 2)
-            return { text: "Yếu", color: "#FF5A3C", width: "33%" };
+        if (!form.NgaySinh) errors.NgaySinh = "Ngày sinh không được để trống.";
+        else if (form.NgaySinh > maxBirthDate) errors.NgaySinh = "Ngày sinh phải trước ngày hôm nay.";
 
-        if (score <= 4)
-            return { text: "Trung bình", color: "#FFB100", width: "66%" };
+        if (!["Nam", "Nu"].includes(form.GioiTinh)) errors.GioiTinh = "Vui lòng chọn giới tính.";
 
-        return { text: "Mạnh", color: "#04B26D", width: "100%" };
+        if (!email) errors.Email = "Email không được để trống.";
+        else if (!EMAIL_PATTERN.test(email)) errors.Email = "Email không đúng định dạng.";
+
+        if (!phone) errors.SoDienThoai = "Số điện thoại không được để trống.";
+        else if (!PHONE_PATTERN.test(phone)) errors.SoDienThoai = "Số điện thoại phải gồm 10 số và bắt đầu bằng 0.";
+
+        if (!form.MatKhau) errors.MatKhau = "Mật khẩu không được để trống.";
+        else if (!PASSWORD_PATTERN.test(form.MatKhau)) {
+            errors.MatKhau = "Mật khẩu phải có 8–20 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt.";
+        }
+
+        if (!form.MatKhau_confirmation) {
+            errors.MatKhau_confirmation = "Vui lòng xác nhận mật khẩu.";
+        } else if (form.MatKhau_confirmation !== form.MatKhau) {
+            errors.MatKhau_confirmation = "Xác nhận mật khẩu không khớp.";
+        }
+
+        setFieldErrors(errors);
+        return Object.keys(errors).length === 0;
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+    const handleSubmit = async (event) => {
+        event.preventDefault();
+        if (submittingRef.current || !validate()) return;
 
-        if (formData.MatKhau !== confirmPassword) {
-            Swal.fire({
-                icon: "warning",
-                title: "Mật khẩu xác nhận không khớp"
-            });
-            return;
-        }
-
-        const passwordRegex =
-            /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*#?&]).{8,20}$/;
-
-        if (!passwordRegex.test(formData.MatKhau)) {
-            Swal.fire({
-                icon: "warning",
-                title: "Mật khẩu chưa đủ mạnh",
-                text: "8-20 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt"
-            });
-            return;
-        }
+        submittingRef.current = true;
+        setSubmitting(true);
+        setGeneralError("");
 
         try {
             await registerMember({
-                ...formData,
-                MatKhau_confirmation: confirmPassword
+                ...form,
+                HoTen: form.HoTen.trim(),
+                Email: form.Email.trim().toLowerCase(),
+                SoDienThoai: form.SoDienThoai.trim(),
             });
 
-            Swal.fire({
+            await Swal.fire({
                 icon: "success",
                 title: "Đăng ký thành công",
-                timer: 1500,
-                showConfirmButton: false
+                text: "Bạn có thể đăng nhập bằng tài khoản vừa tạo.",
+                timer: 1600,
+                showConfirmButton: false,
             });
-
-            navigate("/member/login");
-
+            navigate("/member/login", { replace: true });
         } catch (error) {
-            let message = "Có lỗi xảy ra";
-
-            if (error.response?.data?.errors) {
-                message = Object.values(error.response.data.errors)[0][0];
-            } else if (error.response?.data?.message) {
-                message = error.response.data.message;
-            }
-
-            Swal.fire({
-                icon: "error",
-                title: "Đăng ký thất bại",
-                text: message
-            });
+            const responseErrors = normalizeFieldErrors(error);
+            const hasFieldErrors = Object.keys(responseErrors).length > 0;
+            if (hasFieldErrors) setFieldErrors(responseErrors);
+            setGeneralError(hasFieldErrors
+                ? "Vui lòng kiểm tra lại các trường được đánh dấu."
+                : getAuthRequestMessage(error, "Không thể đăng ký lúc này. Vui lòng thử lại."));
+        } finally {
+            submittingRef.current = false;
+            setSubmitting(false);
         }
     };
 
-    const strength = getPasswordStrength(formData.MatKhau);
-
     return (
-        <div className="auth-container">
+        <CustomerAuthLayout
+            eyebrow="Bắt đầu hành trình"
+            title="Đăng ký thành viên"
+            description="Tạo tài khoản bằng đúng thông tin của bạn để tích điểm và nhận quyền lợi theo hạng."
+            footer={(
+                <span>
+                    Đã có tài khoản? <Link to="/member/login">Đăng nhập</Link>
+                </span>
+            )}
+        >
+            <form className="customer-auth__form" onSubmit={handleSubmit} noValidate>
+                <AuthMessage message={generalError} />
 
-            <div className="auth-card">
-
-                {/* HEADER */}
-                <div className="text-center">
-                    <h1 className="restaurant-logo">BUFFET VIP</h1>
-                    <p className="restaurant-subtitle">
-                        Hệ thống thành viên thân thiết
-                    </p>
-                </div>
-
-                {/* HÀNG TEM TÍCH ĐIỂM - điểm nhấn hành trình thành viên */}
-                <div className="stamp-trail">
-                    <div className="stamp stamp-filled"><FaGift /></div>
-                    <div className="stamp stamp-filled"><FaPercent /></div>
-                    <div className="stamp stamp-filled"><FaStar /></div>
-                    <div className="stamp stamp-locked"><FaUtensils /></div>
-                    <div className="stamp stamp-locked"><FaCrown /></div>
-                </div>
-
-                <div className="ticket-divider">
-                    <span className="ticket-notch left" />
-                    <span className="ticket-notch right" />
-                </div>
-
-                <h2 className="auth-title">Đăng ký thành viên</h2>
-
-                <form onSubmit={handleSubmit}>
-
-                    {/* HÀNG 1: HỌ TÊN - NGÀY SINH - GIỚI TÍNH */}
-                    <div className="form-grid-row">
-                        <div className="form-group">
-                            <label className="form-label">Họ và tên</label>
-                            <input
-                                className="auth-input"
-                                type="text"
-                                name="HoTen"
-                                onChange={handleChange}
-                                required
-                            />
-                        </div>
-
-                        <div className="form-group">
-                            <label className="form-label">Ngày sinh</label>
-                            <input
-                                className="auth-input"
-                                type="date"
-                                name="NgaySinh"
-                                onChange={handleChange}
-                                required
-                            />
-                        </div>
-
-                        <div className="form-group">
-                            <label className="form-label">Giới tính</label>
-                            <select
-                                className="auth-input"
-                                name="GioiTinh"
-                                onChange={handleChange}
-                            >
-                                <option value="Nam">Nam</option>
-                                <option value="Nu">Nữ</option>
-                            </select>
-                        </div>
+                <div className="customer-auth__grid customer-auth__grid--three">
+                    <div className="customer-auth__field">
+                        <label htmlFor="register-name">Họ và tên</label>
+                        <input
+                            id="register-name"
+                            name="HoTen"
+                            type="text"
+                            className="customer-input customer-auth__input"
+                            value={form.HoTen}
+                            onChange={(event) => updateField("HoTen", event.target.value)}
+                            autoComplete="name"
+                            aria-invalid={Boolean(fieldErrors.HoTen)}
+                            aria-describedby={fieldErrors.HoTen ? "register-name-error" : undefined}
+                            disabled={submitting}
+                            required
+                        />
+                        {fieldErrors.HoTen && <small id="register-name-error" className="customer-auth__error">{fieldErrors.HoTen}</small>}
                     </div>
 
-                    {/* HÀNG 2: EMAIL - SĐT */}
-                    <div className="form-grid-row">
-                        <div className="form-group">
-                            <label className="form-label">Email</label>
-                            <input
-                                className="auth-input"
-                                type="email"
-                                name="Email"
-                                onChange={handleChange}
-                                required
-                            />
-                        </div>
-
-                        <div className="form-group">
-                            <label className="form-label">Số điện thoại</label>
-                            <input
-                                className="auth-input"
-                                type="text"
-                                name="SoDienThoai"
-                                onChange={handleChange}
-                                required
-                            />
-                        </div>
+                    <div className="customer-auth__field">
+                        <label htmlFor="register-birth-date">Ngày sinh</label>
+                        <input
+                            id="register-birth-date"
+                            name="NgaySinh"
+                            type="date"
+                            className="customer-input customer-auth__input"
+                            value={form.NgaySinh}
+                            max={maxBirthDate}
+                            onChange={(event) => updateField("NgaySinh", event.target.value)}
+                            autoComplete="bday"
+                            aria-invalid={Boolean(fieldErrors.NgaySinh)}
+                            aria-describedby={fieldErrors.NgaySinh ? "register-birth-date-error" : undefined}
+                            disabled={submitting}
+                            required
+                        />
+                        {fieldErrors.NgaySinh && <small id="register-birth-date-error" className="customer-auth__error">{fieldErrors.NgaySinh}</small>}
                     </div>
 
-                    {/* HÀNG 3: MẬT KHẨU - XÁC NHẬN MẬT KHẨU */}
-                    <div className="form-grid-row">
-                        <div className="form-group">
-                            <label className="form-label">Mật khẩu</label>
+                    <div className="customer-auth__field">
+                        <label htmlFor="register-gender">Giới tính</label>
+                        <select
+                            id="register-gender"
+                            name="GioiTinh"
+                            className="customer-select customer-auth__select"
+                            value={form.GioiTinh}
+                            onChange={(event) => updateField("GioiTinh", event.target.value)}
+                            aria-invalid={Boolean(fieldErrors.GioiTinh)}
+                            aria-describedby={fieldErrors.GioiTinh ? "register-gender-error" : undefined}
+                            disabled={submitting}
+                            required
+                        >
+                            <option value="Nam">Nam</option>
+                            <option value="Nu">Nữ</option>
+                        </select>
+                        {fieldErrors.GioiTinh && <small id="register-gender-error" className="customer-auth__error">{fieldErrors.GioiTinh}</small>}
+                    </div>
+                </div>
 
-                            <div className="password-box">
-                                <input
-                                    className="auth-input"
-                                    type={showPassword ? "text" : "password"}
-                                    name="MatKhau"
-                                    onChange={handleChange}
-                                    required
-                                />
-
-                                <span
-                                    className="password-eye"
-                                    onClick={() => setShowPassword(!showPassword)}
-                                >
-                                    {showPassword ? <FaEyeSlash /> : <FaEye />}
-                                </span>
-                            </div>
-
-                            {/* GỢI Ý YÊU CẦU MẬT KHẨU */}
-                            <div className="password-hint">
-                                8-20 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt (@$!%*#?&)
-                            </div>
-                        </div>
-
-                        <div className="form-group">
-                            <label className="form-label">
-                                Xác nhận mật khẩu
-                            </label>
-
-                            <div className="password-box">
-                                <input
-                                    className="auth-input"
-                                    type={showConfirmPassword ? "text" : "password"}
-                                    value={confirmPassword}
-                                    onChange={(e) =>
-                                        setConfirmPassword(e.target.value)
-                                    }
-                                    required
-                                />
-
-                                <span
-                                    className="password-eye"
-                                    onClick={() =>
-                                        setShowConfirmPassword(!showConfirmPassword)
-                                    }
-                                >
-                                    {showConfirmPassword ? (
-                                        <FaEyeSlash />
-                                    ) : (
-                                        <FaEye />
-                                    )}
-                                </span>
-                            </div>
-                        </div>
+                <div className="customer-auth__grid">
+                    <div className="customer-auth__field">
+                        <label htmlFor="register-email">Email</label>
+                        <input
+                            id="register-email"
+                            name="Email"
+                            type="email"
+                            className="customer-input customer-auth__input"
+                            value={form.Email}
+                            onChange={(event) => updateField("Email", event.target.value)}
+                            autoComplete="email"
+                            inputMode="email"
+                            aria-invalid={Boolean(fieldErrors.Email)}
+                            aria-describedby={fieldErrors.Email ? "register-email-error" : undefined}
+                            disabled={submitting}
+                            required
+                        />
+                        {fieldErrors.Email && <small id="register-email-error" className="customer-auth__error">{fieldErrors.Email}</small>}
                     </div>
 
-                    {/* PASSWORD STRENGTH */}
-                    {formData.MatKhau && (
-                        <div className="strength-wrapper">
+                    <div className="customer-auth__field">
+                        <label htmlFor="register-phone">Số điện thoại</label>
+                        <input
+                            id="register-phone"
+                            name="SoDienThoai"
+                            type="tel"
+                            className="customer-input customer-auth__input"
+                            value={form.SoDienThoai}
+                            onChange={(event) => updateField("SoDienThoai", event.target.value)}
+                            autoComplete="tel"
+                            inputMode="numeric"
+                            maxLength={10}
+                            aria-invalid={Boolean(fieldErrors.SoDienThoai)}
+                            aria-describedby={fieldErrors.SoDienThoai ? "register-phone-error" : undefined}
+                            disabled={submitting}
+                            required
+                        />
+                        {fieldErrors.SoDienThoai && <small id="register-phone-error" className="customer-auth__error">{fieldErrors.SoDienThoai}</small>}
+                    </div>
+                </div>
 
-                            <div className="strength-bar-bg">
-                                <div
-                                    className="strength-bar"
-                                    style={{
-                                        width: strength.width,
-                                        background: strength.color
-                                    }}
-                                />
-                            </div>
+                <div className="customer-auth__grid">
+                    <PasswordField
+                        id="register-password"
+                        name="MatKhau"
+                        label="Mật khẩu"
+                        value={form.MatKhau}
+                        onChange={(event) => updateField("MatKhau", event.target.value)}
+                        error={fieldErrors.MatKhau}
+                        help="8–20 ký tự, gồm chữ hoa, chữ thường, số và @$!%*#?&."
+                        autoComplete="new-password"
+                        disabled={submitting}
+                    />
+                    <PasswordField
+                        id="register-password-confirmation"
+                        name="MatKhau_confirmation"
+                        label="Xác nhận mật khẩu"
+                        value={form.MatKhau_confirmation}
+                        onChange={(event) => updateField("MatKhau_confirmation", event.target.value)}
+                        error={fieldErrors.MatKhau_confirmation}
+                        autoComplete="new-password"
+                        disabled={submitting}
+                    />
+                </div>
 
-                            <div
-                                className="strength-text"
-                                style={{ color: strength.color }}
-                            >
-                                {strength.text}
-                            </div>
+                {strength.score > 0 && (
+                    <div
+                        className="customer-auth__strength"
+                        data-score={strength.score}
+                        data-level={strength.key}
+                        aria-label={`Độ mạnh mật khẩu: ${strength.label}`}
+                    >
+                        <span className="customer-auth__strength-track" aria-hidden="true"><i /><i /><i /></span>
+                        <strong>{strength.label}</strong>
+                        <small>Thước đo chỉ hỗ trợ nhập liệu; backend vẫn là nơi xác thực quy tắc mật khẩu.</small>
+                    </div>
+                )}
 
-                        </div>
+                <button
+                    className="customer-button customer-button--primary customer-auth__submit"
+                    type="submit"
+                    disabled={submitting}
+                >
+                    {submitting ? (
+                        <><span className="customer-auth__submit-spinner" aria-hidden="true" /> Đang đăng ký…</>
+                    ) : (
+                        <><FaGift aria-hidden="true" /> Đăng ký</>
                     )}
-
-                    {/* SUBMIT */}
-                    <button className="auth-btn" type="submit">
-                        <FaGift /> Đăng ký nhận ưu đãi
-                    </button>
-
-                    {/* LOGIN LINK */}
-                    <div className="text-center mt-4">
-                        <span>Đã có tài khoản?</span>
-                        <a href="/member/login" className="auth-link ms-2">
-                            Đăng nhập
-                        </a>
-                    </div>
-
-                </form>
-            </div>
-        </div>
+                </button>
+            </form>
+        </CustomerAuthLayout>
     );
 }
 

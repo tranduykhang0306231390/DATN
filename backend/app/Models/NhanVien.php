@@ -30,7 +30,14 @@ class NhanVien extends Authenticatable implements JWTSubject
 
     public function getJWTCustomClaims():array
     {
-        return [];
+        return [
+            'password_fingerprint' => $this->getJwtPasswordFingerprint(),
+        ];
+    }
+
+    public function getJwtPasswordFingerprint(): string
+    {
+        return hash_hmac('sha256', (string) $this->MatKhau, (string) config('app.key'));
     }
 
     // ===== Relationships =====

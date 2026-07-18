@@ -1,215 +1,131 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import Swal from "sweetalert2";
+import {
+    FaCrown,
+    FaGift,
+    FaStar,
+    FaTicketAlt,
+} from "react-icons/fa";
 
-import { memberLogin } from "../../api/authApi";
+import { Link } from "react-router-dom";
+
+import { MemberLoginForm } from "../customer/auth";
+import "../../assets/css/customer/authentication.css";
+
+const PUBLIC_LOGIN_BENEFITS = [
+    {
+        icon: FaStar,
+        label: "Theo dõi điểm thưởng sau từng giao dịch",
+    },
+    {
+        icon: FaGift,
+        label: "Đổi voucher phù hợp với số điểm hiện có",
+    },
+    {
+        icon: FaCrown,
+        label: "Xem hạng và tiến trình thăng hạng rõ ràng",
+    },
+];
 
 function LoginSection() {
-
-    const navigate = useNavigate();
-
-    const [formData, setFormData] = useState({
-
-        email: "",
-        password: ""
-
-    });
-
-    const handleChange = (e) => {
-
-        setFormData({
-
-            ...formData,
-
-            [e.target.name]: e.target.value
-
-        });
-
-    };
-
-    const handleLogin = async (e) => {
-
-        e.preventDefault();
-
-        try {
-
-            const res = await memberLogin(formData);
-
-            localStorage.setItem("token", res.data.token);
-
-            localStorage.setItem("role", res.data.role);
-
-            localStorage.setItem(
-
-                "user",
-
-                JSON.stringify(res.data.user)
-
-            );
-
-            Swal.fire({
-
-                icon: "success",
-
-                title: "Đăng nhập thành công",
-
-                timer: 1200,
-
-                showConfirmButton: false
-
-            });
-
-            navigate("/member/home");
-
-        } catch (err) {
-
-            Swal.fire({
-
-                icon: "error",
-
-                title: "Đăng nhập thất bại",
-
-                text:
-
-                    err.response?.data?.message ||
-
-                    "Có lỗi xảy ra."
-
-            });
-
-        }
-
-    };
-
     return (
+        <section
+            id="dangnhap"
+            className="customer-auth customer-public-auth"
+            aria-labelledby="public-login-title"
+        >
+            <span
+                className="customer-auth__shape customer-auth__shape--purple"
+                aria-hidden="true"
+            />
 
-        <section className="login-section">
+            <span
+                className="customer-auth__shape customer-auth__shape--cyan"
+                aria-hidden="true"
+            />
 
-            <div className="container">
+            <div className="customer-shell customer-auth__shell customer-public-auth__shell">
+                <aside
+                    className="customer-auth__story"
+                    aria-labelledby="public-login-story-title"
+                >
+                    <div className="customer-auth__story-copy">
+                        <span className="customer-auth__story-kicker">
+                            <FaTicketAlt aria-hidden="true" />
+                            Buffet VIP Rewards
+                        </span>
 
-                <div className="login-wrapper">
+                        <h1 id="public-login-story-title">
+                            Mỗi lần dùng bữa, một bước gần hơn đến ưu đãi
+                        </h1>
 
-                    {/* LEFT */}
-
-                    <div className="login-left">
-
-                        <h2>
-
-                            Đăng nhập
-
-                        </h2>
-
-                        <p className="login-desc">
-
-                            Đăng nhập để tích điểm, nhận ưu đãi và quản lý
-                            tài khoản thành viên Buffet VIP.
-
+                        <p>
+                            Một tài khoản để theo dõi điểm, hạng thành viên,
+                            voucher và toàn bộ lịch sử giao dịch của bạn.
                         </p>
-
-                        <form onSubmit={handleLogin}>
-
-                            <div className="form-group">
-
-                                <label>
-
-                                    Email
-
-                                </label>
-
-                                <input
-
-                                    type="email"
-
-                                    name="email"
-
-                                    value={formData.email}
-
-                                    onChange={handleChange}
-
-                                    placeholder="Nhập email"
-
-                                    className="form-control"
-
-                                />
-
-                            </div>
-
-                            <div className="form-group">
-
-                                <label>
-
-                                    Mật khẩu
-
-                                </label>
-
-                                <input
-
-                                    type="password"
-
-                                    name="password"
-
-                                    value={formData.password}
-
-                                    onChange={handleChange}
-
-                                    placeholder="Nhập mật khẩu"
-
-                                    className="form-control"
-
-                                />
-
-                            </div>
-
-                            <button
-                                className="login-btn"
-                                type="submit"
-                            >
-
-                                Đăng nhập
-
-                            </button>
-
-                        </form>
-
                     </div>
 
-                    {/* RIGHT */}
+                    <ul className="customer-auth__benefits">
+                        {PUBLIC_LOGIN_BENEFITS.map(
+                            ({ icon: Icon, label }) => (
+                                <li key={label}>
+                                    <span aria-hidden="true">
+                                        <Icon />
+                                    </span>
 
-                    <div className="login-right">
+                                    {label}
+                                </li>
+                            ),
+                        )}
+                    </ul>
 
-                        <h2>
+                    <div
+                        className="customer-auth__journey"
+                        aria-hidden="true"
+                    >
+                        <span>
+                            <FaGift />
+                        </span>
 
-                            Chưa phải là thành viên?
+                        <i />
 
+                        <span>
+                            <FaStar />
+                        </span>
+
+                        <i />
+
+                        <span>
+                            <FaCrown />
+                        </span>
+                    </div>
+                </aside>
+
+                <article
+                    className="customer-auth__panel"
+                    aria-labelledby="public-login-title"
+                >
+                    <header className="customer-auth__heading">
+                        <span>Chào mừng trở lại</span>
+
+                        <h2 id="public-login-title">
+                            Đăng nhập thành viên
                         </h2>
 
                         <p>
-
-                            Tham gia chương trình thành viên Buffet VIP để
-                            tích điểm sau mỗi hóa đơn và nhận nhiều ưu đãi
-                            độc quyền.
-
+                            Đăng nhập để tiếp tục quản lý quyền lợi Buffet VIP
+                            Rewards.
                         </p>
+                    </header>
 
-                        <Link
-                            to="/register"
-                            className="register-btn"
-                        >
+                    <MemberLoginForm idPrefix="public-member-login" />
 
-                            Tham gia ngay
-
-                        </Link>
-
+                    <div className="customer-auth__footer">
+                        Chưa có tài khoản?{" "}
+                        <Link to="/register">Đăng ký thành viên</Link>
                     </div>
-
-                </div>
-
+                </article>
             </div>
-
         </section>
-
     );
-
 }
 
 export default LoginSection;

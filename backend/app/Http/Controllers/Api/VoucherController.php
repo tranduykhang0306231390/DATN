@@ -7,255 +7,213 @@ use App\Models\KhachHang;
 use App\Models\LichSuGiaoDichDiem;
 use App\Models\UuDai;
 use App\Models\VoucherKhachHang;
+use App\Services\SequentialCodeService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class VoucherController extends Controller
 {
-    /**
-     * Voucher khách hàng đang sở hữu
-     */
+    public function __construct(
+        private SequentialCodeService $codes
+    ) {}
+
+    /** Voucher khách hàng đang sở hữu. */
     public function myVoucher()
-{
-    $user = auth('khachhang')->user();
-
-    $vouchers = VoucherKhachHang::with('uuDai')
-        ->where('MaKhachHang', $user->MaKhachHang)
-        ->orderByDesc('NgayCap')
-        ->paginate(6);
-
-    return response()->json($vouchers);
-}
-
-    /**
-     * Kho voucher
-     */
-    public function voucherStore()
     {
         $user = auth('khachhang')->user();
 
-        $vouchers = UuDai::where('TrangThai', 'HoatDong')
+        return response()->json(
+            VoucherKhachHang::with('uuDai')
+                ->where('MaKhachHang', $user->MaKhachHang)
+                ->orderByDesc('NgayCap')
+                ->orderByRaw('CAST(SUBSTRING(MaVoucherKhachHang, 4) AS UNSIGNED) DESC')
+                ->paginate(6)
+        );
+    }
+
+    /** Kho voucher còn đủ điều kiện đổi ở thời điểm hiện tại. */
+    public function voucherStore()
+    {
+        $user = auth('khachhang')->user();
+        $today = now()->toDateString();
+
+        $vouchers = UuDai::query()
+            ->where('TrangThai', 'HoatDong')
             ->where('SoLuongTon', '>', 0)
-            ->whereDate('NgayBatDau', '<=', now())
-            ->whereDate('NgayKetThuc', '>=', now())
-            ->where(function ($q) use ($user) {
-
-                $q->whereNull('MaHangThanhVien')
+            ->whereDate('NgayBatDau', '<=', $today)
+            ->whereDate('NgayKetThuc', '>=', $today)
+            ->where(function ($query) use ($user) {
+                $query->whereNull('MaHangThanhVien')
                     ->orWhere('MaHangThanhVien', $user->MaHangThanhVien);
-
             })
             ->orderBy('ThuTuApDung')
             ->orderBy('SoDiemCanDoi')
+            ->orderByRaw('CAST(SUBSTRING(MaUuDai, 3) AS UNSIGNED) ASC')
             ->paginate(6);
 
         return response()->json($vouchers);
     }
 
-    /**
-     * Voucher nổi bật trang Home
-     */
+    /** Voucher nổi bật trang chủ thành viên. */
     public function hot()
     {
         $user = auth('khachhang')->user();
+        $today = now()->toDateString();
 
-        $vouchers = UuDai::where('TrangThai', 'HoatDong')
-            ->where('SoLuongTon', '>', 0)
-            ->whereDate('NgayBatDau', '<=', now())
-            ->whereDate('NgayKetThuc', '>=', now())
-            ->where(function ($q) use ($user) {
+        $redemptionCounts = VoucherKhachHang::query()
+            ->selectRaw('MaUuDai, COUNT(*) AS SoLuotDoi')
+            ->groupBy('MaUuDai');
 
-                $q->whereNull('MaHangThanhVien')
-                    ->orWhere('MaHangThanhVien', $user->MaHangThanhVien);
-
+        $vouchers = UuDai::query()
+            ->leftJoinSub($redemptionCounts, 'redemptions', 'uudai.MaUuDai', '=', 'redemptions.MaUuDai')
+            ->where('uudai.TrangThai', 'HoatDong')
+            ->where('uudai.SoLuongTon', '>', 0)
+            ->whereDate('uudai.NgayBatDau', '<=', $today)
+            ->whereDate('uudai.NgayKetThuc', '>=', $today)
+            ->where(function ($query) use ($user) {
+                $query->whereNull('uudai.MaHangThanhVien')
+                    ->orWhere('uudai.MaHangThanhVien', $user->MaHangThanhVien);
             })
-            ->orderByDesc('GiaTriGiam')
-            ->take(4)
-            ->get();
+            ->orderByRaw('COALESCE(redemptions.SoLuotDoi, 0) DESC')
+            ->orderBy('uudai.ThuTuApDung')
+            ->orderByRaw('CAST(SUBSTRING(uudai.MaUuDai, 3) AS UNSIGNED) ASC')
+            ->limit(4)
+            ->get('uudai.*');
 
-        return response()->json([
-            'success' => true,
-            'data' => $vouchers
-        ]);
+        return response()->json(['success' => true, 'data' => $vouchers]);
     }
 
     /**
-     * Đổi voucher
+     * Đổi voucher. Điểm, tồn kho, voucher sở hữu và lịch sử điểm được cập nhật
+     * nguyên tử để không thể trừ điểm hai lần hoặc phát vượt tồn kho.
      */
     public function exchangeVoucher(Request $request)
     {
-        $request->validate([
-            'MaUuDai' => 'required'
+        $data = $request->validate([
+            'MaUuDai' => ['required', 'string', 'exists:uudai,MaUuDai'],
         ]);
-
-        $user = auth('khachhang')->user();
-
-        $voucher = UuDai::where('MaUuDai', $request->MaUuDai)
-            ->where('TrangThai', 'HoatDong')
-            ->first();
-
-        if (!$voucher) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Voucher không tồn tại.'
-            ], 404);
-        }
-
-        if ($voucher->SoLuongTon <= 0) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Voucher đã hết.'
-            ], 400);
-        }
-
-        if ($user->TongDiem < $voucher->SoDiemCanDoi) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Bạn không đủ điểm để đổi voucher.'
-            ], 400);
-        }
-
-        DB::beginTransaction();
+        $authenticatedUser = auth('khachhang')->user();
 
         try {
+            $result = DB::transaction(function () use ($authenticatedUser, $data) {
+                // Luôn khóa khách hàng trước rồi mới khóa ưu đãi. Thứ tự này đồng
+                // nhất với luồng thanh toán để giảm nguy cơ deadlock.
+                $customer = KhachHang::where('MaKhachHang', $authenticatedUser->MaKhachHang)
+                    ->lockForUpdate()
+                    ->first();
+                $offer = UuDai::where('MaUuDai', $data['MaUuDai'])
+                    ->lockForUpdate()
+                    ->first();
 
-            $voucher = UuDai::where('MaUuDai', $request->MaUuDai)
-                ->where('TrangThai', 'HoatDong')
-                ->lockForUpdate()
-                ->first();
+                if (!$customer || $customer->TrangThai !== 'HoatDong') {
+                    return $this->businessError('Tài khoản không còn đủ điều kiện đổi voucher.', 403);
+                }
+                if (!$offer) {
+                    return $this->businessError('Voucher không còn tồn tại.', 404);
+                }
 
-            $khachHang = KhachHang::where(
-                'MaKhachHang',
-                $user->MaKhachHang
-            )->lockForUpdate()->first();
+                $today = now()->toDateString();
+                $isInDateRange = !empty($offer->NgayBatDau)
+                    && !empty($offer->NgayKetThuc)
+                    && $offer->NgayBatDau <= $today
+                    && $offer->NgayKetThuc >= $today;
+                $isForRank = !$offer->MaHangThanhVien
+                    || $offer->MaHangThanhVien === $customer->MaHangThanhVien;
 
-            if (!$voucher || $voucher->SoLuongTon <= 0) {
-                DB::rollBack();
+                if ($offer->TrangThai !== 'HoatDong' || !$isInDateRange || !$isForRank) {
+                    return $this->businessError('Voucher không còn đủ điều kiện để đổi.', 409);
+                }
+                if ((int) $offer->SoLuongTon <= 0) {
+                    return $this->businessError('Voucher đã hết.', 409);
+                }
 
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Voucher đã hết hoặc không còn hoạt động.'
-                ], 400);
-            }
+                $requiredPoints = max(0, (int) $offer->SoDiemCanDoi);
+                $pointsBefore = max(0, (int) $customer->TongDiem);
+                if ($pointsBefore < $requiredPoints) {
+                    return $this->businessError('Bạn không đủ điểm để đổi voucher.', 409);
+                }
 
-            if ($khachHang->TongDiem < $voucher->SoDiemCanDoi) {
-                DB::rollBack();
+                $ownedVoucherCode = $this->codes->next(
+                    'voucherkhachhang',
+                    'MaVoucherKhachHang',
+                    'VKH'
+                );
+                $pointsAfter = $pointsBefore - $requiredPoints;
 
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Bạn không đủ điểm để đổi voucher.'
-                ], 400);
-            }
+                $customer->TongDiem = $pointsAfter;
+                $customer->save();
 
-            $diemTruoc = $khachHang->TongDiem;
+                $offer->SoLuongTon = (int) $offer->SoLuongTon - 1;
+                $offer->save();
 
-            $diemSau = $diemTruoc - $voucher->SoDiemCanDoi;
+                VoucherKhachHang::create([
+                    'MaVoucherKhachHang' => $ownedVoucherCode,
+                    'TrangThai' => 'ChuaSuDung',
+                    'MaKhachHang' => $customer->MaKhachHang,
+                    'MaUuDai' => $offer->MaUuDai,
+                    'NgaySuDung' => null,
+                    'NgayCap' => now(),
+                    'NgayHetHan' => $offer->NgayKetThuc ?: now()->addDays(30)->toDateString(),
+                ]);
 
-            $khachHang->TongDiem = $diemSau;
+                if ($requiredPoints > 0) {
+                    LichSuGiaoDichDiem::create([
+                        'MaGiaoDichDiem' => $this->codes->next(
+                            'lichsugiaodichdiem',
+                            'MaGiaoDichDiem',
+                            'GDD'
+                        ),
+                        'LoaiGiaoDich' => 'DoiVoucher',
+                        'SoDiem' => $requiredPoints,
+                        'SoDiemTruoc' => $pointsBefore,
+                        'SoDiemSau' => $pointsAfter,
+                        'MaKhachHang' => $customer->MaKhachHang,
+                        'MaThamChieu' => $ownedVoucherCode,
+                        'ThoiGianGiaoDich' => now(),
+                    ]);
+                }
 
-            $khachHang->save();
-
-            $voucher->SoLuongTon--;
-
-            $voucher->save();
-                        // ===== Sinh mã VoucherKhachHang =====
-
-            $lastVoucher = VoucherKhachHang::orderByDesc('MaVoucherKhachHang')
-                ->lockForUpdate()
-                ->first();
-
-            if ($lastVoucher) {
-
-                $stt = intval(substr($lastVoucher->MaVoucherKhachHang, 3)) + 1;
-
-            } else {
-
-                $stt = 1;
-
-            }
-
-            $maVoucherKH = 'VKH' . str_pad($stt, 3, '0', STR_PAD_LEFT);
-
-            // ===== Ngày cấp và ngày hết hạn =====
-
-            $ngayCap = now();
-
-            if ($voucher->NgayKetThuc) {
-
-                $ngayHetHan = $voucher->NgayKetThuc;
-
-            } else {
-
-                $ngayHetHan = now()->addDays(30);
-
-            }
-
-            VoucherKhachHang::create([
-
-                'MaVoucherKhachHang' => $maVoucherKH,
-                'TrangThai' => 'ChuaSuDung',
-                'MaKhachHang' => $khachHang->MaKhachHang,
-                'MaUuDai' => $voucher->MaUuDai,
-                'NgaySuDung' => null,
-                'NgayCap' => $ngayCap,
-                'NgayHetHan' => $ngayHetHan,
-
+                return [
+                    'success' => true,
+                    'TongDiem' => $pointsAfter,
+                    'MaVoucherKhachHang' => $ownedVoucherCode,
+                ];
+            });
+        } catch (\Throwable $exception) {
+            Log::error('Không thể đổi voucher', [
+                'customer_id' => $authenticatedUser->MaKhachHang,
+                'offer_id' => $data['MaUuDai'],
+                'exception' => $exception,
             ]);
-
-            // ===== Sinh mã giao dịch điểm =====
-
-            $lastGD = LichSuGiaoDichDiem::orderByDesc('MaGiaoDichDiem')
-                ->lockForUpdate()
-                ->first();
-
-            if ($lastGD) {
-
-                $sttGD = intval(substr($lastGD->MaGiaoDichDiem, 3)) + 1;
-
-            } else {
-
-                $sttGD = 1;
-
-            }
-
-            $maGD = 'GDD' . str_pad($sttGD, 3, '0', STR_PAD_LEFT);
-
-            // ===== Lưu lịch sử giao dịch điểm =====
-
-            LichSuGiaoDichDiem::create([
-
-                'MaGiaoDichDiem' => $maGD,
-                'LoaiGiaoDich' => 'DoiVoucher',
-                'SoDiem' => $voucher->SoDiemCanDoi,
-                'SoDiemTruoc' => $diemTruoc,
-                'SoDiemSau' => $diemSau,
-                'MaKhachHang' => $khachHang->MaKhachHang,
-                'MaThamChieu' => $maVoucherKH,
-                'ThoiGianGiaoDich' => now(),
-
-            ]);
-
-            DB::commit();
 
             return response()->json([
-
-                'success' => true,
-                'message' => 'Đổi voucher thành công.'
-
-            ]);
-
-        } catch (\Exception $e) {
-
-            DB::rollBack();
-
-            return response()->json([
-
                 'success' => false,
-                'message' => $e->getMessage()
-
+                'message' => 'Không thể đổi voucher lúc này. Vui lòng thử lại.',
             ], 500);
-
         }
 
+        if (!$result['success']) {
+            return response()->json([
+                'success' => false,
+                'message' => $result['message'],
+            ], $result['status']);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Đổi voucher thành công.',
+            'TongDiem' => $result['TongDiem'],
+            'data' => [
+                'MaVoucherKhachHang' => $result['MaVoucherKhachHang'],
+                'TongDiem' => $result['TongDiem'],
+            ],
+        ]);
     }
 
+    /** @return array{success: false, message: string, status: int} */
+    private function businessError(string $message, int $status): array
+    {
+        return ['success' => false, 'message' => $message, 'status' => $status];
+    }
 }

@@ -4,11 +4,16 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\LoaiVe;
+use App\Services\SequentialCodeService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class LoaiVeController extends Controller
 {
+    public function __construct(
+        private SequentialCodeService $codes
+    ) {}
    
     public function index(Request $request)
     {
@@ -83,18 +88,18 @@ class LoaiVeController extends Controller
             'TrangThai' => ['nullable', Rule::in(['HoatDong', 'TamNgung'])],
         ]);
 
-        $last = LoaiVe::orderBy('MaLoaiVe', 'desc')->first();
-        $so   = $last ? ((int) substr($last->MaLoaiVe, 2)) + 1 : 1;
-        $maLV = 'LV' . str_pad($so, 3, '0', STR_PAD_LEFT);
+        $lv = DB::transaction(function () use ($data) {
+            $lv = new LoaiVe();
+            $lv->MaLoaiVe  = $this->codes->next('loaive', 'MaLoaiVe', 'LV');
+            $lv->TenLoaiVe = $data['TenLoaiVe'];
+            $lv->BuoiAn    = $data['BuoiAn'];
+            $lv->LoaiNgay  = $data['LoaiNgay'];
+            $lv->GiaVe     = $data['GiaVe'];
+            $lv->TrangThai = $data['TrangThai'] ?? 'HoatDong';
+            $lv->save();
 
-        $lv = new LoaiVe();
-        $lv->MaLoaiVe  = $maLV;
-        $lv->TenLoaiVe = $data['TenLoaiVe'];
-        $lv->BuoiAn    = $data['BuoiAn'];
-        $lv->LoaiNgay  = $data['LoaiNgay'];
-        $lv->GiaVe     = $data['GiaVe'];
-        $lv->TrangThai = $data['TrangThai'] ?? 'HoatDong';
-        $lv->save();
+            return $lv;
+        });
 
         return response()->json([
             'success' => true,

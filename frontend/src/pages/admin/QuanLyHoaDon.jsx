@@ -15,7 +15,11 @@ const fmtDateTime = (s) => {
     return d.toLocaleString('vi-VN');
 };
 
-const trangThaiLabel = (tt) => (tt === 'DaThanhToan' ? 'Đã thanh toán' : 'Đã hủy');
+const trangThaiLabel = (status) => ({
+    ChuaThanhToan: 'Chưa thanh toán',
+    DaThanhToan: 'Đã thanh toán',
+    DaHuy: 'Đã hủy',
+}[status] || 'Không xác định');
 
 export default function QuanLyHoaDon() {
     const [list, setList] = useState([]);
@@ -32,10 +36,11 @@ export default function QuanLyHoaDon() {
     const [detail, setDetail] = useState(null);
     const [loadingDetail, setLoadingDetail] = useState(false);
 
-    const loadList = useCallback(() => {
+    const loadList = useCallback(async () => {
+        await Promise.resolve();
         setLoading(true);
         hoaDonAdminApi
-            .getAll({ search, trang_thai: trangThai, page, per_page: 10 })
+            .getAll({ keyword: search, trang_thai: trangThai, page, per_page: 10 })
             .then((res) => {
                 const body = res.data;
                 // Hỗ trợ cả 2 dạng: { data, pagination } hoặc Laravel paginate mặc định
@@ -53,7 +58,8 @@ export default function QuanLyHoaDon() {
     }, [search, trangThai, page]);
 
     useEffect(() => {
-        loadList();
+        const timeoutId = window.setTimeout(() => void loadList(), 0);
+        return () => window.clearTimeout(timeoutId);
     }, [loadList]);
 
     const openDetail = async (maHD) => {
@@ -72,8 +78,8 @@ export default function QuanLyHoaDon() {
     };
 
     const applyFilter = () => {
-        setPage(1);
-        loadList();
+        if (page === 1) void loadList();
+        else setPage(1);
     };
 
     return (
@@ -161,15 +167,6 @@ export default function QuanLyHoaDon() {
                                             >
                                                 Chi tiết
                                             </button>
-                                            {hd.TrangThai === 'DaThanhToan' && (
-                                                <button
-                                                    type="button"
-                                                    className="admin-btn admin-btn--danger admin-btn--sm"
-                                                    onClick={() => handleHuy(hd.MaHoaDon)}
-                                                >
-                                                    Hủy
-                                                </button>
-                                            )}
                                         </div>
                                     </td>
                                 </tr>

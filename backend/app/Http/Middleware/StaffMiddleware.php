@@ -7,44 +7,45 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Chỉ cho phép nhân viên (guard: nhanvien) truy cập.
- * Truyền thêm roles nếu muốn giới hạn theo vai trò cụ thể.
- *
- * Ví dụ dùng trong route:
- *   ->middleware('staff')            // mọi nhân viên
- *   ->middleware('staff:Admin')      // chỉ Admin
- *   ->middleware('staff:Admin,NhanVien') // Admin hoặc NhanVien
+ * Chỉ cho phép nhân viên đang hoạt động truy cập và có thể giới hạn vai trò.
  */
 class StaffMiddleware
 {
     public function handle(Request $request, Closure $next, string ...$roles): Response
     {
-        // Thử xác thực bằng guard nhanvien
-        $user = auth('nhanvien')->user();
+        try {
+            $guard = auth('nhanvien');
+            $user = $guard->user();
+            $tokenFingerprint = $guard->payload()->get('password_fingerprint');
+        } catch (\Throwable) {
+            $user = null;
+            $tokenFingerprint = null;
+        }
 
-        // Không có token hoặc token không thuộc guard nhanvien
-        if (!$user) {
+        if (
+            !$user
+            || !is_string($tokenFingerprint)
+            || !hash_equals($user->getJwtPasswordFingerprint(), $tokenFingerprint)
+        ) {
             return response()->json([
                 'success' => false,
-                'message' => 'Bạn cần đăng nhập với tư cách nhân viên.'
+                'message' => 'Phiên đăng nhập không hợp lệ hoặc đã hết hạn.',
             ], 401);
         }
 
-        // Kiểm tra trạng thái tài khoản
         if ($user->TrangThai !== 'HoatDong') {
             return response()->json([
                 'success' => false,
-                'message' => 'Tài khoản nhân viên đã bị vô hiệu hóa.'
+                'message' => 'Tài khoản nhân viên đã bị vô hiệu hóa.',
             ], 403);
         }
 
-        // Nếu có yêu cầu role cụ thể thì kiểm tra thêm
-        if (!empty($roles) && !in_array($user->VaiTro, $roles)) {
+        if (!empty($roles) && !in_array($user->VaiTro, $roles, true)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Bạn không có quyền truy cập chức năng này.',
                 'your_role' => $user->VaiTro,
-                'required_roles' => $roles
+                'required_roles' => $roles,
             ], 403);
         }
 

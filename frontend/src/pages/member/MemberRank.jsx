@@ -1,106 +1,148 @@
-import { useEffect, useState } from "react";
-import Swal from "sweetalert2";
+import { lazy, Suspense, useEffect, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
 
+import AccountNavigation from "../../components/member/AccountNavigation";
+import LoadingSkeleton from "../../components/customer/ui/LoadingSkeleton";
+import SectionHeading from "../../components/customer/ui/SectionHeading";
 import {
-    getMemberProfile,
-    getMemberPoints
-} from "../../api/authApi";
+    getAccountNavigationKey,
+    getAccountSearch,
+    normalizeAccountModal,
+    normalizeAccountTab,
+} from "../../utils/accountCenter";
+import "../../assets/css/customer/member-rank.css";
+import "../../assets/css/customer/account-center.css";
 
-import MemberCard from "../../components/member/MemberCard";
-import MemberProgress from "../../components/member/MemberProgress";
-import MemberPointSummary from "../../components/member/MemberPointSummary";
-import MemberProfile from "../../components/member/MemberProfile";
-import PointHistory from "../../components/member/PointHistory";
-import RankHistoryModal from "../../components/member/RankHistoryModal";
+const RankOverviewPanel = lazy(() => import("../../components/member/RankOverviewPanel"));
+const TicketPricingPanel = lazy(() => import("../../components/member/TicketPricingPanel"));
+const VoucherPanel = lazy(() => import("../../components/member/VoucherPanel"));
+const TransactionHistoryPanel = lazy(() => import("../../components/member/TransactionHistoryPanel"));
 
-import "../../assets/css/memberRank.css";
+const TAB_HEADINGS = {
+    rank: {
+        eyebrow: "Vibrant Rewards Club",
+        title: "Hạng và điểm",
+        description: "Thẻ thành viên, điểm hiện có và hành trình thăng hạng của bạn.",
+    },
+    tickets: {
+        eyebrow: "Giá vé",
+        title: "Các loại vé đang áp dụng",
+        description: "Tham khảo giá và thông tin vé được lấy trực tiếp từ hệ thống.",
+    },
+    vouchers: {
+        eyebrow: "Đổi điểm nhận quà",
+        title: "Voucher thành viên",
+        description: "Đổi điểm và quản lý voucher của bạn trong cùng một nơi.",
+    },
+    "my-vouchers": {
+        eyebrow: "Đổi điểm nhận quà",
+        title: "Voucher thành viên",
+        description: "Đổi điểm và quản lý voucher của bạn trong cùng một nơi.",
+    },
+    transactions: {
+        eyebrow: "Hoạt động tài khoản",
+        title: "Lịch sử giao dịch",
+        description: "Tra cứu hóa đơn và biến động điểm trong cùng một nơi.",
+    },
+};
+
+function AccountPanelLoading() {
+    return (
+        <div className="account-center-loading" role="status" aria-label="Đang tải nội dung tài khoản">
+            <LoadingSkeleton lines={5} ariaLabel="Đang tải nội dung" />
+            <LoadingSkeleton lines={4} ariaLabel="Đang tải dữ liệu" />
+        </div>
+    );
+}
 
 function MemberRank() {
-
-    const [user, setUser] = useState(null);
-    const [points, setPoints] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [showRankHistory, setShowRankHistory] = useState(false);
+    const [searchParams, setSearchParams] = useSearchParams();
+    const contentRef = useRef(null);
+    const previousTabRef = useRef(null);
+    const requestedTab = searchParams.get("tab");
+    const activeTab = normalizeAccountTab(requestedTab);
+    const activeModal = normalizeAccountModal(searchParams.get("modal"), activeTab);
+    const heading = TAB_HEADINGS[activeTab];
+    const activeNavigationKey = getAccountNavigationKey(activeTab, activeModal);
 
     useEffect(() => {
-        loadData();
-    }, []);
+        const hasInvalidTab = requestedTab !== null && requestedTab !== activeTab;
+        const requestedModal = searchParams.get("modal");
+        const hasInvalidModal = requestedModal !== null && requestedModal !== activeModal;
 
-    const loadData = async () => {
-        try {
-            const [profileRes, pointRes] = await Promise.all([
-                getMemberProfile(),
-                getMemberPoints()
-            ]);
+        if (!hasInvalidTab && !hasInvalidModal) return;
+        setSearchParams(getAccountSearch({ tab: activeTab, modal: activeModal }), { replace: true });
+    }, [activeModal, activeTab, requestedTab, searchParams, setSearchParams]);
 
-            setUser(profileRes.data.user);
-            setPoints(pointRes.data);
-
-        } catch (error) {
-            console.log(error);
-
-            Swal.fire({
-                icon: "error",
-                title: "Không thể tải dữ liệu"
-            });
-
-        } finally {
-            setLoading(false);
+    useEffect(() => {
+        if (previousTabRef.current === null) {
+            previousTabRef.current = activeTab;
+            return;
         }
+        if (previousTabRef.current === activeTab) return;
+
+        previousTabRef.current = activeTab;
+        contentRef.current?.scrollIntoView({ block: "start" });
+    }, [activeTab]);
+
+    const openModal = (modal) => {
+        setSearchParams(getAccountSearch({ tab: "rank", modal }));
     };
 
-    if (loading) {
-        return (
-            <div className="container py-5 text-center">
-                <h5>Đang tải dữ liệu...</h5>
-            </div>
+    const closeModal = () => {
+        setSearchParams(getAccountSearch({ tab: "rank" }), { replace: true });
+    };
+
+    const changeVoucherView = (view) => {
+        setSearchParams(getAccountSearch({
+            tab: view === "mine" ? "my-vouchers" : "vouchers",
+        }));
+    };
+
+    let panel = null;
+    if (activeTab === "rank") {
+        panel = (
+            <RankOverviewPanel
+                activeModal={activeModal}
+                onRequestModal={openModal}
+                onCloseModal={closeModal}
+            />
         );
+    } else if (activeTab === "tickets") {
+        panel = <TicketPricingPanel />;
+    } else if (activeTab === "vouchers") {
+        panel = <VoucherPanel key="voucher-store" view="store" onViewChange={changeVoucherView} />;
+    } else if (activeTab === "my-vouchers") {
+        panel = <VoucherPanel key="voucher-mine" view="mine" onViewChange={changeVoucherView} />;
+    } else if (activeTab === "transactions") {
+        panel = <TransactionHistoryPanel />;
     }
 
     return (
-        <div className="member-rank-page container">
+        <div className="account-center-page">
+            <div className="customer-shell">
+                <SectionHeading
+                    eyebrow={heading.eyebrow}
+                    title={heading.title}
+                    description={heading.description}
+                    as="h1"
+                    id="account-center-title"
+                />
 
-            {/* TITLE */}
-            <div className="page-title">
-                <h2>Hạng Thành Viên</h2>
-                <p>Quản lý hạng, điểm thưởng và thông tin cá nhân</p>
-            </div>
+                <div className="account-center-layout">
+                    <AccountNavigation activeKey={activeNavigationKey} />
 
-            {/* ===== TOP SECTION (CARD + PROFILE RIGHT) ===== */}
-            <div className="member-top-layout">
-
-                {/* LEFT SIDE */}
-                <div style={{ flex: 1 }}>
-
-                    <MemberCard
-                        user={user}
-                        points={points}
-                        onShowHistory={() => setShowRankHistory(true)}
-                    />
-
-                    <MemberProgress points={points} />
-
+                    <section
+                        ref={contentRef}
+                        className="account-center-content"
+                        aria-labelledby="account-center-title"
+                    >
+                        <Suspense fallback={<AccountPanelLoading />}>
+                            {panel}
+                        </Suspense>
+                    </section>
                 </div>
-
-                {/* RIGHT SIDE */}
-                <div style={{ width: "320px" }}>
-                    <MemberProfile user={user} />
-                </div>
-
             </div>
-
-            {/* SUMMARY */}
-            <MemberPointSummary points={points} />
-
-            {/* HISTORY */}
-            <PointHistory />
-
-            {/* MODAL LỊCH SỬ HẠNG */}
-            <RankHistoryModal
-                show={showRankHistory}
-                onClose={() => setShowRankHistory(false)}
-            />
-
         </div>
     );
 }

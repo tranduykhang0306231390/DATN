@@ -1,22 +1,6 @@
 // src/components/staff/StaffComponents.jsx
 // Các component dùng chung cho trang staff
-
-// ─── Format helpers ──────────────────────────────────────────────────────────
-export const fmt = (n) =>
-    Number(n).toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
-
-export const fmtDate = (str) =>
-    str ? new Date(str).toLocaleString('vi-VN') : '—';
-
-// ─── Hằng số dùng chung ──────────────────────────────────────────────────────
-export const TRANG_THAI_CONFIG = {
-    DaThanhToan: { badgeClass: 'badge badge-success', label: 'Đã thanh toán' },
-    DaHuy:       { badgeClass: 'badge badge-danger',  label: 'Đã hủy' },
-};
-
-export const BUOI_LABEL = { Trua: '🌤 Trưa', Toi: '🌙 Tối' };
-export const NGAY_LABEL = { NgayThuong: 'Ngày thường', CuoiTuan: 'Cuối tuần' };
-export const NHOM_LABEL = { GiamTien: 'Giảm tiền', PhanTram: 'Giảm %', TangMon: 'Tặng món' };
+import { TRANG_THAI_CONFIG } from './staffUtils';
 
 // ─── PageTitle ───────────────────────────────────────────────────────────────
 export function PageTitle({ children }) {

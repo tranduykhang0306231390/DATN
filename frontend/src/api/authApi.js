@@ -1,7 +1,7 @@
 import axios from "axios";
 import axiosClient from "./axiosClient";
 
-const API_URL = "http://127.0.0.1:8000/api";
+const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/api";
 
 /* AUTH */
 export const staffLogin = (data) => {
@@ -22,7 +22,7 @@ export const getMemberProfile = () => {
 };
 
 export const getStaffProfile = () => {
-    return axiosClient.get("/staff/profile");
+    return axiosClient.get("/profile");
 };
 
 /* POINTS */
@@ -103,3 +103,5 @@ export const forgotPassword = (data) => {
 export const resetPassword = (data) => {
     return axios.post(`${API_URL}/member/reset-password`, data);
 };
+
+export const logoutSession = () => axiosClient.post("/logout");

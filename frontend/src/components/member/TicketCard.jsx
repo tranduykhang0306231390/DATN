@@ -1,68 +1,37 @@
-import "../../assets/css/member/ticket.css";
+const getMealLabel = (meal) => ({
+    Sang: "Buổi sáng",
+    Trua: "Buổi trưa",
+    Toi: "Buổi tối",
+}[meal] || meal || "Chưa xác định");
+
+const getDayTypeLabel = (dayType) => ({
+    NgayThuong: "Ngày thường",
+    CuoiTuan: "Cuối tuần",
+    LeTet: "Lễ / Tết",
+}[dayType] || dayType || "Chưa xác định");
 
 function TicketCard({ ticket }) {
+    const price = Number(ticket?.GiaVe);
 
     return (
-
-        <div className="vip-ticket">
-
-            <div className="ticket-watermark">
-                BUFFET VIP
+        <article className="customer-ticket-card">
+            <div className="customer-ticket-card__watermark" aria-hidden="true">BUFFET VIP</div>
+            <div className="customer-ticket-card__top">
+                <span className="customer-ticket-card__brand">Buffet VIP</span>
+                <span className="customer-ticket-card__session">{getMealLabel(ticket?.BuoiAn)}</span>
             </div>
-
-            <div className="ticket-header">
-
-                <span className="ticket-brand">
-
-                    BUFFET VIP
-
-                </span>
-
-                <span className="ticket-session">
-
-                    {ticket.BuoiAn === "Trua" ? "☀ Buổi trưa" : "🌙 Buổi tối"}
-
-                </span>
-
+            <h2>{ticket?.TenLoaiVe || "Loại vé"}</h2>
+            <div className="customer-ticket-card__details">
+                {ticket?.LoaiVe && <span>{ticket.LoaiVe}</span>}
+                <span>{getDayTypeLabel(ticket?.LoaiNgay)}</span>
             </div>
-
-            <h3 className="ticket-name">
-
-                {ticket.TenLoaiVe}
-
-            </h3>
-
-            <div className="ticket-detail">
-
-                <span>
-
-                    {ticket.LoaiVe}
-
-                </span>
-
-                <span>
-
-                    Vé Buffet
-
-                </span>
-
+            <div className="customer-ticket-card__bottom">
+                {Number.isFinite(price) && price >= 0
+                    ? `${price.toLocaleString("vi-VN")} ₫`
+                    : "Liên hệ"}
             </div>
-
-            <div className="ticket-bottom">
-
-                <div className="ticket-price">
-
-                    {Number(ticket.GiaVe).toLocaleString("vi-VN")}đ
-
-                </div>
-
-                
-            </div>
-
-        </div>
-
+        </article>
     );
-
 }
 
 export default TicketCard;

@@ -1,4 +1,4 @@
-.feedback-star {
+.feedback-modal .feedback-star {
 
     font-size: 42px;
 
@@ -10,21 +10,27 @@
 
     margin: 0 6px;
 
+    padding: 0;
+
+    border: 0;
+
+    background: transparent;
+
 }
 
-.feedback-star:hover {
+.feedback-modal .feedback-star:hover {
 
     transform: scale(1.15);
 
 }
 
-.feedback-star.active {
+.feedback-modal .feedback-star.active {
 
     color: #ffc107;
 
 }
 
-.modal-header h5 {
+.feedback-modal .modal-header h5 {
 
     font-weight: 700;
 
@@ -32,7 +38,7 @@
 
 }
 
-.modal-body textarea {
+.feedback-modal .modal-body textarea {
 
     resize: none;
 
@@ -44,7 +50,7 @@
 
 }
 
-.modal-body textarea:focus {
+.feedback-modal .modal-body textarea:focus {
 
     border-color: #198754;
 
@@ -52,7 +58,7 @@
 
 }
 
-.modal-footer {
+.feedback-modal .modal-footer {
 
     border-top: none;
 
@@ -60,7 +66,7 @@
 
 }
 
-.modal-footer .btn {
+.feedback-modal .modal-footer .btn {
 
     min-width: 120px;
 

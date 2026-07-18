@@ -5,13 +5,19 @@ namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\UuDai;
+use App\Services\SequentialCodeService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class UuDaiController extends Controller
 {
     private const NHOM = ['GiamTien', 'PhanTram', 'TangMon'];
+
+    public function __construct(
+        private SequentialCodeService $codes
+    ) {}
 
     /**
      * Dữ liệu phụ cho form (danh sách hạng thành viên để chọn).
@@ -89,26 +95,26 @@ class UuDaiController extends Controller
     {
         $data = $this->validateData($request);
 
-        $last = UuDai::orderBy('MaUuDai', 'desc')->first();
-        $so   = $last ? ((int) substr($last->MaUuDai, 2)) + 1 : 1;
-        $maUD = 'UD' . str_pad($so, 3, '0', STR_PAD_LEFT);
+        $ud = DB::transaction(function () use ($data) {
+            $ud = new UuDai();
+            $ud->MaUuDai         = $this->codes->next('uudai', 'MaUuDai', 'UD');
+            $ud->TenUuDai        = $data['TenUuDai'];
+            $ud->SoDiemCanDoi    = $data['SoDiemCanDoi'];
+            $ud->GiaTriGiam      = $data['GiaTriGiam'];
+            $ud->MoTa            = $data['MoTa'] ?? null;
+            $ud->SoLuongPhatHanh = $data['SoLuongPhatHanh'];
+            $ud->SoLuongTon      = $data['SoLuongPhatHanh'];
+            $ud->NgayBatDau      = $data['NgayBatDau'];
+            $ud->NgayKetThuc     = $data['NgayKetThuc'];
+            $ud->TrangThai       = 'HoatDong';
+            $ud->MaHangThanhVien = $data['MaHangThanhVien'] ?: null;
+            $ud->NhomUuDai       = $data['NhomUuDai'];
+            $ud->CoTheDungChung  = (int) ($data['CoTheDungChung'] ?? 0);
+            $ud->ThuTuApDung     = $data['ThuTuApDung'] ?? 1;
+            $ud->save();
 
-        $ud = new UuDai();
-        $ud->MaUuDai         = $maUD;
-        $ud->TenUuDai        = $data['TenUuDai'];
-        $ud->SoDiemCanDoi    = $data['SoDiemCanDoi'];
-        $ud->GiaTriGiam      = $data['GiaTriGiam'];
-        $ud->MoTa            = $data['MoTa'] ?? null;
-        $ud->SoLuongPhatHanh = $data['SoLuongPhatHanh'];
-        $ud->SoLuongTon      = $data['SoLuongPhatHanh']; // ban đầu chưa phát ra voucher nào
-        $ud->NgayBatDau      = $data['NgayBatDau'];
-        $ud->NgayKetThuc     = $data['NgayKetThuc'];
-        $ud->TrangThai       = 'HoatDong';
-        $ud->MaHangThanhVien = $data['MaHangThanhVien'] ?: null;
-        $ud->NhomUuDai       = $data['NhomUuDai'];
-        $ud->CoTheDungChung  = (int) ($data['CoTheDungChung'] ?? 0);
-        $ud->ThuTuApDung     = $data['ThuTuApDung'] ?? 1;
-        $ud->save();
+            return $ud;
+        });
 
         return response()->json([
             'success' => true,
@@ -131,23 +137,44 @@ class UuDaiController extends Controller
 
         $data = $this->validateData($request);
 
-        // Số voucher đã phát ra trước đó = phát hành cũ - tồn cũ
-        $daPhatRa       = max(0, (int) $ud->SoLuongPhatHanh - (int) $ud->SoLuongTon);
-        $newPhatHanh    = (int) $data['SoLuongPhatHanh'];
-        $ud->SoLuongTon = max(0, $newPhatHanh - $daPhatRa);
+        $ud = DB::transaction(function () use ($ma, $data) {
+            $ud = UuDai::where('MaUuDai', $ma)->lockForUpdate()->first();
+            if (!$ud) return null;
 
-        $ud->TenUuDai        = $data['TenUuDai'];
-        $ud->SoDiemCanDoi    = $data['SoDiemCanDoi'];
-        $ud->GiaTriGiam      = $data['GiaTriGiam'];
-        $ud->MoTa            = $data['MoTa'] ?? null;
-        $ud->SoLuongPhatHanh = $newPhatHanh;
-        $ud->NgayBatDau      = $data['NgayBatDau'];
-        $ud->NgayKetThuc     = $data['NgayKetThuc'];
-        $ud->MaHangThanhVien = $data['MaHangThanhVien'] ?: null;
-        $ud->NhomUuDai       = $data['NhomUuDai'];
-        $ud->CoTheDungChung  = (int) ($data['CoTheDungChung'] ?? 0);
-        $ud->ThuTuApDung     = $data['ThuTuApDung'] ?? 1;
-        $ud->save();
+            $daPhatRa = max(
+                0,
+                (int) $ud->SoLuongPhatHanh - (int) $ud->SoLuongTon
+            );
+            $newPhatHanh = (int) $data['SoLuongPhatHanh'];
+
+            if ($newPhatHanh < $daPhatRa) {
+                throw ValidationException::withMessages([
+                    'SoLuongPhatHanh' => [
+                        "Số lượng phát hành không thể thấp hơn {$daPhatRa} voucher đã cấp.",
+                    ],
+                ]);
+            }
+
+            $ud->SoLuongTon      = $newPhatHanh - $daPhatRa;
+            $ud->TenUuDai        = $data['TenUuDai'];
+            $ud->SoDiemCanDoi    = $data['SoDiemCanDoi'];
+            $ud->GiaTriGiam      = $data['GiaTriGiam'];
+            $ud->MoTa            = $data['MoTa'] ?? null;
+            $ud->SoLuongPhatHanh = $newPhatHanh;
+            $ud->NgayBatDau      = $data['NgayBatDau'];
+            $ud->NgayKetThuc     = $data['NgayKetThuc'];
+            $ud->MaHangThanhVien = $data['MaHangThanhVien'] ?: null;
+            $ud->NhomUuDai       = $data['NhomUuDai'];
+            $ud->CoTheDungChung  = (int) ($data['CoTheDungChung'] ?? 0);
+            $ud->ThuTuApDung     = $data['ThuTuApDung'] ?? 1;
+            $ud->save();
+
+            return $ud;
+        });
+
+        if (!$ud) {
+            return response()->json(['success' => false, 'message' => 'Không tìm thấy ưu đãi'], 404);
+        }
 
         return response()->json([
             'success' => true,
@@ -167,8 +194,19 @@ class UuDaiController extends Controller
             return response()->json(['success' => false, 'message' => 'Không tìm thấy ưu đãi'], 404);
         }
 
-        $ud->TrangThai = $ud->TrangThai === 'HoatDong' ? 'NgungApDung' : 'HoatDong';
-        $ud->save();
+        $ud = DB::transaction(function () use ($ma) {
+            $ud = UuDai::where('MaUuDai', $ma)->lockForUpdate()->first();
+            if (!$ud) return null;
+
+            $ud->TrangThai = $ud->TrangThai === 'HoatDong' ? 'NgungApDung' : 'HoatDong';
+            $ud->save();
+
+            return $ud;
+        });
+
+        if (!$ud) {
+            return response()->json(['success' => false, 'message' => 'Không tìm thấy ưu đãi'], 404);
+        }
 
         return response()->json([
             'success' => true,
@@ -198,10 +236,15 @@ class UuDaiController extends Controller
 
         // Ưu đãi phần trăm thì giá trị giảm phải nằm trong 0–100
         if ($data['NhomUuDai'] === 'PhanTram' && $data['GiaTriGiam'] > 100) {
-            abort(response()->json([
-                'success' => false,
-                'message' => 'Ưu đãi phần trăm không được vượt quá 100%',
-            ], 422));
+            throw ValidationException::withMessages([
+                'GiaTriGiam' => ['Ưu đãi phần trăm không được vượt quá 100%.'],
+            ]);
+        }
+
+        if ((float) $data['GiaTriGiam'] <= 0) {
+            throw ValidationException::withMessages([
+                'GiaTriGiam' => ['Giá trị giảm hoặc quy đổi phải lớn hơn 0.'],
+            ]);
         }
 
         return $data;

@@ -5,8 +5,6 @@ import '../../assets/css/admin.css';
 import khachHangApi from '../../api/khachHangApi';
 import Modal from '../../components/admin/Modal';
 
-const gioiTinhLabel = (g) => (g === 'Nam' ? 'Nam' : g === 'Nu' ? 'Nữ' : '—');
-
 const EMPTY_FORM = {
     HoTen: '',
     SoDienThoai: '',
@@ -36,7 +34,8 @@ export default function QuanLyKhachHang() {
     const [saving, setSaving] = useState(false);
     const [formError, setFormError] = useState('');
 
-    const loadList = useCallback(() => {
+    const loadList = useCallback(async () => {
+        await Promise.resolve();
         setLoading(true);
         khachHangApi
             .getAll({ search, hang, trang_thai: trangThai, page, per_page: 10 })
@@ -60,7 +59,8 @@ export default function QuanLyKhachHang() {
     }, []);
 
     useEffect(() => {
-        loadList();
+        const timeoutId = window.setTimeout(() => void loadList(), 0);
+        return () => window.clearTimeout(timeoutId);
     }, [loadList]);
 
     const openEdit = (kh) => {
@@ -137,8 +137,8 @@ export default function QuanLyKhachHang() {
     };
 
     const applyFilter = () => {
-        setPage(1);
-        loadList();
+        if (page === 1) void loadList();
+        else setPage(1);
     };
 
     return (

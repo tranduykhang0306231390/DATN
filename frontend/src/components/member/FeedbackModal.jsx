@@ -1,208 +1,152 @@
-import { useState } from "react";
-import Swal from "sweetalert2";
-import {
-    sendInvoiceFeedback
-} from "../../api/authApi";
+import { useRef, useState } from "react";
+import { FaPaperPlane, FaStar } from "react-icons/fa";
 
-import "../../assets/css/member/FeedbackModal.css";
+import { sendInvoiceFeedback } from "../../api/authApi";
+import CustomerModal from "../customer/ui/CustomerModal";
 
-function FeedbackModal({
-    show,
-    onClose,
-    invoice
-}) {
-
+function FeedbackModal({ show, onClose, invoice }) {
     const [rating, setRating] = useState(5);
-
     const [content, setContent] = useState("");
-
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
+    const submittingRef = useRef(false);
 
-    if (!show) return null;
+    if (!invoice?.MaHoaDon) return null;
 
-    const submit = async () => {
+    const resetAndClose = () => {
+        if (loading) return;
+        setRating(5);
+        setContent("");
+        setError("");
+        onClose?.();
+    };
 
-        if (content.trim() === "") {
+    const submit = async (event) => {
+        event.preventDefault();
+        if (submittingRef.current) return;
 
-            Swal.fire({
-                icon: "warning",
-                title: "Thông báo",
-                text: "Vui lòng nhập nội dung đánh giá."
-            });
-
+        const normalizedContent = content.trim();
+        if (!normalizedContent) {
+            setError("Vui lòng nhập nội dung đánh giá.");
             return;
-
         }
 
         try {
-
+            submittingRef.current = true;
             setLoading(true);
+            setError("");
 
             await sendInvoiceFeedback(invoice.MaHoaDon, {
-
                 DiemDanhGia: rating,
-
-                NoiDungCuaKhachHang: content
-
+                NoiDungCuaKhachHang: normalizedContent,
             });
 
-            Swal.fire({
-
-                icon: "success",
-
-                title: "Thành công",
-
-                text: "Cảm ơn bạn đã đánh giá."
-
+            setRating(5);
+            setContent("");
+            onClose?.({
+                success: true,
+                message: "Đánh giá đã được gửi. Cảm ơn bạn đã chia sẻ trải nghiệm.",
             });
-
-            onClose();
-
-        }
-
-      catch (err) {
-
-    console.log("FULL ERROR:", err);
-    console.log("STATUS:", err.response?.status);
-    console.log("DATA:", err.response?.data);
-
-    Swal.fire({
-        icon: "error",
-        title: "Lỗi",
-        text: err.response?.data?.message || "Không thể gửi đánh giá."
-    });
-}
-        finally {
-
+        } catch (requestError) {
+            setError(requestError.response?.data?.message || "Không thể gửi đánh giá lúc này.");
+        } finally {
+            submittingRef.current = false;
             setLoading(false);
-
         }
-
     };
 
-    return (
+    const handleRatingKeyDown = (event) => {
+        if (!["ArrowLeft", "ArrowDown", "ArrowRight", "ArrowUp"].includes(event.key)) return;
+        event.preventDefault();
+        const direction = ["ArrowRight", "ArrowUp"].includes(event.key) ? 1 : -1;
+        setRating((current) => Math.min(5, Math.max(1, current + direction)));
+    };
 
-        <div
-            className="modal fade show"
-            style={{
-                display: "block",
-                background: "rgba(0,0,0,.45)"
-            }}
-        >
-
-            <div className="modal-dialog">
-
-                <div className="modal-content">
-
-                    <div className="modal-header">
-
-                        <h5>
-
-                            Đánh giá hóa đơn
-
-                        </h5>
-
-                        <button
-                            className="btn-close"
-                            onClick={onClose}
-                        ></button>
-
-                    </div>
-
-                    <div className="modal-body">
-
-                        <div className="text-center mb-4">
-
-                            {
-
-                                [1, 2, 3, 4, 5].map(item => (
-
-                                    <span
-
-                                        key={item}
-
-                                        className={
-                                            item <= rating
-                                                ? "feedback-star active"
-                                                : "feedback-star"
-                                        }
-
-                                        onClick={() => setRating(item)}
-
-                                    >
-
-                                        ★
-
-                                    </span>
-
-                                ))
-
-                            }
-
-                        </div>
-
-                        <textarea
-
-                            rows="5"
-
-                            className="form-control"
-
-                            placeholder="Hãy chia sẻ trải nghiệm của bạn..."
-
-                            value={content}
-
-                            onChange={(e) => setContent(e.target.value)}
-
-                        />
-
-                    </div>
-
-                    <div className="modal-footer">
-
-                        <button
-
-                            className="btn btn-secondary"
-
-                            onClick={onClose}
-
-                        >
-
-                            Hủy
-
-                        </button>
-
-                        <button
-
-                            className="btn btn-success"
-
-                            disabled={loading}
-
-                            onClick={submit}
-
-                        >
-
-                            {
-
-                                loading
-
-                                    ? "Đang gửi..."
-
-                                    : "Gửi đánh giá"
-
-                            }
-
-                        </button>
-
-                    </div>
-
-                </div>
-
-            </div>
-
+    const footer = (
+        <div className="feedback-dialog__actions">
+            <button
+                type="button"
+                className="customer-button customer-button--ghost"
+                onClick={resetAndClose}
+                disabled={loading}
+            >
+                Hủy
+            </button>
+            <button
+                type="submit"
+                form="invoice-feedback-form"
+                className="customer-button customer-button--primary"
+                disabled={loading}
+            >
+                <FaPaperPlane aria-hidden="true" />
+                {loading ? "Đang gửi…" : "Gửi đánh giá"}
+            </button>
         </div>
-
     );
 
+    return (
+        <CustomerModal
+            open={show}
+            onClose={resetAndClose}
+            title="Đánh giá hóa đơn"
+            eyebrow={invoice.MaHoaDon}
+            footer={footer}
+            busy={loading}
+            className="feedback-dialog"
+            titleId="invoice-feedback-title"
+        >
+            <form id="invoice-feedback-form" className="feedback-dialog__form" onSubmit={submit}>
+                <fieldset className="feedback-dialog__rating">
+                    <legend>Mức độ hài lòng</legend>
+                    <div role="radiogroup" aria-label="Chọn số sao đánh giá" onKeyDown={handleRatingKeyDown}>
+                        {[1, 2, 3, 4, 5].map((item) => (
+                            <button
+                                key={item}
+                                type="button"
+                                role="radio"
+                                aria-checked={rating === item}
+                                aria-label={`${item} sao`}
+                                tabIndex={rating === item ? 0 : -1}
+                                className={item <= rating ? "is-active" : ""}
+                                onClick={() => setRating(item)}
+                            >
+                                <FaStar aria-hidden="true" />
+                            </button>
+                        ))}
+                    </div>
+                    <span>{rating}/5 sao</span>
+                </fieldset>
+
+                <div className="customer-form-field">
+                    <label className="customer-form-field__label" htmlFor="invoice-feedback-content">
+                        Chia sẻ trải nghiệm
+                    </label>
+                    <textarea
+                        id="invoice-feedback-content"
+                        className="customer-textarea"
+                        rows="5"
+                        placeholder="Hãy cho chúng tôi biết điều bạn hài lòng hoặc cần cải thiện…"
+                        value={content}
+                        maxLength={1000}
+                        aria-invalid={Boolean(error)}
+                        aria-describedby={error ? "invoice-feedback-error" : "invoice-feedback-help"}
+                        onChange={(event) => {
+                            setContent(event.target.value);
+                            setError("");
+                        }}
+                    />
+                    <span id="invoice-feedback-help" className="customer-form-field__help">
+                        Tối đa 1.000 ký tự · {content.length}/1.000
+                    </span>
+                    {error && (
+                        <span id="invoice-feedback-error" className="customer-form-field__error" role="alert">
+                            {error}
+                        </span>
+                    )}
+                </div>
+            </form>
+        </CustomerModal>
+    );
 }
 
 export default FeedbackModal;

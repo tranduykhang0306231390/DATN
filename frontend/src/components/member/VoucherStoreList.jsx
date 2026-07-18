@@ -1,79 +1,81 @@
+import { FaExclamationCircle } from "react-icons/fa";
+import Pagination from "../customer/ui/Pagination";
+import VoucherGrid from "./VoucherGrid";
 import VoucherStoreCard from "./VoucherStoreCard";
+import { getStoreVoucherStatus } from "../../utils/voucher";
 
-function VoucherStoreList({ vouchers, links, onPageChange, reloadData }) {
-
-    const getLabel = (label) => {
-        if (label.includes("Previous")) return "«";
-        if (label.includes("Next")) return "»";
-        return label;
-    };
+function VoucherStoreList({
+    vouchers,
+    points,
+    page,
+    totalPages,
+    loading,
+    error,
+    submittingVoucherId,
+    onRedeem,
+    onPageChange,
+    onRetry,
+}) {
+    const hasRedeemableVoucher = vouchers.some((voucher) => (
+        getStoreVoucherStatus({
+            voucher,
+            currentPoints: points?.TongDiem,
+            memberRankCode: points?.HangThanhVien,
+        }).canRedeem
+    ));
 
     return (
-
-        <div className="voucher-section">
-
-            <div className="section-header">
-
-                <h3>Kho Voucher</h3>
-
-                <span>{vouchers.length} voucher</span>
-
+        <section
+            id="voucher-panel-store"
+            className="reward-voucher-panel"
+            role="tabpanel"
+            aria-labelledby="voucher-tab-store"
+        >
+            <div className="reward-voucher-panel__intro">
+                <div>
+                    <span>Reward catalogue</span>
+                    <h2>Chọn phần thưởng dành cho bạn</h2>
+                    <p>Danh sách đã được backend giới hạn theo thời gian, tồn kho và hạng hiện tại.</p>
+                </div>
             </div>
 
-            {
-                vouchers.length === 0 ? (
+            {!loading && vouchers.length > 0 && points && !hasRedeemableVoucher && (
+                <div className="reward-voucher-points-notice" role="status">
+                    <FaExclamationCircle aria-hidden="true" />
+                    <span>Điểm hiện có chưa đủ để đổi các voucher trên trang này.</span>
+                </div>
+            )}
 
-                    <div className="empty-voucher">
+            <VoucherGrid
+                items={vouchers}
+                loading={loading}
+                error={error}
+                onRetry={onRetry}
+                emptyTitle="Hiện chưa có voucher phù hợp"
+                emptyDescription="Kho phần thưởng chưa có voucher phù hợp với hạng hoặc thời gian hiện tại."
+            >
+                {vouchers.map((voucher) => (
+                    <VoucherStoreCard
+                        key={voucher.MaUuDai}
+                        voucher={voucher}
+                        points={points}
+                        submittingVoucherId={submittingVoucherId}
+                        onRedeem={onRedeem}
+                    />
+                ))}
+            </VoucherGrid>
 
-                        Hiện tại chưa có voucher nào.
-
-                    </div>
-
-                ) : (
-
-                    <>
-                    <div className="voucher-grid">
-
-                        {
-                            vouchers.map((voucher) => (
-
-                                <VoucherStoreCard
-                                    key={voucher.MaUuDai}
-                                    voucher={voucher}
-                                    reloadData={reloadData}
-                                />
-
-                            ))
-                        }
-
-                    </div>
-
-                    <div className="voucher-pagination">
-                        {links.map((link, index) => (
-                            <button
-                                key={index}
-                                className={`page-btn ${link.active ? "active" : ""} ${!link.url ? "disabled" : ""}`}
-                                disabled={!link.url}
-                                onClick={() => {
-                                    if (link.url) {
-                                        const page = new URL(link.url).searchParams.get("page");
-                                        onPageChange(Number(page));
-                                    }
-                                }}
-                            >
-                                {getLabel(link.label)}
-                            </button>
-                        ))}
-                    </div>
-                    </>
-
-                )
-            }
-
-        </div>
-
+            {vouchers.length > 0 && (
+                <Pagination
+                    currentPage={page}
+                    totalPages={totalPages}
+                    onPageChange={onPageChange}
+                    disabled={loading}
+                    ariaLabel="Phân trang kho voucher"
+                />
+            )}
+        </section>
     );
-
 }
 
 export default VoucherStoreList;

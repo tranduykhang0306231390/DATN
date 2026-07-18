@@ -1,314 +1,327 @@
-import "../../assets/css/member/InvoiceDetailModal.css";
-import { useState, useEffect } from "react";
-import FeedbackModal from "../../components/member/FeedbackModal";
+import { useEffect, useMemo, useState } from "react";
+import {
+    FaCheckCircle,
+    FaCommentDots,
+    FaExclamationTriangle,
+    FaReceipt,
+    FaTag,
+    FaTicketAlt,
+    FaUser,
+} from "react-icons/fa";
+
 import { getInvoiceFeedback } from "../../api/authApi";
+import CustomerModal from "../../components/customer/ui/CustomerModal";
+import LoadingSkeleton from "../../components/customer/ui/LoadingSkeleton";
+import StatusBadge from "../../components/customer/ui/StatusBadge";
+import FeedbackModal from "../../components/member/FeedbackModal";
+import { calculateInvoiceTotals, toInvoiceNumber } from "../../utils/invoice";
+import {
+    formatMemberDateTime,
+    formatMemberMoney,
+    formatMemberNumber,
+} from "../../utils/memberRank";
+import { formatVoucherValue, getVoucherTypeLabel } from "../../utils/voucher";
+import "../../assets/css/customer/account-invoice-detail.css";
+
+const getInvoiceStatus = (status) => {
+    if (status === "DaThanhToan") return { label: "Đã thanh toán", tone: "success" };
+    if (status === "ChuaThanhToan") return { label: "Chờ thanh toán", tone: "warning" };
+    return { label: status || "Chưa xác định", tone: "neutral" };
+};
 
 function InvoiceDetailModal({ show, onClose, invoice }) {
-
     const [showFeedback, setShowFeedback] = useState(false);
     const [feedback, setFeedback] = useState(null);
+    const [feedbackError, setFeedbackError] = useState(null);
+    const [feedbackSuccess, setFeedbackSuccess] = useState("");
     const [loadingFeedback, setLoadingFeedback] = useState(false);
+    const [feedbackReloadKey, setFeedbackReloadKey] = useState(0);
+    const invoiceId = invoice?.MaHoaDon;
 
-    // ==============================
-    // FETCH FEEDBACK FUNCTION
-    // ==============================
-    const fetchFeedback = async () => {
-        if (!invoice?.MaHoaDon) return;
+    useEffect(() => {
+        if (!show || !invoiceId) return undefined;
+        let active = true;
 
-        try {
+        const fetchFeedback = async () => {
+            await Promise.resolve();
+            if (!active) return;
+
             setLoadingFeedback(true);
-
-            const res = await getInvoiceFeedback(invoice.MaHoaDon);
-
-            // Backend trả về: { success: true, data: <feedback object hoặc null> }
-            // Sửa lại cho khớp field "data" mà backend thực sự trả về
-            // (trước đây code đọc nhầm res.data?.feedback -> luôn undefined)
-            setFeedback(res.data?.data || null);
-
-        } catch (err) {
-            console.log("No feedback:", err);
+            setFeedbackError(null);
             setFeedback(null);
-        } finally {
-            setLoadingFeedback(false);
+
+            try {
+                const response = await getInvoiceFeedback(invoiceId);
+                if (active) setFeedback(response.data?.data || null);
+            } catch (error) {
+                if (active) setFeedbackError(error);
+            } finally {
+                if (active) setLoadingFeedback(false);
+            }
+        };
+
+        void fetchFeedback();
+        return () => {
+            active = false;
+        };
+    }, [feedbackReloadKey, invoiceId, show]);
+
+    const invoiceData = useMemo(() => {
+        if (!invoice) return null;
+
+        const totals = calculateInvoiceTotals(invoice);
+        const responseVouchers = invoice.vouchers_ap_dung;
+        const legacyVoucher = invoice.voucherKhachHang || invoice.voucher_khach_hang;
+        const vouchers = Array.isArray(responseVouchers)
+            ? responseVouchers
+            : (legacyVoucher ? [legacyVoucher] : []);
+
+        return {
+            ...totals,
+            vouchers,
+            staff: invoice.nhanVien || invoice.nhan_vien || null,
+        };
+    }, [invoice]);
+
+    if (!invoice || !invoiceData) return null;
+
+    const status = getInvoiceStatus(invoice.TrangThai);
+    const rating = Math.max(0, Math.min(5, Math.trunc(toInvoiceNumber(feedback?.DiemDanhGia))));
+    const canReview = invoice.TrangThai === "DaThanhToan";
+
+    const handleClose = () => {
+        if (showFeedback) return;
+        onClose?.();
+    };
+
+    const handleFeedbackClose = (result) => {
+        setShowFeedback(false);
+        if (result?.success) {
+            setFeedbackSuccess(result.message || "Đã gửi đánh giá thành công.");
+            setFeedbackReloadKey((current) => current + 1);
         }
     };
 
-    // ==============================
-    // LOAD WHEN OPEN MODAL
-    // ==============================
-    useEffect(() => {
-        if (!show || !invoice?.MaHoaDon) return;
-
-        fetchFeedback();
-    }, [show, invoice]);
-
-    if (!show || !invoice) return null;
-
-    const voucher =
-        invoice.voucherKhachHang ||
-        invoice.voucher_khach_hang;
-
-    const uuDai =
-        voucher?.uuDai ||
-        voucher?.uu_dai;
-
-    const nhanVien =
-        invoice.nhanVien ||
-        invoice.nhan_vien;
-
-    const chiTiet =
-        invoice.chiTietHoaDon ||
-        invoice.chi_tiet_hoa_don ||
-        [];
-
-    const tongTien = Number(invoice.TongTien || 0);
-
-    const giamGia = uuDai
-        ? Number(uuDai.GiaTriGiam || 0)
-        : 0;
-
-    const thanhToan = tongTien - giamGia;
+    const footer = (
+        <div className="invoice-detail-footer">
+            <div className="invoice-detail-footer__status">
+                {feedback ? (
+                    <span className="is-reviewed"><FaCheckCircle aria-hidden="true" /> Đã đánh giá</span>
+                ) : (
+                    <span>{canReview ? "Bạn có thể chia sẻ trải nghiệm của mình." : "Chỉ hóa đơn đã thanh toán mới có thể đánh giá."}</span>
+                )}
+            </div>
+            <div className="invoice-detail-footer__actions">
+                {!feedback && canReview && (
+                    <button
+                        type="button"
+                        className="customer-button customer-button--secondary"
+                        onClick={() => {
+                            setFeedbackSuccess("");
+                            setShowFeedback(true);
+                        }}
+                        disabled={loadingFeedback || Boolean(feedbackError)}
+                    >
+                        <FaCommentDots aria-hidden="true" />
+                        Đánh giá
+                    </button>
+                )}
+                <button type="button" className="customer-button customer-button--primary" onClick={handleClose}>
+                    Đóng
+                </button>
+            </div>
+        </div>
+    );
 
     return (
-        <div
-            className="modal fade show"
-            style={{ display: "block", background: "rgba(0,0,0,.45)" }}
-        >
-            <div className="modal-dialog modal-lg invoice-modal">
-                <div className="modal-content">
+        <>
+            <CustomerModal
+                open={show}
+                onClose={handleClose}
+                title={`Hóa đơn ${invoice.MaHoaDon || ""}`.trim()}
+                eyebrow="Chi tiết giao dịch"
+                footer={footer}
+                busy={showFeedback}
+                className="invoice-detail-dialog"
+                titleId="invoice-detail-title"
+            >
+                <div className="invoice-detail">
+                    <section className="invoice-detail-hero" aria-label="Tổng quan hóa đơn">
+                        <div className="invoice-detail-hero__icon" aria-hidden="true"><FaReceipt /></div>
+                        <div className="invoice-detail-hero__content">
+                            <span>Tổng thanh toán</span>
+                            <strong>{formatMemberMoney(invoiceData.finalTotal, "0 ₫")}</strong>
+                            <small>{formatMemberDateTime(invoice.NgayLap)}</small>
+                        </div>
+                        <StatusBadge tone={status.tone}>{status.label}</StatusBadge>
+                    </section>
 
-                    {/* HEADER */}
-                    <div className="invoice-header">
-                        <div className="d-flex justify-content-between align-items-center">
+                    <section className="invoice-detail-section" aria-labelledby="invoice-information-title">
+                        <div className="invoice-detail-section__heading">
+                            <FaUser aria-hidden="true" />
+                            <h3 id="invoice-information-title">Thông tin giao dịch</h3>
+                        </div>
+                        <dl className="invoice-detail-info-grid">
+                            <div><dt>Mã hóa đơn</dt><dd>{invoice.MaHoaDon || "—"}</dd></div>
+                            <div><dt>Mã khách hàng</dt><dd>{invoice.MaKhachHang || "—"}</dd></div>
                             <div>
-                                <h4 className="mb-1">CHI TIẾT HÓA ĐƠN</h4>
-                                <small>Buffet VIP</small>
+                                <dt>Nhân viên</dt>
+                                <dd>{invoiceData.staff?.HoTen || invoiceData.staff?.TenNhanVien || invoice.MaNhanVien || "—"}</dd>
                             </div>
+                            <div><dt>Số bàn</dt><dd>{invoice.SoBan || "—"}</dd></div>
+                            <div><dt>Điểm tích lũy</dt><dd>+{formatMemberNumber(Math.max(0, toInvoiceNumber(invoice.DiemTichLuy)), "0")}</dd></div>
+                            <div><dt>Điểm sử dụng</dt><dd>{formatMemberNumber(Math.max(0, toInvoiceNumber(invoice.DiemSuDung)), "0")}</dd></div>
+                        </dl>
+                    </section>
 
-                            <button
-                                className="btn-close btn-close-white"
-                                onClick={onClose}
-                            />
+                    <section className="invoice-detail-section" aria-labelledby="invoice-ticket-title">
+                        <div className="invoice-detail-section__heading">
+                            <FaTicketAlt aria-hidden="true" />
+                            <h3 id="invoice-ticket-title">Danh sách vé</h3>
                         </div>
-                    </div>
 
-                    <div className="modal-body">
-
-                        {/* INFO */}
-                        <div className="invoice-info">
-                            <div className="row">
-                                <div className="col-md-6">
-                                    <p><strong>Mã hóa đơn</strong> <span>{invoice.MaHoaDon}</span></p>
-                                    <p><strong>Ngày lập</strong> <span>{invoice.NgayLap}</span></p>
-                                    <p>
-                                        <strong>Nhân viên</strong>
-                                        <span>
-                                            {nhanVien?.HoTen ||
-                                                nhanVien?.TenNhanVien ||
-                                                "Không xác định"}
-                                        </span>
-                                    </p>
+                        {invoiceData.details.length > 0 ? (
+                            <>
+                                <div className="invoice-detail-ticket-table-wrap">
+                                    <table className="invoice-detail-ticket-table">
+                                        <caption className="customer-visually-hidden">Các loại vé trong hóa đơn</caption>
+                                        <thead>
+                                            <tr>
+                                                <th scope="col">Loại vé</th>
+                                                <th scope="col">Số lượng</th>
+                                                <th scope="col">Đơn giá</th>
+                                                <th scope="col">Thành tiền</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {invoiceData.details.map((item, index) => {
+                                                const quantity = Math.max(0, toInvoiceNumber(item.SoLuong));
+                                                const unitPrice = Math.max(0, toInvoiceNumber(item.DonGia));
+                                                return (
+                                                    <tr key={item.MaChiTietHD || `${item.MaLoaiVe || "ticket"}-${index}`}>
+                                                        <td>{item.loaiVe?.TenLoaiVe || item.loai_ve?.TenLoaiVe || item.MaLoaiVe || "Loại vé"}</td>
+                                                        <td>{formatMemberNumber(quantity, "0")}</td>
+                                                        <td>{formatMemberMoney(unitPrice, "0 ₫")}</td>
+                                                        <td>{formatMemberMoney(quantity * unitPrice, "0 ₫")}</td>
+                                                    </tr>
+                                                );
+                                            })}
+                                        </tbody>
+                                    </table>
                                 </div>
 
-                                <div className="col-md-6">
-                                    <p><strong>Trạng thái</strong> <span>{invoice.TrangThai}</span></p>
-                                    <p><strong>Điểm tích lũy</strong> <span>{invoice.DiemTichLuy}</span></p>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* CHI TIẾT */}
-                        <div className="invoice-section">
-                            <h5>Danh sách vé</h5>
-
-                            <table className="table">
-                                <thead>
-                                    <tr>
-                                        <th>Loại vé</th>
-                                        <th className="text-center">SL</th>
-                                        <th className="text-end">Đơn giá</th>
-                                        <th className="text-end">Thành tiền</th>
-                                    </tr>
-                                </thead>
-
-                                <tbody>
-                                    {chiTiet.map(item => (
-                                        <tr key={item.MaChiTietHD}>
-                                            <td>
-                                                {item.loaiVe?.TenLoaiVe ||
-                                                    item.loai_ve?.TenLoaiVe}
-                                            </td>
-                                            <td className="text-center">{item.SoLuong}</td>
-                                            <td className="text-end">
-                                                {Number(item.DonGia).toLocaleString()} đ
-                                            </td>
-                                            <td className="text-end fw-bold">
-                                                {(item.SoLuong * item.DonGia).toLocaleString()} đ
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-
-                        {/* VOUCHER */}
-                        {uuDai && (
-                            <div className="voucher-box">
-                                <h5>Voucher áp dụng</h5>
-                                <div>{uuDai.TenUuDai}</div>
-                                <div>{uuDai.MoTa}</div>
-                            </div>
-                        )}
-
-                        {/* THANH TOÁN */}
-                        <div className="invoice-total">
-                            <h5>Thanh toán</h5>
-
-                            <table className="table table-borderless">
-                                <tbody>
-                                    <tr>
-                                        <td>Tạm tính</td>
-                                        <td className="text-end">{tongTien.toLocaleString()} đ</td>
-                                    </tr>
-
-                                    <tr>
-                                        <td>Giảm voucher</td>
-                                        <td className="text-end text-danger">
-                                            - {giamGia.toLocaleString()} đ
-                                        </td>
-                                    </tr>
-
-                                    <tr>
-                                        <td>Điểm sử dụng</td>
-                                        <td className="text-end">{invoice.DiemSuDung}</td>
-                                    </tr>
-
-                                    <tr className="fw-bold">
-                                        <td>TỔNG</td>
-                                        <td className="text-end">
-                                            {thanhToan.toLocaleString()} đ
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-
-                        {/* FEEDBACK */}
-                        {/* FEEDBACK */}
-                        <div className="invoice-section">
-                            <h5>Đánh giá của bạn</h5>
-
-                            {loadingFeedback && <p>Đang tải...</p>}
-
-                            {!loadingFeedback && feedback && (
-                                <div className="feedback-box">
-
-                                    {/* Đánh giá */}
-                                    <div className="mb-3">
-                                        <strong>Đánh giá của bạn</strong>
-
-                                        <div className="mt-2">
-                                            <span className="text-warning fs-5">
-                                                {"★".repeat(feedback.DiemDanhGia)}
-                                                {"☆".repeat(5 - feedback.DiemDanhGia)}
-                                            </span>
-
-                                            <span className="ms-2 fw-bold">
-                                                {feedback.DiemDanhGia}/5
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    {/* Nội dung khách */}
-                                    <div className="mb-3">
-                                        <strong>Ý kiến của bạn</strong>
-
-                                        <div className="border rounded p-3 mt-2 bg-light">
-                                            {feedback.NoiDungCuaKhachHang}
-                                        </div>
-                                    </div>
-
-                                    <hr />
-
-                                    {/* Trạng thái */}
-                                    <div className="mb-3">
-                                        <strong>Trạng thái xử lý</strong>
-
-                                        <div className="mt-2">
-                                            <span
-                                                className={
-                                                    feedback.TrangThaiXuLy === "DaXuLy"
-                                                        ? "badge bg-success"
-                                                        : "badge bg-warning text-dark"
-                                                }
-                                            >
-                                                {feedback.TrangThaiXuLy === "DaXuLy"
-                                                    ? "Đã xử lý"
-                                                    : "Chưa xử lý"}
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    {/* Phản hồi của cửa hàng */}
-                                    {feedback.TrangThaiXuLy === "DaXuLy" &&
-                                        feedback.NoiDungPhanHoiCuaHang && (
-                                            <div className="mt-4">
-                                                <strong>Phản hồi từ cửa hàng</strong>
-
-                                                <div className="border rounded p-3 bg-white mt-2">
-                                                    {feedback.NoiDungPhanHoiCuaHang}
-                                                </div>
-
-                                                {feedback.ThoiGianPhanHoi && (
-                                                    <small className="text-muted d-block mt-2">
-                                                        Phản hồi lúc: {feedback.ThoiGianPhanHoi}
-                                                    </small>
-                                                )}
-                                            </div>
-                                        )}
-                                </div>
-                            )}
-
-                            {!loadingFeedback && !feedback && (
-                                <p className="text-muted">
-                                    Chưa có đánh giá
-                                </p>
-                            )}
-                        </div>
-
-                    </div>
-
-                    {/* FOOTER */}
-                    <div className="modal-footer justify-content-between">
-
-                        {!feedback ? (
-                            <button
-                                className="btn btn-outline-warning"
-                                onClick={() => setShowFeedback(true)}
-                            >
-                                ⭐ Đánh giá
-                            </button>
+                                <ul className="invoice-detail-ticket-cards" aria-label="Các loại vé trong hóa đơn">
+                                    {invoiceData.details.map((item, index) => {
+                                        const quantity = Math.max(0, toInvoiceNumber(item.SoLuong));
+                                        const unitPrice = Math.max(0, toInvoiceNumber(item.DonGia));
+                                        return (
+                                            <li key={item.MaChiTietHD || `${item.MaLoaiVe || "ticket-mobile"}-${index}`}>
+                                                <strong>{item.loaiVe?.TenLoaiVe || item.loai_ve?.TenLoaiVe || item.MaLoaiVe || "Loại vé"}</strong>
+                                                <span>{formatMemberNumber(quantity, "0")} × {formatMemberMoney(unitPrice, "0 ₫")}</span>
+                                                <b>{formatMemberMoney(quantity * unitPrice, "0 ₫")}</b>
+                                            </li>
+                                        );
+                                    })}
+                                </ul>
+                            </>
                         ) : (
-                            <span className="text-success">✔ Đã đánh giá</span>
+                            <p className="invoice-detail-empty">Hóa đơn chưa có dữ liệu chi tiết vé.</p>
+                        )}
+                    </section>
+
+                    <section className="invoice-detail-section" aria-labelledby="invoice-voucher-title">
+                        <div className="invoice-detail-section__heading">
+                            <FaTag aria-hidden="true" />
+                            <h3 id="invoice-voucher-title">Voucher áp dụng</h3>
+                        </div>
+
+                        {invoiceData.vouchers.length > 0 ? (
+                            <ul className="invoice-detail-vouchers">
+                                {invoiceData.vouchers.map((voucher, index) => {
+                                    const offer = voucher.uuDai || voucher.uu_dai || null;
+                                    return (
+                                        <li key={voucher.MaVoucherKhachHang || `${offer?.MaUuDai || "voucher"}-${index}`}>
+                                            <div>
+                                                <strong>{offer?.TenUuDai || voucher.MaVoucherKhachHang || "Voucher thành viên"}</strong>
+                                                <span>{getVoucherTypeLabel(voucher)}</span>
+                                                {offer?.MoTa && <p>{offer.MoTa}</p>}
+                                            </div>
+                                            <b>{formatVoucherValue(voucher)}</b>
+                                        </li>
+                                    );
+                                })}
+                            </ul>
+                        ) : (
+                            <p className="invoice-detail-empty">Hóa đơn này không sử dụng voucher.</p>
+                        )}
+                    </section>
+
+                    <section className="invoice-detail-section invoice-detail-payment" aria-labelledby="invoice-payment-title">
+                        <div className="invoice-detail-section__heading">
+                            <FaReceipt aria-hidden="true" />
+                            <h3 id="invoice-payment-title">Tổng kết thanh toán</h3>
+                        </div>
+                        <dl>
+                            <div><dt>Tạm tính</dt><dd>{formatMemberMoney(invoiceData.subtotal, "0 ₫")}</dd></div>
+                            <div className="is-discount"><dt>Tổng ưu đãi</dt><dd>− {formatMemberMoney(invoiceData.discount, "0 ₫")}</dd></div>
+                            <div className="is-total"><dt>Tổng thanh toán cuối</dt><dd>{formatMemberMoney(invoiceData.finalTotal, "0 ₫")}</dd></div>
+                        </dl>
+                    </section>
+
+                    <section className="invoice-detail-section" aria-labelledby="invoice-feedback-title">
+                        <div className="invoice-detail-section__heading">
+                            <FaCommentDots aria-hidden="true" />
+                            <h3 id="invoice-feedback-title">Đánh giá của bạn</h3>
+                        </div>
+
+                        {feedbackSuccess && (
+                            <div className="invoice-detail-feedback-success" role="status" aria-live="polite">
+                                <FaCheckCircle aria-hidden="true" /> {feedbackSuccess}
+                            </div>
                         )}
 
-                        <button className="btn btn-success" onClick={onClose}>
-                            Đóng
-                        </button>
-                    </div>
-
+                        {loadingFeedback ? (
+                            <LoadingSkeleton lines={3} ariaLabel="Đang tải đánh giá hóa đơn" />
+                        ) : feedbackError ? (
+                            <div className="invoice-detail-feedback-error" role="alert">
+                                <FaExclamationTriangle aria-hidden="true" />
+                                <span>Không thể kiểm tra đánh giá lúc này.</span>
+                                <button type="button" onClick={() => setFeedbackReloadKey((current) => current + 1)}>
+                                    Thử lại
+                                </button>
+                            </div>
+                        ) : feedback ? (
+                            <div className="invoice-detail-feedback">
+                                <div className="invoice-detail-feedback__rating" aria-label={`${rating} trên 5 sao`}>
+                                    <span aria-hidden="true">{"★".repeat(rating)}{"☆".repeat(5 - rating)}</span>
+                                    <strong>{rating}/5</strong>
+                                </div>
+                                <p>{feedback.NoiDungCuaKhachHang || "Không có nội dung đánh giá."}</p>
+                                <StatusBadge tone={feedback.TrangThaiXuLy === "DaXuLy" ? "success" : "warning"}>
+                                    {feedback.TrangThaiXuLy === "DaXuLy" ? "Đã phản hồi" : "Đang chờ phản hồi"}
+                                </StatusBadge>
+                                {feedback.TrangThaiXuLy === "DaXuLy" && feedback.NoiDungPhanHoiCuaHang && (
+                                    <blockquote>
+                                        <strong>Phản hồi từ cửa hàng</strong>
+                                        <p>{feedback.NoiDungPhanHoiCuaHang}</p>
+                                        {feedback.ThoiGianPhanHoi && <small>{formatMemberDateTime(feedback.ThoiGianPhanHoi)}</small>}
+                                    </blockquote>
+                                )}
+                            </div>
+                        ) : (
+                            <p className="invoice-detail-empty">Bạn chưa đánh giá hóa đơn này.</p>
+                        )}
+                    </section>
                 </div>
-            </div>
+            </CustomerModal>
 
             <FeedbackModal
+                key={invoice.MaHoaDon}
                 show={showFeedback}
-                onClose={() => {
-                    setShowFeedback(false);
-                    fetchFeedback(); // tải lại đánh giá sau khi gửi
-                }}
+                onClose={handleFeedbackClose}
                 invoice={invoice}
             />
-        </div>
+        </>
     );
 }
 

@@ -1,303 +1,121 @@
-/* ==========================================================
-   BENEFIT SECTION
-========================================================== */
-
-.benefit-section{
-
-    padding:90px 0;
-
-    background:#f8f8f5;
-
+.customer-app .customer-public-home .benefit-section {
+    padding: clamp(58px, 8vw, 96px) 0;
+    background:
+        radial-gradient(circle at 12% 20%, rgba(37, 191, 211, 0.12), transparent 26%),
+        var(--customer-bg-deep);
 }
 
-.benefit-header{
-
-    max-width:400px;
-
-    margin:0 auto 60px;
-
-    text-align:center;
-
+.customer-app .customer-public-home .benefit-header {
+    max-width: 650px;
+    margin: 0 auto 42px;
+    text-align: center;
 }
 
-.benefit-header h2{
-
-    font-size:35px;
-
-    font-weight:700;
-
-    color:#0B5D3B;
-
-    margin:12px 0;
-
+.customer-app .customer-public-home .benefit-header h2 {
+    margin: 8px 0 12px;
+    color: var(--customer-text);
+    font-size: clamp(28px, 4vw, 42px);
+    font-weight: 950;
 }
 
-.benefit-header p{
-
-    color:#666;
-
-    font-size:12px;
-
-    line-height:1.8;
-
+.customer-app .customer-public-home .benefit-header p {
+    margin: 0;
+    color: var(--customer-text-muted);
+    font-size: 14px;
 }
 
-
-/* ==========================================================
-   GRID
-========================================================== */
-
-.benefit-grid{
-
-    display:grid;
-
-    grid-template-columns:repeat(2,minmax(0,1fr));
-
-    gap:5px;
-
+.customer-app .customer-public-home .benefit-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
 }
 
-
-/* ==========================================================
-   CARD
-========================================================== */
-
-.benefit-card{
-
-    background:#fff;
-
-    border-radius:30px;
-
-    padding:30px;
-
-    border:1px solid #dfd580;
-
-    box-shadow:0 10px 25px rgba(0,0,0,.06);
-
-    transition:.35s;
-
-    display:flex;
-
-    flex-direction:column;
-
-    min-height:200px;
-
+.customer-app .customer-public-home .benefit-card {
+    display: flex;
+    min-width: 0;
+    min-height: 230px;
+    flex-direction: column;
+    padding: clamp(24px, 4vw, 34px);
+    border: 1px solid var(--customer-border);
+    border-radius: var(--customer-radius-lg);
+    background: var(--customer-surface-solid);
+    box-shadow: var(--customer-shadow-sm);
+    transition: transform var(--customer-transition-fast), box-shadow var(--customer-transition-fast);
 }
 
-.benefit-card:hover{
-
-    transform:translateY(-8px);
-
-    box-shadow:0 20px 40px rgba(0,0,0,.12);
-
-    border-color:#d8be82;
-
+.customer-app .customer-public-home .benefit-card:nth-child(2) {
+    background: linear-gradient(145deg, #fff, var(--customer-purple-light));
 }
 
-
-/* ==========================================================
-   TOP
-========================================================== */
-
-.benefit-top{
-
-    display:flex;
-
-    align-items:center;
-
-    margin-bottom:25px;
-
+.customer-app .customer-public-home .benefit-card:nth-child(3) {
+    background: linear-gradient(145deg, #fff, var(--customer-yellow-light));
 }
 
-.benefit-number{
-
-    width:54px;
-
-    height:54px;
-
-    border-radius:50%;
-
-    background:#0B5D3B;
-
-    color:#fff;
-
-    display:flex;
-
-    justify-content:center;
-
-    align-items:center;
-
-    font-size:18px;
-
-    font-weight:700;
-
+.customer-app .customer-public-home .benefit-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--customer-shadow-md);
 }
 
-.benefit-line{
-
-    flex:1;
-
-    height:2px;
-
-    background:#06682e;
-
-    margin-left:18px;
-
+.customer-app .customer-public-home .benefit-top {
+    display: flex;
+    align-items: center;
+    margin-bottom: 24px;
 }
 
-
-/* ==========================================================
-   TITLE
-========================================================== */
-
-.benefit-card h3{
-
-    color:#0B5D3B;
-
-    font-size:24px;
-
-    margin-bottom:15px;
-
-    font-weight:700;
-
+.customer-app .customer-public-home .benefit-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+    flex: 0 0 50px;
+    border-radius: 50%;
+    color: #fff;
+    background: linear-gradient(135deg, var(--customer-green), var(--customer-cyan));
+    font-size: 14px;
+    font-weight: 900;
 }
 
-
-/* ==========================================================
-   DESCRIPTION
-========================================================== */
-
-.benefit-card p{
-
-    flex:1;
-
-    color:#666;
-
-    line-height:1.9;
-
-    font-size:15px;
-
+.customer-app .customer-public-home .benefit-line {
+    height: 2px;
+    flex: 1;
+    margin-left: 15px;
+    background: linear-gradient(90deg, var(--customer-green-light), transparent);
 }
 
-
-/* ==========================================================
-   BUTTON
-========================================================== */
-
-.benefit-card button{
-
-    width:max-content;
-
-    padding:11px 24px;
-
-    border:none;
-
-    border-radius:30px;
-
-    background:#0B5D3B;
-
-    color:#fff;
-
-    cursor:pointer;
-
-    transition:.3s;
-
-    font-weight:600;
-
+.customer-app .customer-public-home .benefit-card h3 {
+    margin: 0 0 12px;
+    color: var(--customer-text);
+    font-size: 21px;
+    font-weight: 900;
 }
 
-.benefit-card button:hover{
-
-    background:#148454;
-
+.customer-app .customer-public-home .benefit-card p {
+    margin: 0;
+    color: var(--customer-text-muted);
+    font-size: 14px;
 }
 
-
-/* ==========================================================
-   FOOTER
-========================================================== */
-
-.benefit-footer{
-
-    text-align:center;
-
-    margin-top:60px;
-
-}
-
-.benefit-footer a{
-
-    display:inline-block;
-
-    padding:14px 34px;
-
-    background:#0B5D3B;
-
-    color:#fff;
-
-    border-radius:40px;
-
-    text-decoration:none;
-
-    font-weight:600;
-
-    transition:.3s;
-
-}
-
-.benefit-footer a:hover{
-
-    background:#148454;
-
-}
-
-
-/* ==========================================================
-   RESPONSIVE
-========================================================== */
-
-@media(max-width:992px){
-
-    .benefit-grid{
-
-        grid-template-columns:1fr;
-
+@media (max-width: 768px) {
+    .customer-app .customer-public-home .benefit-grid {
+        grid-template-columns: 1fr;
     }
 
+    .customer-app .customer-public-home .benefit-header {
+        text-align: left;
+    }
+
+    .customer-app .customer-public-home .benefit-card {
+        min-height: 0;
+    }
 }
 
-@media(max-width:768px){
-
-    .benefit-section{
-
-        padding:60px 15px;
-
+@media (prefers-reduced-motion: reduce) {
+    .customer-app .customer-public-home .benefit-card {
+        transition: none;
     }
 
-    .benefit-header{
-
-        text-align:left;
-
+    .customer-app .customer-public-home .benefit-card:hover {
+        transform: none;
     }
-
-    .benefit-header h2{
-
-        font-size:30px;
-
-    }
-
-    .benefit-card{
-
-        min-height:auto;
-
-        padding:24px;
-
-    }
-
-    .benefit-card h3{
-
-        font-size:21px;
-
-    }
-
 }

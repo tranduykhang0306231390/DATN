@@ -1,12 +1,18 @@
 // src/pages/staff/TaoHoaDon.jsx
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Swal from 'sweetalert2';
 import hoaDonApi from '../../api/hoaDonApi';
 import '../../assets/css/staff.css';
 import {
-    fmt, BUOI_LABEL, NGAY_LABEL, NHOM_LABEL,
     PageTitle,
 } from '../../components/staff/StaffComponents';
+import {
+    BUOI_LABEL,
+    calculateVoucherDiscount,
+    fmt,
+    NGAY_LABEL,
+    NHOM_LABEL,
+} from '../../components/staff/staffUtils';
 
 const TONG_SO_BAN = 20;
 
@@ -25,6 +31,7 @@ export default function TaoHoaDon() {
     const [sdtLoading, setSdtLoading] = useState(false);
     const [error,      setError]      = useState('');
     const [sdtError,   setSdtError]   = useState('');
+    const operationRef = useRef(false);
 
     const banTreoMap = banTreo.reduce((acc, hd) => {
         acc[String(hd.SoBan)] = hd;
@@ -69,30 +76,12 @@ export default function TaoHoaDon() {
 
     const tongTienGoc = cartItems.reduce((s, i) => s + i.ThanhTien, 0);
 
-    const tinhGiam = useCallback(() => {
-        let giam = 0;
-        const nhomDung = {};
-        const sorted = [...vouchers]
-            .filter((v) => selected.includes(v.MaVoucherKhachHang))
-            .sort((a, b) => a.ThuTuApDung - b.ThuTuApDung);
-        for (const v of sorted) {
-            if (giam >= tongTienGoc) break;                 // đã giảm hết mức
-            if (nhomDung[v.NhomUuDai] && !v.CoTheDungChung) continue;
+    const tongGiam = calculateVoucherDiscount({
+        vouchers,
+        selectedVoucherIds: selected,
+        subtotal: tongTienGoc,
+    });
 
-            let giamVoucher = v.NhomUuDai === 'PhanTram'
-                ? tongTienGoc * (v.GiaTriGiam / 100)
-                : v.GiaTriGiam;
-
-            giamVoucher = Math.min(giamVoucher, tongTienGoc - giam); // không vượt phần còn lại
-            if (giamVoucher <= 0) continue;
-
-            giam += giamVoucher;
-            nhomDung[v.NhomUuDai] = true;
-        }
-        return Math.min(giam, tongTienGoc);
-    }, [selected, vouchers, tongTienGoc]);
-
-    const tongGiam      = tinhGiam();
     const tongThanhToan = tongTienGoc - tongGiam;
 
     const handleLookup = async () => {
@@ -117,8 +106,10 @@ export default function TaoHoaDon() {
     };
 
     const handleMoBan = async () => {
+        if (operationRef.current) return;
         if (!soBan) { setError('Vui lòng chọn bàn.'); return; }
         if (cartItems.length === 0) { setError('Vui lòng chọn ít nhất 1 vé.'); return; }
+        operationRef.current = true;
         setError(''); setLoading(true);
         try {
             const res = await hoaDonApi.taoHoaDon({
@@ -133,11 +124,15 @@ export default function TaoHoaDon() {
             }
         } catch (e) {
             setError(e.response?.data?.message || 'Có lỗi xảy ra khi mở bàn.');
-        } finally { setLoading(false); }
+        } finally {
+            operationRef.current = false;
+            setLoading(false);
+        }
     };
 
     const handleThanhToan = async () => {
-        if (!payBill) return;
+        if (!payBill || operationRef.current) return;
+        operationRef.current = true;
         const confirm = await Swal.fire({
             title: `Thanh toán bàn ${payBill.SoBan}?`,
             text: 'Hóa đơn sẽ được chốt và tích điểm cho khách (nếu có).',
@@ -145,10 +140,35 @@ export default function TaoHoaDon() {
             confirmButtonText: 'Thanh toán', cancelButtonText: 'Hủy',
             confirmButtonColor: '#16a34a',
         });
-        if (!confirm.isConfirmed) return;
+        if (!confirm.isConfirmed) {
+            operationRef.current = false;
+            return;
+        }
         setLoading(true);
         try {
-            const res = await hoaDonApi.thanhToan(payBill.MaHoaDon);
+            let res;
+            try {
+                res = await hoaDonApi.thanhToan(payBill.MaHoaDon);
+            } catch (error) {
+                if (error.response?.data?.code !== 'VOUCHERS_INVALID') throw error;
+
+                const invalidIds = error.response.data.invalid_vouchers || [];
+                const retry = await Swal.fire({
+                    title: 'Không thể áp dụng tất cả voucher',
+                    text: `${error.response.data.message} Mã cần bỏ qua: ${invalidIds.join(', ') || 'không xác định'}.`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Tiếp tục thanh toán',
+                    cancelButtonText: 'Chưa thanh toán',
+                    confirmButtonColor: '#dc2626',
+                });
+                if (!retry.isConfirmed) return;
+
+                res = await hoaDonApi.thanhToan(payBill.MaHoaDon, {
+                    continue_without_invalid_vouchers: true,
+                });
+            }
+
             if (res.data.success) {
                 const d = res.data.data;
                 Swal.fire({
@@ -160,7 +180,10 @@ export default function TaoHoaDon() {
             }
         } catch (e) {
             Swal.fire('Lỗi', e.response?.data?.message || 'Không thể thanh toán.', 'error');
-        } finally { setLoading(false); }
+        } finally {
+            operationRef.current = false;
+            setLoading(false);
+        }
     };
 
     const grouped = loaiVeList.reduce((acc, v) => {

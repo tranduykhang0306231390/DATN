@@ -2,12 +2,11 @@
 import { useNavigate } from 'react-router-dom';
 import '../../assets/css/staff.css';
 import { STAFF_MENU } from '../../components/staff/staffMenu';
+import { getStoredObject } from '../../utils/storage';
 
 export default function StaffDashboard() {
     const navigate = useNavigate();
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    const role = localStorage.getItem('role') || 'Nhân viên';
-
+    const user = getStoredObject('user');
     return (
         <div className="staff-page" style={{ padding: 24 }}>
             {/* Lời chào (đăng xuất nằm ở header của StaffLayout) */}

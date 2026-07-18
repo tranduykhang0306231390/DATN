@@ -1,21 +1,21 @@
 import "../../assets/css/benefit.css";
 const benefits = [
     {
-        title: "Nhân đôi hệ số tích điểm",
-        desc: "Mỗi hóa đơn được nhân đôi điểm thưởng. Càng trải nghiệm nhiều, bạn càng nhanh đổi voucher và quà tặng giá trị."
+        title: "Tích điểm theo giao dịch",
+        desc: "Điểm được ghi nhận theo quy tắc hiện hành và hiển thị rõ trong lịch sử giao dịch của thành viên."
     },
     {
-        title: "Kho voucher hàng ngàn ưu đãi",
-        desc: "Voucher giảm giá, tặng món và các ưu đãi độc quyền luôn được cập nhật để thành viên tiết kiệm hơn."
+        title: "Kho voucher thành viên",
+        desc: "Xem điều kiện, số điểm cần đổi và trạng thái voucher trước khi xác nhận sử dụng điểm."
     },
     {
-        title: "Ưu đãi sinh nhật đặc biệt",
-        desc: "Nhận voucher sinh nhật cùng những phần quà riêng giúp bữa buffet của bạn trở nên đáng nhớ hơn."
+        title: "Theo dõi hạng thành viên",
+        desc: "Biết hạng hiện tại, mốc tiếp theo và số điểm còn thiếu trên hành trình thăng hạng."
     },
    
     {
         title: "Ưu đãi theo hạng thành viên",
-        desc: "Cấp bậc càng cao, quyền lợi càng lớn với nhiều ưu đãi độc quyền chỉ dành riêng cho bạn."
+        desc: "Quyền lợi và voucher được hiển thị theo cấu hình hạng đang áp dụng trong hệ thống."
     }
 ];
 
@@ -49,7 +49,7 @@ function Benefit() {
 
                         <div
                             className="benefit-card"
-                            key={index}
+                            key={item.title}
                         >
 
                             <div className="benefit-top">

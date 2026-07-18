@@ -5,11 +5,34 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\LichSuGiaoDichDiem;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class MemberHistoryController extends Controller
 {
     public function index(Request $request)
     {
+        $validated = $request->validate([
+            'keyword' => ['nullable', 'string', 'max:100'],
+            'type' => [
+                'nullable',
+                Rule::in(['all', 'CongDiemHoaDon', 'DoiVoucher', 'HoanDiemHuyHD']),
+            ],
+            'from' => ['nullable', 'date_format:Y-m-d'],
+            'to' => ['nullable', 'date_format:Y-m-d'],
+            'sort' => ['nullable', 'in:newest,oldest,point_desc,point_asc'],
+            'page' => ['nullable', 'integer', 'min:1'],
+        ]);
+
+        if (
+            !empty($validated['from'])
+            && !empty($validated['to'])
+            && $validated['to'] < $validated['from']
+        ) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'to' => ['Ngày kết thúc phải bằng hoặc sau ngày bắt đầu.'],
+            ]);
+        }
+
         $user = auth('khachhang')->user();
 
         $query = LichSuGiaoDichDiem::where(
@@ -23,18 +46,20 @@ class MemberHistoryController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        if ($request->filled('keyword')) {
+        if (!empty($validated['keyword'])) {
 
-            $keyword = trim($request->keyword);
+            $keyword = trim($validated['keyword']);
 
             $query->where(function ($q) use ($keyword) {
-
                 $q->where(
+                    'MaGiaoDichDiem',
+                    'like',
+                    "%{$keyword}%"
+                )->orWhere(
                     'MaThamChieu',
                     'like',
                     "%{$keyword}%"
                 );
-
             });
 
         }
@@ -46,14 +71,14 @@ class MemberHistoryController extends Controller
         */
 
         if (
-            $request->filled('type')
+            !empty($validated['type'])
             &&
-            $request->type !== 'all'
+            $validated['type'] !== 'all'
         ) {
 
             $query->where(
                 'LoaiGiaoDich',
-                $request->type
+                $validated['type']
             );
 
         }
@@ -64,22 +89,22 @@ class MemberHistoryController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        if ($request->filled('from')) {
+        if (!empty($validated['from'])) {
 
             $query->whereDate(
                 'ThoiGianGiaoDich',
                 '>=',
-                $request->from
+                $validated['from']
             );
 
         }
 
-        if ($request->filled('to')) {
+        if (!empty($validated['to'])) {
 
             $query->whereDate(
                 'ThoiGianGiaoDich',
                 '<=',
-                $request->to
+                $validated['to']
             );
 
         }
@@ -90,13 +115,15 @@ class MemberHistoryController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        switch ($request->sort) {
+        switch ($validated['sort'] ?? 'newest') {
 
             case 'oldest':
 
                 $query->orderBy(
                     'ThoiGianGiaoDich',
                     'asc'
+                )->orderByRaw(
+                    'CAST(SUBSTRING(MaGiaoDichDiem, 4) AS UNSIGNED) ASC'
                 );
 
                 break;
@@ -106,7 +133,10 @@ class MemberHistoryController extends Controller
                 $query->orderBy(
                     'SoDiem',
                     'desc'
-                );
+                )->orderBy('ThoiGianGiaoDich', 'desc')
+                    ->orderByRaw(
+                        'CAST(SUBSTRING(MaGiaoDichDiem, 4) AS UNSIGNED) DESC'
+                    );
 
                 break;
 
@@ -115,16 +145,26 @@ class MemberHistoryController extends Controller
                 $query->orderBy(
                     'SoDiem',
                     'asc'
-                );
+                )->orderBy('ThoiGianGiaoDich', 'desc')
+                    ->orderByRaw(
+                        'CAST(SUBSTRING(MaGiaoDichDiem, 4) AS UNSIGNED) DESC'
+                    );
 
                 break;
 
             default:
 
-                $query->orderBy(
-                    'MaGiaoDichDiem',
-                    'desc'
-                );
+                // Mã có dạng GDD123: sắp xếp theo phần số để GDD1000
+                // luôn mới hơn GDD999, kể cả trước khi phân trang.
+                // Mã không đúng định dạng được đưa xuống sau và có tiêu chí phụ
+                // ổn định, tránh phụ thuộc vào thứ tự vật lý của database.
+                $query->orderByRaw(
+                    "CASE WHEN MaGiaoDichDiem REGEXP '^GDD[0-9]+$' THEN 0 ELSE 1 END ASC"
+                )->orderByRaw(
+                    "CASE WHEN MaGiaoDichDiem REGEXP '^GDD[0-9]+$' "
+                    . 'THEN CAST(SUBSTRING(MaGiaoDichDiem, 4) AS UNSIGNED) ELSE 0 END DESC'
+                )->orderBy('ThoiGianGiaoDich', 'desc')
+                    ->orderBy('MaGiaoDichDiem', 'desc');
 
                 break;
 

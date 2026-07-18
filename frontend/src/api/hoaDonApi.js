@@ -14,7 +14,7 @@ const hoaDonApi = {
     // Danh sách bàn đang treo (hóa đơn ChuaThanhToan)
     banDangTreo: () => axiosClient.get("/quan-ly-hoa-don/ban-dang-treo"),
     // Thanh toán hóa đơn treo -> chốt + tích điểm
-    thanhToan: (maHD) => axiosClient.patch(`/hoa-don/${maHD}/thanh-toan`),
+    thanhToan: (maHD, data = {}) => axiosClient.patch(`/hoa-don/${maHD}/thanh-toan`, data),
 };
 
 export default hoaDonApi;

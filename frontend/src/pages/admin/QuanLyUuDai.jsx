@@ -40,24 +40,6 @@ const todayStr = () => {
     return `${d.getFullYear()}-${m}-${day}`;
 };
 
-// Tạo dãy số trang có dấu "…" khi quá nhiều trang
-const buildPageList = (current, last) => {
-    const delta = 2;
-    const range = [];
-    for (let i = Math.max(1, current - delta); i <= Math.min(last, current + delta); i++) {
-        range.push(i);
-    }
-    if (range[0] > 1) {
-        if (range[0] > 2) range.unshift('…');
-        range.unshift(1);
-    }
-    if (range[range.length - 1] < last) {
-        if (range[range.length - 1] < last - 1) range.push('…');
-        range.push(last);
-    }
-    return range;
-};
-
 export default function QuanLyUuDai() {
     const [list, setList] = useState([]);
     const [pagination, setPagination] = useState({ current_page: 1, last_page: 1, total: 0 });
@@ -77,7 +59,8 @@ export default function QuanLyUuDai() {
     const [saving, setSaving] = useState(false);
     const [formError, setFormError] = useState('');
 
-    const loadList = useCallback(() => {
+    const loadList = useCallback(async () => {
+        await Promise.resolve();
         setLoading(true);
         uuDaiApi
             .getAll({ search, trang_thai: trangThai, nhom, page, per_page: PER_PAGE })
@@ -101,7 +84,8 @@ export default function QuanLyUuDai() {
     }, []);
 
     useEffect(() => {
-        loadList();
+        const timeoutId = window.setTimeout(() => void loadList(), 0);
+        return () => window.clearTimeout(timeoutId);
     }, [loadList]);
 
     const openCreate = () => {
@@ -206,8 +190,6 @@ export default function QuanLyUuDai() {
         if (p < 1 || p > pagination.last_page || p === pagination.current_page) return;
         setPage(p);
     };
-
-    const pageList = buildPageList(pagination.current_page, pagination.last_page);
 
     return (
         <div className="admin-page">

@@ -41,7 +41,8 @@ export default function QuanLyThongBao() {
     const [saving, setSaving] = useState(false);
     const [formError, setFormError] = useState('');
 
-    const loadList = useCallback(() => {
+    const loadList = useCallback(async () => {
+        await Promise.resolve();
         setLoading(true);
         thongBaoApi
             .getAll({ search, trang_thai: trangThai, page, per_page: 10 })
@@ -67,7 +68,8 @@ export default function QuanLyThongBao() {
     }, []);
 
     useEffect(() => {
-        loadList();
+        const timeoutId = window.setTimeout(() => void loadList(), 0);
+        return () => window.clearTimeout(timeoutId);
     }, [loadList]);
 
     const openSend = () => {
@@ -90,8 +92,8 @@ export default function QuanLyThongBao() {
         try {
             const res = await thongBaoApi.send(payload);
             setModalOpen(false);
-            setPage(1);
-            loadList();
+            if (page === 1) void loadList();
+            else setPage(1);
             Swal.fire({
                 icon: 'success',
                 title: 'Đã gửi thông báo',
@@ -109,8 +111,8 @@ export default function QuanLyThongBao() {
     };
 
     const applyFilter = () => {
-        setPage(1);
-        loadList();
+        if (page === 1) void loadList();
+        else setPage(1);
     };
 
     return (

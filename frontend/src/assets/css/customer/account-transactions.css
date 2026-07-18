@@ -1,0 +1,848 @@
+.customer-app .transaction-page {
+    position: relative;
+    isolation: isolate;
+    padding: 42px 0 72px;
+    overflow: hidden;
+}
+
+.customer-app .transaction-page.transaction-page--embedded {
+    padding: 0;
+    overflow: visible;
+}
+
+.customer-app .transaction-page.transaction-page--embedded > .customer-shell {
+    width: 100%;
+    max-width: none;
+    padding: 0;
+}
+
+.customer-app .transaction-page.transaction-page--embedded .transaction-layout {
+    grid-template-columns: minmax(0, 1fr);
+    margin-top: 0;
+}
+
+.customer-app .transaction-page.transaction-page--embedded::before,
+.customer-app .transaction-page.transaction-page--embedded::after {
+    display: none;
+}
+
+.customer-app .transaction-page::before,
+.customer-app .transaction-page::after {
+    position: absolute;
+    z-index: -1;
+    width: 360px;
+    height: 360px;
+    border-radius: 50%;
+    content: "";
+    filter: blur(18px);
+    pointer-events: none;
+}
+
+.customer-app .transaction-page::before {
+    top: 120px;
+    right: -180px;
+    background: radial-gradient(circle, rgba(117, 89, 255, 0.13), transparent 68%);
+}
+
+.customer-app .transaction-page::after {
+    bottom: 120px;
+    left: -210px;
+    background: radial-gradient(circle, rgba(0, 170, 135, 0.12), transparent 70%);
+}
+
+.customer-app .transaction-layout {
+    display: grid;
+    grid-template-columns: minmax(210px, 250px) minmax(0, 1fr);
+    gap: 28px;
+    align-items: start;
+    margin-top: 30px;
+}
+
+.customer-app .transaction-content {
+    min-width: 0;
+}
+
+.customer-app .transaction-tabs {
+    display: inline-flex;
+    gap: 8px;
+    padding: 6px;
+    border: 1px solid var(--customer-border);
+    border-radius: var(--customer-radius-pill);
+    background: rgba(255, 255, 255, 0.82);
+    box-shadow: var(--customer-shadow-sm);
+}
+
+.customer-app .transaction-tabs button {
+    display: inline-flex;
+    gap: 9px;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 10px 18px;
+    border: 0;
+    border-radius: var(--customer-radius-pill);
+    color: var(--customer-text-muted);
+    background: transparent;
+    font-weight: 800;
+    cursor: pointer;
+    transition: color var(--customer-transition-fast),
+        background var(--customer-transition-fast),
+        transform var(--customer-transition-fast),
+        box-shadow var(--customer-transition-fast);
+}
+
+.customer-app .transaction-tabs button:hover {
+    color: var(--customer-green-dark);
+    background: var(--customer-green-light);
+}
+
+.customer-app .transaction-tabs button.is-active {
+    color: #fff;
+    background: linear-gradient(135deg, var(--customer-green), #00a983);
+    box-shadow: 0 10px 24px rgba(0, 117, 74, 0.22);
+}
+
+.customer-app .transaction-results-anchor {
+    position: relative;
+    top: -90px;
+}
+
+.customer-app .transaction-panel {
+    display: grid;
+    gap: 22px;
+    margin-top: 22px;
+    animation: customer-transaction-enter 280ms ease both;
+}
+
+.customer-app .transaction-summary {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.customer-app .transaction-summary__card {
+    position: relative;
+    display: flex;
+    gap: 13px;
+    align-items: center;
+    min-width: 0;
+    padding: 17px;
+    overflow: hidden;
+    border: 1px solid var(--customer-border);
+    border-radius: var(--customer-radius-md);
+    background: var(--customer-surface-solid);
+    box-shadow: var(--customer-shadow-sm);
+}
+
+.customer-app .transaction-summary__card::after {
+    position: absolute;
+    top: -36px;
+    right: -34px;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    content: "";
+    opacity: 0.2;
+}
+
+.customer-app .transaction-summary__card--green::after {
+    background: var(--customer-green);
+}
+
+.customer-app .transaction-summary__card--purple::after {
+    background: var(--customer-purple);
+}
+
+.customer-app .transaction-summary__card--gold::after {
+    background: var(--customer-yellow);
+}
+
+.customer-app .transaction-summary__icon {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    flex: 0 0 44px;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    font-size: 19px;
+}
+
+.customer-app .transaction-summary__card--green .transaction-summary__icon {
+    color: var(--customer-green-dark);
+    background: var(--customer-green-light);
+}
+
+.customer-app .transaction-summary__card--purple .transaction-summary__icon {
+    color: #5a42d4;
+    background: var(--customer-purple-light);
+}
+
+.customer-app .transaction-summary__card--gold .transaction-summary__icon {
+    color: #9a6b00;
+    background: var(--customer-yellow-light);
+}
+
+.customer-app .transaction-summary__card div {
+    display: grid;
+    min-width: 0;
+}
+
+.customer-app .transaction-summary__card span:not(.transaction-summary__icon) {
+    overflow: hidden;
+    color: var(--customer-text-muted);
+    font-size: 12px;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.customer-app .transaction-summary__card strong {
+    color: var(--customer-text);
+    font-family: var(--customer-font-body);
+    font-size: clamp(20px, 2vw, 27px);
+    line-height: 1.15;
+}
+
+.customer-app .transaction-filter-form {
+    display: grid;
+    gap: 8px;
+}
+
+.customer-app .transaction-filter-form .customer-filter-bar {
+    position: relative;
+    overflow: hidden;
+    border-color: rgba(0, 117, 74, 0.13);
+    background:
+        linear-gradient(135deg, rgba(232, 249, 241, 0.76), rgba(246, 243, 255, 0.74)),
+        var(--customer-surface-solid);
+}
+
+.customer-app .transaction-filter-form .customer-filter-bar__fields {
+    display: grid;
+    grid-template-columns: minmax(180px, 1.45fr) repeat(2, minmax(135px, 0.85fr)) minmax(170px, 1fr);
+    gap: 12px;
+    align-items: end;
+}
+
+.customer-app #point-history-panel .transaction-filter-form .customer-filter-bar__fields {
+    grid-template-columns: minmax(190px, 1.35fr) minmax(165px, 1fr) repeat(2, minmax(130px, 0.78fr)) minmax(180px, 1fr);
+}
+
+.customer-app .transaction-filter-form .customer-filter-bar__actions {
+    flex: 0 0 auto;
+}
+
+.customer-app .transaction-filter-form .customer-button {
+    display: inline-flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+}
+
+.customer-app .transaction-filter-error {
+    display: flex;
+    gap: 7px;
+    align-items: center;
+    margin: 0;
+    color: var(--customer-danger);
+    font-size: 13px;
+    font-weight: 750;
+}
+
+.customer-app .transaction-detail-error {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px;
+    margin-top: 16px;
+    border: 1px solid rgba(217, 79, 90, 0.2);
+    border-radius: var(--customer-radius-sm);
+    color: #a33b43;
+    background: var(--customer-coral-light);
+    font-size: 13px;
+    font-weight: 750;
+}
+
+.customer-app .transaction-detail-error button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    flex: 0 0 30px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    color: inherit;
+    background: rgba(255, 255, 255, 0.62);
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.customer-app .transaction-loading-panel {
+    min-height: 320px;
+    padding: 28px;
+    border: 1px solid var(--customer-border);
+    border-radius: var(--customer-radius-lg);
+    background: var(--customer-surface-solid);
+    box-shadow: var(--customer-shadow-sm);
+}
+
+.customer-app .transaction-loading-panel .customer-loading-skeleton__line {
+    height: 38px;
+    border-radius: 12px;
+}
+
+.customer-app .transaction-refresh-error,
+.customer-app .transaction-updating {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: space-between;
+    padding: 11px 14px;
+    border-radius: var(--customer-radius-sm);
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.customer-app .transaction-refresh-error {
+    border: 1px solid rgba(239, 106, 112, 0.22);
+    color: #a33b43;
+    background: rgba(239, 106, 112, 0.08);
+}
+
+.customer-app .transaction-refresh-error button {
+    padding: 5px 9px;
+    border: 0;
+    color: inherit;
+    background: transparent;
+    font-weight: 850;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.customer-app .transaction-updating {
+    justify-content: center;
+    color: var(--customer-green-dark);
+    background: var(--customer-green-light);
+}
+
+.customer-app .transaction-table-wrap {
+    overflow: hidden;
+    border: 1px solid var(--customer-border);
+    border-radius: var(--customer-radius-lg);
+    background: var(--customer-surface-solid);
+    box-shadow: var(--customer-shadow-md);
+}
+
+.customer-app .transaction-table {
+    width: 100%;
+    border-collapse: collapse;
+    color: var(--customer-text);
+    font-size: 13px;
+}
+
+.customer-app .transaction-table thead {
+    background: linear-gradient(120deg, #ecf8f2, #f4f1ff);
+}
+
+.customer-app .transaction-table th {
+    padding: 14px 15px;
+    color: var(--customer-text-muted);
+    font-size: 11px;
+    font-weight: 850;
+    letter-spacing: 0.055em;
+    text-align: left;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.customer-app .transaction-table td {
+    padding: 16px 15px;
+    border-top: 1px solid rgba(12, 52, 42, 0.08);
+    vertical-align: middle;
+}
+
+.customer-app .transaction-table tbody tr {
+    transition: background var(--customer-transition-fast);
+}
+
+.customer-app .transaction-table tbody tr:hover {
+    background: rgba(232, 249, 241, 0.46);
+}
+
+.customer-app .transaction-table td:first-child strong {
+    color: var(--customer-green-dark);
+    font-family: var(--customer-font-body);
+    font-size: 14px;
+    overflow-wrap: anywhere;
+}
+
+.customer-app .transaction-money {
+    color: var(--customer-text);
+    font-weight: 850;
+    white-space: nowrap;
+}
+
+.customer-app .transaction-points {
+    display: inline-flex;
+    gap: 5px;
+    align-items: center;
+    font-weight: 900;
+    white-space: nowrap;
+}
+
+.customer-app .transaction-points--positive,
+.customer-app .transaction-points--is-positive {
+    color: var(--customer-green);
+}
+
+.customer-app .transaction-points--is-negative {
+    color: var(--customer-coral);
+}
+
+.customer-app .transaction-points--is-neutral {
+    color: var(--customer-text-muted);
+}
+
+.customer-app .transaction-table__action {
+    text-align: right;
+}
+
+.customer-app .transaction-detail-button {
+    display: inline-flex;
+    gap: 7px;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+    padding: 8px 12px;
+    white-space: nowrap;
+}
+
+.customer-app .transaction-reference-button {
+    padding: 0;
+    border: 0;
+    color: var(--customer-purple);
+    background: transparent;
+    font: inherit;
+    font-weight: 850;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+}
+
+.customer-app .transaction-reference-button:disabled {
+    cursor: wait;
+    opacity: 0.55;
+}
+
+.customer-app .transaction-mobile-list {
+    display: none;
+    gap: 12px;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+}
+
+.customer-app .transaction-mobile-card {
+    display: grid;
+    gap: 14px;
+    padding: 17px;
+    border: 1px solid var(--customer-border);
+    border-radius: var(--customer-radius-md);
+    background: var(--customer-surface-solid);
+    box-shadow: var(--customer-shadow-sm);
+}
+
+.customer-app .transaction-mobile-card__header {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    justify-content: space-between;
+}
+
+.customer-app .transaction-mobile-card__header > div {
+    display: grid;
+    min-width: 0;
+}
+
+.customer-app .transaction-mobile-card__header > div > span {
+    color: var(--customer-text-muted);
+    font-size: 11px;
+    font-weight: 750;
+    text-transform: uppercase;
+}
+
+.customer-app .transaction-mobile-card__header strong {
+    color: var(--customer-green-dark);
+    font-family: var(--customer-font-body);
+    overflow-wrap: anywhere;
+}
+
+.customer-app .transaction-mobile-card__details {
+    display: grid;
+    gap: 9px;
+    margin: 0;
+}
+
+.customer-app .transaction-mobile-card__details div {
+    display: flex;
+    gap: 12px;
+    align-items: baseline;
+    justify-content: space-between;
+}
+
+.customer-app .transaction-mobile-card__details dt {
+    color: var(--customer-text-muted);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.customer-app .transaction-mobile-card__details dd {
+    margin: 0;
+    color: var(--customer-text);
+    font-size: 13px;
+    font-weight: 800;
+    text-align: right;
+}
+
+.customer-app .transaction-mobile-card__content {
+    margin: 0;
+    color: var(--customer-text);
+    font-weight: 800;
+}
+
+.customer-app .transaction-mobile-card__reference {
+    color: var(--customer-text-muted);
+    font-size: 12px;
+    overflow-wrap: anywhere;
+}
+
+.customer-app .transaction-pagination-wrap {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 16px;
+    align-items: center;
+    padding-top: 4px;
+}
+
+.customer-app .transaction-pagination-wrap > span {
+    color: var(--customer-text-muted);
+    font-size: 13px;
+    font-weight: 750;
+    white-space: nowrap;
+}
+
+@keyframes customer-transaction-enter {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 1180px) {
+    .customer-app .transaction-filter-form .customer-filter-bar,
+    .customer-app .transaction-filter-form .customer-filter-bar__actions {
+        align-items: stretch;
+    }
+
+    .customer-app .transaction-filter-form .customer-filter-bar {
+        flex-direction: column;
+    }
+
+    .customer-app .transaction-filter-form .customer-filter-bar__actions {
+        justify-content: flex-end;
+    }
+
+    .customer-app #point-history-panel .transaction-filter-form .customer-filter-bar__fields {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 1024px) {
+    .customer-app .transaction-layout {
+        grid-template-columns: 210px minmax(0, 1fr);
+        gap: 20px;
+    }
+
+    .customer-app .transaction-summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .customer-app .transaction-summary__card:last-child {
+        grid-column: 1 / -1;
+    }
+
+    .customer-app .transaction-filter-form .customer-filter-bar__fields {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .customer-app .transaction-table th,
+    .customer-app .transaction-table td {
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+}
+
+@media (max-width: 768px) {
+    .customer-app .transaction-page {
+        padding: 28px 0 52px;
+    }
+
+    .customer-app .transaction-layout {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .customer-app .transaction-tabs {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        width: 100%;
+        border-radius: var(--customer-radius-md);
+    }
+
+    .customer-app .transaction-tabs button {
+        padding-right: 10px;
+        padding-left: 10px;
+        border-radius: 10px;
+    }
+
+    .customer-app .transaction-filter-form .customer-filter-bar__fields,
+    .customer-app #point-history-panel .transaction-filter-form .customer-filter-bar__fields {
+        grid-template-columns: minmax(0, 1fr);
+        width: 100%;
+    }
+
+    .customer-app .transaction-filter-form .customer-filter-bar__actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        width: 100%;
+    }
+
+    .customer-app .transaction-table-wrap--desktop {
+        display: none;
+    }
+
+    .customer-app .transaction-mobile-list {
+        display: grid;
+    }
+
+    .customer-app .transaction-pagination-wrap {
+        grid-template-columns: minmax(0, 1fr);
+        justify-items: center;
+    }
+
+    .customer-app .transaction-pagination-wrap .customer-pagination {
+        width: 100%;
+    }
+}
+
+@media (max-width: 520px) {
+    .customer-app .transaction-summary {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .customer-app .transaction-summary__card:last-child {
+        grid-column: auto;
+    }
+
+    .customer-app .transaction-tabs button {
+        font-size: 12px;
+    }
+
+    .customer-app .transaction-tabs button svg {
+        display: none;
+    }
+
+    .customer-app .transaction-filter-form .customer-filter-bar__actions {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .customer-app .transaction-mobile-card__header {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .customer-app .transaction-mobile-card__header .customer-status-badge {
+        align-self: flex-start;
+    }
+
+    .customer-app .transaction-refresh-error {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .customer-app .transaction-panel {
+        animation: none;
+    }
+
+    .customer-app .transaction-tabs button,
+    .customer-app .transaction-table tbody tr {
+        transition: none;
+    }
+}
+
+/* Account Center filter: scoped separately from generic admin/staff filter styles. */
+.customer-app .transaction-filter-bar {
+    padding: 16px;
+    border: 1px solid rgba(0, 117, 74, 0.13);
+    border-radius: var(--customer-radius-md);
+    background:
+        linear-gradient(135deg, rgba(232, 249, 241, 0.76), rgba(246, 243, 255, 0.74)),
+        var(--customer-surface-solid);
+}
+
+.customer-app .transaction-filter-bar__toggle {
+    display: none;
+}
+
+.customer-app .transaction-filter-bar__panel {
+    display: grid;
+    gap: 14px;
+}
+
+.customer-app .transaction-filter-bar__fields {
+    display: grid;
+    grid-template-columns: minmax(220px, 1.7fr) repeat(2, minmax(135px, 0.82fr)) minmax(165px, 1fr);
+    gap: 12px;
+    align-items: end;
+}
+
+.customer-app #point-history-panel .transaction-filter-bar__fields {
+    grid-template-columns: minmax(220px, 1.65fr) minmax(160px, 1fr) repeat(2, minmax(130px, 0.78fr)) minmax(175px, 1fr);
+}
+
+.customer-app .transaction-filter-bar__fields > *,
+.customer-app .transaction-filter-bar__fields :where(.customer-input, .customer-select) {
+    min-width: 0;
+}
+
+.customer-app .transaction-filter-bar__fields :where(.customer-input, .customer-select),
+.customer-app .transaction-filter-bar__actions .customer-button {
+    min-height: 44px;
+}
+
+.customer-app .transaction-filter-bar__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+.customer-app .transaction-search-control {
+    position: relative;
+}
+
+.customer-app .transaction-search-control > svg {
+    position: absolute;
+    top: 50%;
+    left: 14px;
+    z-index: 1;
+    color: var(--customer-text-muted);
+    font-size: 14px;
+    pointer-events: none;
+    transform: translateY(-50%);
+}
+
+.customer-app .transaction-search-control .customer-input {
+    width: 100%;
+    padding-left: 40px;
+}
+
+.customer-app .transaction-search-control:focus-within > svg {
+    color: var(--customer-green-dark);
+}
+
+@media (max-width: 1180px) {
+    .customer-app .transaction-filter-bar__fields,
+    .customer-app #point-history-panel .transaction-filter-bar__fields {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .customer-app .transaction-filter-field--search {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (max-width: 768px) {
+    .customer-app .transaction-filter-bar {
+        padding: 12px;
+    }
+
+    .customer-app .transaction-filter-bar__toggle {
+        display: flex;
+        gap: 9px;
+        width: 100%;
+        min-height: 44px;
+        align-items: center;
+        margin-bottom: 10px;
+        padding: 9px 12px;
+        border: 1px solid var(--customer-border);
+        border-radius: var(--customer-radius-sm);
+        color: var(--customer-green-dark);
+        background: var(--customer-surface-solid);
+        font-weight: 850;
+        cursor: pointer;
+    }
+
+    .customer-app .transaction-filter-bar__toggle span {
+        flex: 1;
+        text-align: left;
+    }
+
+    .customer-app .transaction-filter-bar__toggle svg:last-child {
+        transition: transform var(--customer-transition-fast);
+    }
+
+    .customer-app .transaction-filter-bar__toggle[aria-expanded="true"] svg:last-child {
+        transform: rotate(180deg);
+    }
+
+    .customer-app .transaction-filter-bar__fields,
+    .customer-app #point-history-panel .transaction-filter-bar__fields {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .customer-app .transaction-filter-field--search {
+        grid-column: auto;
+    }
+
+    .customer-app .transaction-filter-bar__panel:not(.is-open)
+        .transaction-filter-bar__fields > .customer-form-field:not(.transaction-filter-field--search),
+    .customer-app .transaction-filter-bar__panel:not(.is-open)
+        .transaction-filter-bar__actions .customer-button--ghost {
+        display: none;
+    }
+
+    .customer-app .transaction-filter-bar__actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .customer-app .transaction-filter-bar__panel:not(.is-open) .transaction-filter-bar__actions {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (max-width: 420px) {
+    .customer-app .transaction-filter-bar__actions {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .customer-app .transaction-filter-bar__toggle svg:last-child {
+        transition: none;
+    }
+}
