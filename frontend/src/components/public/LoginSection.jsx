@@ -50,7 +50,7 @@ function LoginSection() {
                     <div className="customer-auth__story-copy">
                         <span className="customer-auth__story-kicker">
                             <FaTicketAlt aria-hidden="true" />
-                            Buffet VIP Rewards
+                            Buffet
                         </span>
 
                         <h1 id="public-login-story-title">
@@ -111,8 +111,7 @@ function LoginSection() {
                         </h2>
 
                         <p>
-                            Đăng nhập để tiếp tục quản lý quyền lợi Buffet VIP
-                            Rewards.
+                            Đăng nhập để tiếp tục quản lý quyền lợi Buffet.
                         </p>
                     </header>
 

@@ -153,14 +153,31 @@ class DiemTichLuyService
     }
 
     /**
-     * Hạng "xứng đáng" nhất với số điểm hiện có, không quan tâm hạng hiện
-     * tại đang là gì (dùng chung cho cả kiểm tra lên hạng lẫn hạ hạng).
+     * Hạng "xứng đáng" nhất với khách có số điểm và tổng chi tiêu hiện có,
+     * không quan tâm hạng hiện tại đang là gì (dùng chung cho cả kiểm tra
+     * lên hạng lẫn hạ hạng).
+     *
+     * Mỗi hạng yêu cầu ĐỒNG THỜI đủ điểm (DiemToiThieu) VÀ đủ chi tiêu
+     * (TongChiTieuToiThieu) — thiếu điều kiện chi tiêu thì không được tính
+     * là xứng đáng, dù điểm đã vượt ngưỡng.
      */
-    private function hangXungDangTheoDiem(int $tongDiem): ?HangThanhVien
+    private function hangXungDangTheoDiem(int $tongDiem, float $tongChiTieu): ?HangThanhVien
     {
         return HangThanhVien::where('DiemToiThieu', '<=', $tongDiem)
+            ->where('TongChiTieuToiThieu', '<=', $tongChiTieu)
             ->orderBy('ThuTuHang', 'desc')
             ->first();
+    }
+
+    /**
+     * Tổng chi tiêu thực (hóa đơn đã thanh toán) của khách tại thời điểm gọi.
+     */
+    private function tinhTongChiTieu(string $maKhachHang): float
+    {
+        return (float) DB::table('hoadon')
+            ->where('MaKhachHang', $maKhachHang)
+            ->where('TrangThai', 'DaThanhToan')
+            ->sum('TongTien');
     }
 
     /**
@@ -171,18 +188,13 @@ class DiemTichLuyService
         $khachHang->refresh();
 
         $hangHienTai = HangThanhVien::find($khachHang->MaHangThanhVien);
-        $hangMoi     = $this->hangXungDangTheoDiem((int) $khachHang->TongDiem);
+        $tongChiTieu = $this->tinhTongChiTieu($khachHang->MaKhachHang);
+        $hangMoi     = $this->hangXungDangTheoDiem((int) $khachHang->TongDiem, $tongChiTieu);
 
         if (!$hangMoi || $hangMoi->ThuTuHang <= ($hangHienTai->ThuTuHang ?? 0)) return;
 
         $maHangCu = $khachHang->MaHangThanhVien;
         $khachHang->update(['MaHangThanhVien' => $hangMoi->MaHangThanhVien]);
-
-        // Tổng chi tiêu thực của khách tại thời điểm lên hạng
-        $tongChiTieu = (float) DB::table('hoadon')
-            ->where('MaKhachHang', $khachHang->MaKhachHang)
-            ->where('TrangThai', 'DaThanhToan')
-            ->sum('TongTien');
 
         // Lịch sử thay đổi hạng
         LichSuHangThanhVien::create([
@@ -220,22 +232,19 @@ class DiemTichLuyService
         $hangHienTai = HangThanhVien::find($khachHang->MaHangThanhVien);
         if (!$hangHienTai) return null;
 
-        $hangXungDang = $this->hangXungDangTheoDiem((int) $khachHang->TongDiem);
+        $tongChiTieu  = $this->tinhTongChiTieu($khachHang->MaKhachHang);
+        $hangXungDang = $this->hangXungDangTheoDiem((int) $khachHang->TongDiem, $tongChiTieu);
         if (!$hangXungDang || $hangXungDang->ThuTuHang >= $hangHienTai->ThuTuHang) return null;
 
         $maHangCu = $khachHang->MaHangThanhVien;
         $khachHang->update(['MaHangThanhVien' => $hangXungDang->MaHangThanhVien]);
 
-        $tongChiTieu = (float) DB::table('hoadon')
-            ->where('MaKhachHang', $khachHang->MaKhachHang)
-            ->where('TrangThai', 'DaThanhToan')
-            ->sum('TongTien');
-
-        $lastLSH = LichSuHangThanhVien::orderBy('MaLichSuHang', 'desc')->first();
-        $soLSH   = $lastLSH ? ((int) substr($lastLSH->MaLichSuHang, 3)) + 1 : 1;
-
         LichSuHangThanhVien::create([
-            'MaLichSuHang'           => 'LSH' . str_pad($soLSH, 3, '0', STR_PAD_LEFT),
+            'MaLichSuHang'           => $this->codes->next(
+                'lichsuhangthanhvien',
+                'MaLichSuHang',
+                'LSH'
+            ),
             'MaKhachHang'            => $khachHang->MaKhachHang,
             'MaHangThanhVienCu'      => $maHangCu,
             'MaHangThanhVienMoi'     => $hangXungDang->MaHangThanhVien,

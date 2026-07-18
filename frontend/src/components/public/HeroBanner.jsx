@@ -9,7 +9,7 @@ function HeroBanner() {
 
             <img
                 src={banner}
-                alt="Không gian trải nghiệm Buffet VIP"
+                alt="Không gian trải nghiệm Buffet"
                 width="1600"
                 height="640"
                 fetchPriority="high"

@@ -1,22 +1,14 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
-    FaBirthdayCake,
-    FaEdit,
-    FaEnvelope,
-    FaKey,
-    FaPhoneAlt,
     FaSave,
     FaShieldAlt,
     FaTimes,
-    FaUser,
-    FaVenusMars,
 } from "react-icons/fa";
 
 import { updateMemberProfile } from "../../api/authApi";
 import CustomerModal from "../customer/ui/CustomerModal";
 import {
     formatCalendarDateForInput,
-    formatCalendarDateVi,
     getLocalCalendarDate,
     getPreviousLocalCalendarDate,
     normalizeCalendarDateForApi,
@@ -38,12 +30,6 @@ const getProfileFormData = (user) => ({
     NgaySinh: formatCalendarDateForInput(user?.NgaySinh),
     GioiTinh: user?.GioiTinh === "Nữ" ? "Nu" : (user?.GioiTinh || ""),
 });
-
-const formatGender = (value) => {
-    if (value === "Nam") return "Nam";
-    if (["Nu", "Nữ"].includes(value)) return "Nữ";
-    return "—";
-};
 
 const getBackendFieldErrors = (error) => {
     const errors = error?.response?.status === 422 ? error.response.data?.errors : null;
@@ -112,7 +98,6 @@ function FieldError({ id, message }) {
 function MemberProfileSummary({
     user,
     activeModal,
-    onRequestModal,
     onCloseModal,
     onProfileUpdated,
 }) {
@@ -141,14 +126,21 @@ function MemberProfileSummary({
         setProfileStatus(null);
     };
 
-    const startEditing = () => {
+    // Modal được mở trực tiếp qua URL (?modal=profile|password) từ menu tài
+    // khoản ở header, không còn nút "Chỉnh sửa" tại chỗ — nên phải tự nạp
+    // lại dữ liệu mới nhất mỗi khi modal chuyển sang trạng thái mở.
+    useEffect(() => {
+        if (!isEditing) return;
         setFormData({ ...savedProfile });
         setEmailEditor(getEmailEditorState(savedProfile.Email));
         setFieldErrors({});
         setProfileStatus(null);
-        setSecurityStatus("");
-        onRequestModal?.("profile");
-    };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isEditing]);
+
+    useEffect(() => {
+        if (isChangingPassword) setSecurityStatus("");
+    }, [isChangingPassword]);
 
     const handleCancel = () => {
         setFormData({ ...savedProfile });
@@ -224,73 +216,13 @@ function MemberProfileSummary({
 
     return (
         <div className="member-profile-shell">
-            <article className={`member-profile-summary ${profileStatus?.tone === "success" ? "is-updated" : ""}`}>
-                <header className="member-profile-summary__header">
-                    <div>
-                        <span className="member-profile-summary__eyebrow">Hồ sơ thành viên</span>
-                        <h2>Thông tin cá nhân</h2>
-                    </div>
-                    <div className="member-profile-summary__actions">
-                        <button
-                            type="button"
-                            className="customer-button customer-button--primary"
-                            onClick={startEditing}
-                            aria-haspopup="dialog"
-                        >
-                            <FaEdit aria-hidden="true" /> Chỉnh sửa
-                        </button>
-                        <button
-                            type="button"
-                            className="customer-button customer-button--secondary"
-                            onClick={() => {
-                                setSecurityStatus("");
-                                onRequestModal?.("password");
-                            }}
-                            aria-haspopup="dialog"
-                        >
-                            <FaKey aria-hidden="true" />
-                            Đổi mật khẩu
-                        </button>
-                    </div>
-                </header>
-
-                {profileStatus?.tone === "success" && (
-                    <div className="member-profile__notice member-profile__notice--success" role="status" aria-live="polite">
-                        {profileStatus.message}
-                    </div>
-                )}
-
-                {securityStatus && (
-                    <div className="member-profile__notice member-profile__notice--success" role="status" aria-live="polite">
-                        <FaShieldAlt aria-hidden="true" /> {securityStatus}
-                    </div>
-                )}
-
-                <dl className="member-profile-summary__details" aria-label="Thông tin hồ sơ hiện tại">
-                    <div>
-                        <dt><FaUser aria-hidden="true" /> Họ và tên</dt>
-                        <dd>{savedProfile.HoTen || "—"}</dd>
-                    </div>
-                    <div>
-                        <dt><FaEnvelope aria-hidden="true" /> Email</dt>
-                        <dd>{savedProfile.Email || "—"}</dd>
-                    </div>
-                    <div>
-                        <dt><FaPhoneAlt aria-hidden="true" /> Số điện thoại</dt>
-                        <dd>{savedProfile.SoDienThoai || "—"}</dd>
-                    </div>
-                    <div>
-                        <dt><FaBirthdayCake aria-hidden="true" /> Ngày sinh</dt>
-                        <dd>{formatCalendarDateVi(savedProfile.NgaySinh)}</dd>
-                    </div>
-                    {savedProfile.GioiTinh && (
-                        <div>
-                            <dt><FaVenusMars aria-hidden="true" /> Giới tính</dt>
-                            <dd>{formatGender(savedProfile.GioiTinh)}</dd>
-                        </div>
-                    )}
-                </dl>
-            </article>
+            {(profileStatus?.tone === "success" || securityStatus) && (
+                <div className="member-profile__notice member-profile__notice--success" role="status" aria-live="polite">
+                    {securityStatus
+                        ? (<><FaShieldAlt aria-hidden="true" /> {securityStatus}</>)
+                        : profileStatus.message}
+                </div>
+            )}
 
             <CustomerModal
                 open={isEditing}

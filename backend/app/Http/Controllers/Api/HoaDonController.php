@@ -1181,6 +1181,25 @@ class HoaDonController extends Controller
                     ]);
             }
 
+            $nhanVien = auth('nhanvien')->user();
+
+            /*
+             * Đánh dấu hóa đơn là đã hủy TRƯỚC khi hoàn điểm, để nếu việc
+             * hoàn điểm kéo theo hạ hạng, tổng chi tiêu dùng để xét hạng
+             * không tính luôn hóa đơn vừa bị hủy này.
+             */
+            $hoaDon->TrangThai = 'DaHuy';
+
+            /*
+             * Các cột dưới đây cần tồn tại trong migration của nhánh Banner.
+             */
+            $hoaDon->LyDoHuy = trim($data['ly_do']);
+            $hoaDon->ThoiGianHuy = now();
+            $hoaDon->MaNhanVienHuy =
+                $nhanVien?->MaNhanVien;
+
+            $hoaDon->save();
+
             $diemDaThuHoi = 0;
             $haHangResult = null;
 
@@ -1212,20 +1231,6 @@ class HoaDonController extends Controller
                     );
                 }
             }
-
-            $nhanVien = auth('nhanvien')->user();
-
-            $hoaDon->TrangThai = 'DaHuy';
-
-            /*
-             * Các cột dưới đây cần tồn tại trong migration của nhánh Banner.
-             */
-            $hoaDon->LyDoHuy = trim($data['ly_do']);
-            $hoaDon->ThoiGianHuy = now();
-            $hoaDon->MaNhanVienHuy =
-                $nhanVien?->MaNhanVien;
-
-            $hoaDon->save();
 
             DB::commit();
 

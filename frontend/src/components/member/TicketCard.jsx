@@ -15,9 +15,9 @@ function TicketCard({ ticket }) {
 
     return (
         <article className="customer-ticket-card">
-            <div className="customer-ticket-card__watermark" aria-hidden="true">BUFFET VIP</div>
+            <div className="customer-ticket-card__watermark" aria-hidden="true">BUFFET</div>
             <div className="customer-ticket-card__top">
-                <span className="customer-ticket-card__brand">Buffet VIP</span>
+                <span className="customer-ticket-card__brand">Buffet</span>
                 <span className="customer-ticket-card__session">{getMealLabel(ticket?.BuoiAn)}</span>
             </div>
             <h2>{ticket?.TenLoaiVe || "Loại vé"}</h2>

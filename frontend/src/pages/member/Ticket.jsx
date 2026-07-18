@@ -42,7 +42,7 @@ function Ticket({ embedded = false }) {
                     <div>
                         <span>Khám phá thực đơn</span>
                         <h1 id="member-ticket-title">Giá vé Buffet</h1>
-                        <p>Tham khảo các loại vé đang được áp dụng tại Buffet VIP.</p>
+                        <p>Tham khảo các loại vé đang được áp dụng tại Buffet.</p>
                     </div>
                     {status === "success" && (
                         <strong className="customer-ticket-page__count">{tickets.length} loại vé</strong>

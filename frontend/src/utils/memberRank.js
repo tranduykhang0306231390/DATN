@@ -67,21 +67,33 @@ export const buildMembershipState = (points, ranks) => {
     const sortedRanks = sortMemberRanks(ranks);
     const rawPointValue = toFiniteNumber(points?.TongDiem);
     const currentPoints = rawPointValue === null ? null : Math.max(0, rawPointValue);
+    const rawSpendValue = toFiniteNumber(points?.TongChiTieu);
+    const currentSpend = rawSpendValue === null ? null : Math.max(0, rawSpendValue);
     const currentRankCode = points?.HangThanhVien || null;
 
     const baseState = {
         ranks: sortedRanks,
         currentPoints,
+        currentSpend,
         currentRankCode,
         currentTier: null,
         nextTier: null,
         currentIndex: -1,
         percentage: 0,
         remainingPoints: null,
+        remainingSpend: null,
         currentThreshold: null,
         nextThreshold: null,
+        currentSpendThreshold: null,
+        nextSpendThreshold: null,
         isHighestTier: false,
+        // Chỉ tính riêng điều kiện điểm — giữ nguyên tên/ý nghĩa cũ vì đã
+        // được dùng ở nơi khác (TierBenefitCard...).
         hasReachedNextThreshold: false,
+        hasReachedSpendThreshold: false,
+        // true khi đủ CẢ điểm lẫn chi tiêu — khớp điều kiện lên hạng thật
+        // sự ở backend (DiemTichLuyService::hangXungDangTheoDiem).
+        isEligibleForNextTier: false,
         hasEqualThresholds: false,
         hasInvalidThresholdOrder: false,
         status: "ready",
@@ -129,8 +141,13 @@ export const buildMembershipState = (points, ranks) => {
             currentIndex,
             currentThreshold,
             currentPoints,
+            currentSpend,
+            currentSpendThreshold: toFiniteNumber(currentTier.TongChiTieuToiThieu),
             percentage: 100,
             remainingPoints: 0,
+            remainingSpend: 0,
+            hasReachedSpendThreshold: true,
+            isEligibleForNextTier: true,
             isHighestTier: true,
         };
     }
@@ -152,11 +169,30 @@ export const buildMembershipState = (points, ranks) => {
     const hasEqualThresholds = thresholdRange === 0;
     const hasInvalidThresholdOrder = thresholdRange < 0;
     const hasReachedNextThreshold = currentPoints >= nextThreshold;
-    const percentage = thresholdRange <= 0
+    const pointPercentage = thresholdRange <= 0
         ? (hasReachedNextThreshold ? 100 : 0)
         : clampPercentage(
             ((currentPoints - currentThreshold) / thresholdRange) * 100,
         );
+
+    /*
+     * Mỗi hạng còn yêu cầu chi tiêu tối thiểu (TongChiTieuToiThieu), khớp
+     * điều kiện lên hạng thật ở backend. Tiến trình hiển thị phải lấy điều
+     * kiện nào CHƯA đạt (thấp hơn) làm chuẩn, vì thiếu 1 trong 2 là chưa
+     * đủ điều kiện lên hạng — không riêng điểm là đủ.
+     */
+    const currentSpendThreshold = toFiniteNumber(currentTier.TongChiTieuToiThieu) ?? 0;
+    const nextSpendThreshold = toFiniteNumber(nextTier?.TongChiTieuToiThieu) ?? 0;
+    const spendValue = currentSpend ?? 0;
+    const spendRange = nextSpendThreshold - currentSpendThreshold;
+    const hasReachedSpendThreshold = spendValue >= nextSpendThreshold;
+    const spendPercentage = spendRange <= 0
+        ? (hasReachedSpendThreshold ? 100 : 0)
+        : clampPercentage(
+            ((spendValue - currentSpendThreshold) / spendRange) * 100,
+        );
+
+    const percentage = Math.min(pointPercentage, spendPercentage);
 
     return {
         ...baseState,
@@ -165,10 +201,16 @@ export const buildMembershipState = (points, ranks) => {
         currentIndex,
         currentThreshold,
         nextThreshold,
+        currentSpendThreshold,
+        nextSpendThreshold,
         currentPoints,
+        currentSpend,
         percentage,
         remainingPoints: Math.max(0, nextThreshold - currentPoints),
+        remainingSpend: Math.max(0, nextSpendThreshold - spendValue),
         hasReachedNextThreshold,
+        hasReachedSpendThreshold,
+        isEligibleForNextTier: hasReachedNextThreshold && hasReachedSpendThreshold,
         hasEqualThresholds,
         hasInvalidThresholdOrder,
     };

@@ -131,7 +131,7 @@ export default function CauHinhWebsite() {
                                 className="admin-input"
                                 value={form.TenWebsite}
                                 onChange={(e) => setField('TenWebsite', e.target.value)}
-                                placeholder="VD: Buffet VIP"
+                                placeholder="VD: Buffet"
                             />
                         </div>
 

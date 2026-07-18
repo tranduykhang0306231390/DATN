@@ -101,7 +101,7 @@ function HotTicket() {
                                     <p><span>Loại ngày</span><strong>{getDayTypeLabel(ticket.LoaiNgay)}</strong></p>
                                 </div>
                                 <div className="ticket-price">{formatTicketPrice(ticket.GiaVe)}</div>
-                                <div className="ticket-footer"><span>Buffet VIP</span></div>
+                                <div className="ticket-footer"><span>Buffet</span></div>
                             </article>
                         ))}
                     </div>

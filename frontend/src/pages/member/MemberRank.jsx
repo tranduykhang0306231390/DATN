@@ -20,7 +20,7 @@ const TransactionHistoryPanel = lazy(() => import("../../components/member/Trans
 
 const TAB_HEADINGS = {
     rank: {
-        eyebrow: "Vibrant Rewards Club",
+        eyebrow: "",
         title: "Hạng và điểm",
         description: "Thẻ thành viên, điểm hiện có và hành trình thăng hạng của bạn.",
     },
@@ -85,10 +85,6 @@ function MemberRank() {
         contentRef.current?.scrollIntoView({ block: "start" });
     }, [activeTab]);
 
-    const openModal = (modal) => {
-        setSearchParams(getAccountSearch({ tab: "rank", modal }));
-    };
-
     const closeModal = () => {
         setSearchParams(getAccountSearch({ tab: "rank" }), { replace: true });
     };
@@ -104,7 +100,6 @@ function MemberRank() {
         panel = (
             <RankOverviewPanel
                 activeModal={activeModal}
-                onRequestModal={openModal}
                 onCloseModal={closeModal}
             />
         );

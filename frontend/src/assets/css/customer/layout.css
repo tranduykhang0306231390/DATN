@@ -195,18 +195,59 @@
     font-weight: 800;
 }
 
+.customer-app .customer-account-menu {
+    position: relative;
+}
+
 .customer-app .customer-account-summary {
     display: flex;
     gap: 8px;
     align-items: center;
     min-width: 0;
+    padding: 0;
+    border: none;
     border-radius: 999px;
     color: var(--customer-text);
+    background: none;
+    font: inherit;
     text-decoration: none;
+    cursor: pointer;
 }
 
 .customer-app .customer-account-summary:hover {
     color: var(--customer-green-dark);
+}
+
+.customer-app .customer-account-menu__panel {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    z-index: 30;
+    display: flex;
+    flex-direction: column;
+    min-width: 200px;
+    padding: 8px;
+    border: 1px solid var(--customer-border);
+    border-radius: var(--customer-radius-md);
+    background: var(--customer-surface-solid);
+    box-shadow: var(--customer-shadow-md);
+}
+
+.customer-app .customer-account-menu__panel a {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    padding: 10px 12px;
+    border-radius: var(--customer-radius-sm);
+    color: var(--customer-text);
+    font-size: 13px;
+    font-weight: 750;
+    text-decoration: none;
+}
+
+.customer-app .customer-account-menu__panel a:hover {
+    color: var(--customer-green-dark);
+    background: var(--customer-green-light);
 }
 
 .customer-app .customer-account-summary__avatar {

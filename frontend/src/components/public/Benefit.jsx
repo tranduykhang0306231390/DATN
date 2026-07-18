@@ -30,7 +30,7 @@ function Benefit() {
                 <div className="benefit-header">
 
                     <span className="ticket-eyebrow">
-                        THÀNH VIÊN BUFFET VIP
+                        THÀNH VIÊN BUFFET
                     </span>
 
                     <h2>

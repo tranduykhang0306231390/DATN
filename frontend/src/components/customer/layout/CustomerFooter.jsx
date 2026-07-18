@@ -35,7 +35,7 @@ function CustomerFooter({ isAuthenticated = false }) {
 
             <div className="customer-shell customer-footer__grid">
                 <section className="customer-footer__about" aria-labelledby="customer-footer-about">
-                    <h2 id="customer-footer-about">{setting?.TenWebsite || "BUFFET VIP"}</h2>
+                    <h2 id="customer-footer-about">{setting?.TenWebsite || "BUFFET"}</h2>
                     {isLoading ? (
                         <LoadingSkeleton lines={2} ariaLabel="Đang tải thông tin website" />
                     ) : (
@@ -85,7 +85,7 @@ function CustomerFooter({ isAuthenticated = false }) {
 
             <div className="customer-shell customer-footer__bottom">
                 <span>
-                    © {new Date().getFullYear()} {setting?.TenWebsite || "BUFFET VIP"}.
+                    © {new Date().getFullYear()} {setting?.TenWebsite || "BUFFET"}.
                 </span>
                 <span>Chương trình khách hàng thân thiết</span>
             </div>

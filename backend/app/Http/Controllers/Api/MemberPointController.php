@@ -25,7 +25,12 @@ class MemberPointController extends Controller
                 'COALESCE(SUM(CASE WHEN SoDiemSau > SoDiemTruoc THEN SoDiemSau - SoDiemTruoc ELSE 0 END), 0) AS TongDiemNhan'
             )
             ->selectRaw(
-                'COALESCE(SUM(CASE WHEN SoDiemSau < SoDiemTruoc THEN SoDiemTruoc - SoDiemSau ELSE 0 END), 0) AS TongDiemDaDung'
+                /*
+                 * Chỉ tính điểm khách CHỦ ĐỘNG dùng (đổi voucher).
+                 * Không gộp điểm bị hệ thống thu hồi do hủy hóa đơn
+                 * (HoanDiemHuyHD) — đó không phải khách "sử dụng" điểm.
+                 */
+                "COALESCE(SUM(CASE WHEN LoaiGiaoDich = 'DoiVoucher' AND SoDiemSau < SoDiemTruoc THEN SoDiemTruoc - SoDiemSau ELSE 0 END), 0) AS TongDiemDaDung"
             )
             ->first();
 

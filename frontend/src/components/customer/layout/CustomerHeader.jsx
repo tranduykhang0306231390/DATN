@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { FaSignOutAlt } from "react-icons/fa";
+import { FaKey, FaSignOutAlt, FaUserEdit } from "react-icons/fa";
 import { getBackendAssetUrl } from "../../../utils/apiUrl";
+import { getAccountSearch } from "../../../utils/accountCenter";
 import CustomerNavigation from "./CustomerNavigation";
 
 const getInitials = (name) => {
@@ -69,7 +70,7 @@ function CustomerHeader({
                 <Link
                     to={homePath}
                     className="customer-brand"
-                    aria-label={isAuthenticated ? "Buffet VIP - Trung tâm tài khoản" : "Buffet VIP - Trang chủ"}
+                    aria-label={isAuthenticated ? "Buffet - Trung tâm tài khoản" : "Buffet - Trang chủ"}
                 >
                     <img
                         src={getBackendAssetUrl("logo/logo.png")}
@@ -77,8 +78,7 @@ function CustomerHeader({
                         className="customer-brand__logo"
                     />
                     <span className="customer-brand__text">
-                        <strong>BUFFET VIP</strong>
-                        <small>Rewards Club</small>
+                        <strong>BUFFET</strong>
                     </span>
                 </Link>
 
@@ -115,19 +115,52 @@ function CustomerHeader({
                                 </div>
                             )}
 
-                            <Link
-                                to="/member/rank?tab=rank&modal=profile"
-                                className="customer-account-summary"
-                                title={user?.HoTen || "Thành viên"}
-                                aria-label="Mở thông tin cá nhân"
-                            >
-                                <span className="customer-account-summary__avatar" aria-hidden="true">
-                                    {getInitials(user?.HoTen)}
-                                </span>
-                                <span className="customer-account-summary__name">
-                                    {user?.HoTen || "Thành viên"}
-                                </span>
-                            </Link>
+                            <div className="customer-account-menu">
+                                <button
+                                    ref={menuButtonRef}
+                                    type="button"
+                                    className="customer-account-summary"
+                                    title={user?.HoTen || "Thành viên"}
+                                    aria-haspopup="menu"
+                                    aria-expanded={isMenuOpen}
+                                    aria-controls="customer-account-menu-panel"
+                                    onClick={() => {
+                                        setOpenMenuRoute((current) => current === routeKey ? null : routeKey);
+                                    }}
+                                >
+                                    <span className="customer-account-summary__avatar" aria-hidden="true">
+                                        {getInitials(user?.HoTen)}
+                                    </span>
+                                    <span className="customer-account-summary__name">
+                                        {user?.HoTen || "Thành viên"}
+                                    </span>
+                                </button>
+
+                                {isMenuOpen && (
+                                    <div
+                                        id="customer-account-menu-panel"
+                                        className="customer-account-menu__panel"
+                                        role="menu"
+                                    >
+                                        <Link
+                                            to={`/member/rank${getAccountSearch({ tab: "rank", modal: "profile" })}`}
+                                            role="menuitem"
+                                            onClick={() => setOpenMenuRoute(null)}
+                                        >
+                                            <FaUserEdit aria-hidden="true" />
+                                            Chỉnh sửa thông tin
+                                        </Link>
+                                        <Link
+                                            to={`/member/rank${getAccountSearch({ tab: "rank", modal: "password" })}`}
+                                            role="menuitem"
+                                            onClick={() => setOpenMenuRoute(null)}
+                                        >
+                                            <FaKey aria-hidden="true" />
+                                            Đổi mật khẩu
+                                        </Link>
+                                    </div>
+                                )}
+                            </div>
 
                             <button
                                 type="button"

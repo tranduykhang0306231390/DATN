@@ -1,7 +1,7 @@
 import { FaCrown, FaExclamationTriangle, FaLock, FaStar } from "react-icons/fa";
 import EmptyState from "../customer/ui/EmptyState";
 import StatusBadge from "../customer/ui/StatusBadge";
-import { formatMemberNumber } from "../../utils/memberRank";
+import { formatMemberMoney, formatMemberNumber } from "../../utils/memberRank";
 import MemberRankBadge from "./MemberRankBadge";
 
 const EMPTY_STATE_CONTENT = {
@@ -43,10 +43,15 @@ function MemberProgress({ membership }) {
         currentPoints,
         currentThreshold,
         nextThreshold,
+        currentSpendThreshold,
+        nextSpendThreshold,
         percentage,
         remainingPoints,
+        remainingSpend,
         isHighestTier,
         hasReachedNextThreshold,
+        hasReachedSpendThreshold,
+        isEligibleForNextTier,
         hasEqualThresholds,
         hasInvalidThresholdOrder,
         status,
@@ -125,10 +130,14 @@ function MemberProgress({ membership }) {
                 <span>
                     <strong>{currentTier?.TenHang || "Hạng hiện tại"}</strong>
                     {formatMemberNumber(currentThreshold)} điểm
+                    {" · "}
+                    {formatMemberMoney(currentSpendThreshold)}
                 </span>
                 <span>
                     <strong>{nextTier?.TenHang || currentTier?.TenHang || "Hạng cao nhất"}</strong>
                     {formatMemberNumber(nextThreshold ?? currentThreshold)} điểm
+                    {" · "}
+                    {formatMemberMoney(nextSpendThreshold ?? currentSpendThreshold)}
                 </span>
             </div>
 
@@ -163,15 +172,28 @@ function MemberProgress({ membership }) {
                         Bạn đã đạt hạng cao nhất. Hãy tiếp tục tận hưởng các quyền lợi hiện có.
                     </p>
                 )}
-                {!isHighestTier && hasReachedNextThreshold && (
+                {!isHighestTier && isEligibleForNextTier && (
                     <p className="is-ready">
                         <FaStar aria-hidden="true" />
-                        Bạn đã đủ ngưỡng điểm của hạng {nextTier?.TenHang}. Hạng chính thức vẫn do hệ thống xác nhận.
+                        Bạn đã đủ điểm và chi tiêu cho hạng {nextTier?.TenHang}. Hạng sẽ được cập nhật ở giao dịch gần nhất.
                     </p>
                 )}
-                {!isHighestTier && !hasReachedNextThreshold && remainingPoints !== null && (
+                {!isHighestTier && !isEligibleForNextTier && hasReachedNextThreshold && !hasReachedSpendThreshold && (
                     <p>
-                        Còn <strong>{formatMemberNumber(remainingPoints)} điểm</strong> để đạt hạng <strong>{nextTier?.TenHang}</strong>.
+                        Bạn đã đủ điểm cho hạng <strong>{nextTier?.TenHang}</strong>, nhưng cần chi tiêu thêm{" "}
+                        <strong>{formatMemberMoney(remainingSpend)}</strong> nữa để đủ điều kiện.
+                    </p>
+                )}
+                {!isHighestTier && !isEligibleForNextTier && !hasReachedNextThreshold && hasReachedSpendThreshold && remainingPoints !== null && (
+                    <p>
+                        Bạn đã đủ điều kiện chi tiêu cho hạng <strong>{nextTier?.TenHang}</strong>, nhưng cần tích thêm{" "}
+                        <strong>{formatMemberNumber(remainingPoints)} điểm</strong> nữa để đủ điều kiện.
+                    </p>
+                )}
+                {!isHighestTier && !hasReachedNextThreshold && !hasReachedSpendThreshold && remainingPoints !== null && (
+                    <p>
+                        Còn <strong>{formatMemberNumber(remainingPoints)} điểm</strong> và{" "}
+                        <strong>{formatMemberMoney(remainingSpend)}</strong> để đạt hạng <strong>{nextTier?.TenHang}</strong>.
                         Điểm hiện tại: <strong>{formatMemberNumber(currentPoints)}</strong>.
                     </p>
                 )}

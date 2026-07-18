@@ -81,7 +81,7 @@ function LoginStaff() {
                 <div className="text-center mb-4">
 
                     <h1 className="restaurant-logo">
-                        BUFFET VIP
+                        BUFFET
                     </h1>
 
                     <p className="restaurant-subtitle">

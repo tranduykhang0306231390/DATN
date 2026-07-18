@@ -11,7 +11,7 @@ class WebSettingSeeder extends Seeder
     {
         WebSetting::create([
 
-            "TenWebsite"=>"BUFFET VIP",
+            "TenWebsite"=>"BUFFET",
 
             "Logo"=>"logo.png",
 
@@ -21,7 +21,7 @@ class WebSettingSeeder extends Seeder
 
             "SoDienThoai"=>"0356522519",
 
-            "NoiDungWebsite"=>"Buffet VIP mang đến trải nghiệm ẩm thực chất lượng cùng chương trình khách hàng thân thiết với nhiều ưu đãi hấp dẫn.
+            "NoiDungWebsite"=>"Buffet mang đến trải nghiệm ẩm thực chất lượng cùng chương trình khách hàng thân thiết với nhiều ưu đãi hấp dẫn.
 
 "
 

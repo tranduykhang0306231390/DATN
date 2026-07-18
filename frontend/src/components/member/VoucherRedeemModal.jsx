@@ -25,7 +25,7 @@ function VoucherRedeemModal({
             open={open && Boolean(offer)}
             onClose={onClose}
             title="Xác nhận đổi voucher"
-            eyebrow="Rewards checkout"
+            eyebrow="Đổi điểm nhận quà"
             busy={submitting}
             closeOnBackdrop={!submitting}
             className="voucher-redeem-dialog"

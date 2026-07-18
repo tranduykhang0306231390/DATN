@@ -28,7 +28,7 @@ class WebSettingController extends Controller
 
         if (!$setting) {
             $setting = new WebSetting([
-                'TenWebsite' => 'Buffet VIP',
+                'TenWebsite' => 'Buffet',
                 'Logo' => null,
                 'DiaChi' => '',
                 'EmailLienHe' => '',

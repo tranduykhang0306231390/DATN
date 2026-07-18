@@ -29,7 +29,7 @@ function CustomerAuthLayout({
                         <div className="customer-auth__story-copy">
                             <span className="customer-auth__story-kicker">
                                 <FaTicketAlt aria-hidden="true" />
-                                Buffet VIP Rewards
+                                Buffet
                             </span>
                             <h2 id="customer-auth-story-title">
                                 Mỗi lần ghé, một bước gần hơn đến ưu đãi

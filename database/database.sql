@@ -146,7 +146,7 @@ CREATE TABLE `hangthanhvien` (
 INSERT INTO `hangthanhvien` (`MaHangThanhVien`, `TenHang`, `MoTa`, `TongChiTieuToiThieu`, `DiemToiThieu`, `ThuTuHang`, `MaQuyTac`) VALUES
 ('HTV001', 'Đồng', 'Hạng thành viên mới', 0.00, 0, 1, 'QT001'),
 ('HTV002', 'Bạc', 'Hạng khách hàng thân thiết', 5000000.00, 500, 2, 'QT002'),
-('HTV003', 'Vàng', 'Hạng khách hàng VIP', 20000000.00, 2000, 3, 'QT003'),
+('HTV003', 'Vàng', 'Hạng khách hàng ưu tú', 20000000.00, 2000, 3, 'QT003'),
 ('HTV004', 'Kim cương', 'Hạng khách hàng cao cấp', 50000000.00, 5000, 4, 'QT005');
 
 -- --------------------------------------------------------
@@ -593,7 +593,7 @@ INSERT INTO `uudai` (`MaUuDai`, `TenUuDai`, `SoDiemCanDoi`, `GiaTriGiam`, `MoTa`
 ('UD002', 'Giảm 100.000đ', 200, 100000.00, 'Giảm trực tiếp 100.000đ trên hóa đơn', 80, '2026-06-01', '2026-12-31', 'HoatDong', 'HTV002', 74, 'GiamTien', 0, 1),
 ('UD003', 'Giảm 10%', 300, 10.00, 'Giảm 10 phần trăm tổng hóa đơn', 60, '2026-06-01', '2026-12-31', 'HoatDong', 'HTV002', 57, 'PhanTram', 0, 1),
 ('UD004', 'Tặng nước ngọt', 80, 30000.00, 'Tặng 1 phần nước ngọt', 120, '2026-06-01', '2026-09-30', 'HoatDong', NULL, 101, 'TangMon', 1, 1),
-('UD005', 'Giảm VIP 200.000đ', 400, 200000.00, 'Ưu đãi riêng cho khách VIP', 50, '2026-06-01', '2026-12-31', 'HoatDong', 'HTV003', 48, 'GiamTien', 0, 1),
+('UD005', 'Giảm 200.000đ', 400, 200000.00, 'Ưu đãi riêng cho khách hàng ưu tú', 50, '2026-06-01', '2026-12-31', 'HoatDong', 'HTV003', 48, 'GiamTien', 0, 1),
 ('UD006', 'Giảm 5%', 500, 5.00, NULL, 13, '2026-07-17', '2026-07-24', 'HoatDong', NULL, 13, 'PhanTram', 1, 1);
 
 -- --------------------------------------------------------
@@ -644,7 +644,7 @@ CREATE TABLE `web_settings` (
 --
 
 INSERT INTO `web_settings` (`MaWebSetting`, `TenWebsite`, `Logo`, `DiaChi`, `EmailLienHe`, `SoDienThoai`, `NoiDungWebsite`, `created_at`, `updated_at`) VALUES
-(1, 'BUFFET VIP', 'logo.png', '138 Hồng Bàng, Phường Phú Lâm, TP. Hồ Chí Minh', 'buffetvip@gmail.com', '0356522519', 'Buffet VIP mang đến trải nghiệm ẩm thực chất lượng cao với đa dạng món ăn Á - Âu, không gian sang trọng và dịch vụ tận tâm.', '2026-07-07 11:28:11', '2026-07-07 11:28:11');
+(1, 'BUFFET', 'logo.png', '138 Hồng Bàng, Phường Phú Lâm, TP. Hồ Chí Minh', 'buffetvip@gmail.com', '0356522519', 'Buffet mang đến trải nghiệm ẩm thực chất lượng cao với đa dạng món ăn Á - Âu, không gian sang trọng và dịch vụ tận tâm.', '2026-07-07 11:28:11', '2026-07-07 11:28:11');
 
 --
 -- Chỉ mục cho các bảng đã đổ

@@ -35,7 +35,7 @@ function RankOverviewLoading() {
     );
 }
 
-function RankOverviewPanel({ activeModal, onRequestModal, onCloseModal }) {
+function RankOverviewPanel({ activeModal, onCloseModal }) {
     const [user, setUser] = useState(null);
     const [points, setPoints] = useState(null);
     const [ranks, setRanks] = useState([]);
@@ -150,15 +150,18 @@ function RankOverviewPanel({ activeModal, onRequestModal, onCloseModal }) {
                 />
             </section>
 
-            <section className="member-rank-section" aria-label="Thông tin cá nhân">
-                <MemberProfileSummary
-                    user={user}
-                    activeModal={activeModal}
-                    onRequestModal={onRequestModal}
-                    onCloseModal={onCloseModal}
-                    onProfileUpdated={handleProfileUpdated}
-                />
-            </section>
+            {/*
+                Không còn thẻ "Thông tin cá nhân" hiển thị cố định trên trang —
+                chỉnh sửa hồ sơ / đổi mật khẩu giờ mở qua menu tài khoản ở
+                header (?modal=profile|password). Component này giờ chỉ còn
+                vẽ 2 modal đó, không hiển thị gì khi không có modal nào mở.
+            */}
+            <MemberProfileSummary
+                user={user}
+                activeModal={activeModal}
+                onCloseModal={onCloseModal}
+                onProfileUpdated={handleProfileUpdated}
+            />
 
             {error && (
                 <div className="member-rank-notice member-rank-notice--error" role="status">

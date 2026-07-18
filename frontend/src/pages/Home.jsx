@@ -35,7 +35,7 @@ function Home() {
                 <div className="container">
                     <header className="public-rewards-story__heading">
                         <span className="ticket-eyebrow">
-                            BUFFET VIP REWARDS
+                            BUFFET
                         </span>
 
                         <h2 id="public-rewards-story-title">

@@ -21,8 +21,7 @@ function MemberCard({ user, points, membership, onShowHistory }) {
 
             <div className="member-loyalty-card__content">
                 <div className="member-loyalty-card__brand">
-                    <span>BUFFET VIP</span>
-                    <small>Vibrant Rewards Club</small>
+                    <span>BUFFET</span>
                 </div>
 
                 <div className="member-loyalty-card__identity">
@@ -51,23 +50,25 @@ function MemberCard({ user, points, membership, onShowHistory }) {
                 </div>
 
                 <div className="member-loyalty-card__footer">
-                    <div className="member-loyalty-card__points" aria-label={`Điểm hiện có: ${formatMemberNumber(points.TongDiem)}`}>
-                        <FaStar aria-hidden="true" />
-                        <span>
-                            <small>Điểm hiện có</small>
-                            <strong>{formatMemberNumber(points.TongDiem)}</strong>
-                        </span>
-                    </div>
-
-                    {user.NgayDangKy && (
-                        <div className="member-loyalty-card__joined">
-                            <FaCalendarAlt aria-hidden="true" />
+                    <div className="member-loyalty-card__stats">
+                        <div className="member-loyalty-card__points" aria-label={`Điểm hiện có: ${formatMemberNumber(points.TongDiem)}`}>
+                            <FaStar aria-hidden="true" />
                             <span>
-                                <small>Tham gia</small>
-                                <strong>{formatMemberDate(user.NgayDangKy)}</strong>
+                                <small>Điểm hiện có</small>
+                                <strong>{formatMemberNumber(points.TongDiem)}</strong>
                             </span>
                         </div>
-                    )}
+
+                        {user.NgayDangKy && (
+                            <div className="member-loyalty-card__joined">
+                                <FaCalendarAlt aria-hidden="true" />
+                                <span>
+                                    <small>Tham gia</small>
+                                    <strong>{formatMemberDate(user.NgayDangKy)}</strong>
+                                </span>
+                            </div>
+                        )}
+                    </div>
 
                     {onShowHistory && (
                         <button
