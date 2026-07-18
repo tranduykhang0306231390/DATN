@@ -2,6 +2,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import '../../assets/css/admin.css';
 import thongKeApi from '../../api/thongKeApi';
+import AdminDateInput from '../../components/admin/AdminDateInput';
 
 const fmtMoney = (n) =>
     new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(n || 0);
@@ -68,22 +69,18 @@ export default function ThongKe() {
 
             {/* Chọn khoảng thời gian */}
             <div className="admin-toolbar">
-                <input
-                    type="date"
-                    className="admin-input"
+                <AdminDateInput
                     style={{ flex: '0 0 160px' }}
                     value={tuNgay}
                     max={denNgay}
-                    onChange={(e) => setTuNgay(e.target.value)}
+                    onChange={(v) => setTuNgay(v)}
                 />
-                <input
-                    type="date"
-                    className="admin-input"
+                <AdminDateInput
                     style={{ flex: '0 0 160px' }}
                     value={denNgay}
                     min={tuNgay}
                     max={dateStr(0)}
-                    onChange={(e) => setDenNgay(e.target.value)}
+                    onChange={(v) => setDenNgay(v)}
                 />
                 {KHOANG_NHANH.map((k) => (
                     <button

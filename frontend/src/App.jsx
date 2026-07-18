@@ -26,6 +26,7 @@ const TaoHoaDon = lazy(() => import("./pages/staff/TaoHoaDon"));
 const QuanLyHoaDon = lazy(() => import("./pages/staff/QuanLyHoaDon"));
 
 // ================= ADMIN =================
+<<<<<<< HEAD
 const AdminLayout = lazy(() => import("./layouts/AdminLayout"));
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
 const QuanLyUuDai = lazy(() => import("./pages/admin/QuanLyUuDai"));
@@ -42,6 +43,28 @@ const QuanLyPhanHoi = lazy(() => import("./pages/admin/QuanLyPhanHoi"));
 const ThongKe = lazy(() => import("./pages/admin/ThongKe"));
 const QuanLyHoaDonAdmin = lazy(() => import("./pages/admin/QuanLyHoaDon"));
 const CauHinhWebsite = lazy(() => import("./pages/admin/CauHinhWebsite"));
+=======
+import AdminLayout from './layouts/AdminLayout';
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import QuanLyUuDai from './pages/admin/QuanLyUuDai';
+import QuanLyLoaiVe from './pages/admin/QuanLyLoaiVe';
+import QuanLyQuyTac from './pages/admin/QuanLyQuyTac';
+import QuanLyHangThanhVien from './pages/admin/QuanLyHangThanhVien';
+import QuanLyNhanVien from './pages/admin/QuanLyNhanVien';
+import QuanLyKhachHang from './pages/admin/QuanLyKhachHang';
+import LichSuQuyTac from './pages/admin/LichSuQuyTac';
+import LichSuHang from './pages/admin/LichSuHang';
+import LichSuDiem from './pages/admin/LichSuDiem';
+import QuanLyThongBao from './pages/admin/QuanLyThongBao';
+import QuanLyPhanHoi from './pages/admin/QuanLyPhanHoi';
+import ThongKe from "./pages/admin/ThongKe";
+import QuanLyHoaDonAdmin from "./pages/admin/QuanLyHoaDon";
+import CauHinhWebsite from "./pages/admin/CauHinhWebsite";
+import QuanLyBanner from "./pages/admin/QuanLyBanner";
+
+
+
+>>>>>>> origin/KhoiNguyen_QuanLyBanner
 
 // ================= PROTECTED ROUTES =================
 import {
@@ -263,13 +286,15 @@ function App() {
                         }
                     />
                     <Route
-                        path="/admin/cau-hinh-website"
+                        path="cau-hinh-website"
                         element={
                             <AdminRoute>
                                 <CauHinhWebsite />
                             </AdminRoute>
                         }
                     />
+                    <Route path="banner" element={<QuanLyBanner />} />
+                    
 
 
 

@@ -22,43 +22,47 @@ class DiemTichLuyService
      *   1. Điểm cơ bản = floor(TongThanhToan / SoTienQuyDoi) * SoDiemNhan
      *   2. Nếu TongThanhToan >= GiaTriHoaDonToiThieu  -> nhân HeSoNhanDiem
      *   3. Nếu đúng sinh nhật khách & NhanDoiSinhNhat -> nhân 2
+     *
+     * Trả về mảng chi tiết từng bước (không chỉ điểm cuối) để nơi gọi có
+     * thể hiển thị cách tính minh bạch cho khách xem lúc thanh toán.
      */
-    public function tinhDiem($quyTac, float $tongThanhToan, ?string $ngaySinh = null): int
+    public function tinhDiem($quyTac, float $tongThanhToan, ?string $ngaySinh = null): array
     {
         $soTienQuyDoi = (float) $quyTac->SoTienQuyDoi;
-        if ($soTienQuyDoi <= 0) {
-            return 0;
-        }
-
-        // 1. Điểm cơ bản
-        $diem = (int) floor($tongThanhToan / $soTienQuyDoi) * (int) $quyTac->SoDiemNhan;
-        if ($diem <= 0) {
-            return 0;
-        }
-
-        // 2. Xác định các điều kiện
-        $mucToiThieu = (float) ($quyTac->GiaTriHoaDonToiThieu ?? 0);
-        $heSo        = (float) ($quyTac->HeSoNhanDiem ?? 1);
-        $laSinhNhat  = ((int) ($quyTac->NhanDoiSinhNhat ?? 0) === 1 && $this->laSinhNhatHomNay($ngaySinh));
+        $mucToiThieu  = (float) ($quyTac->GiaTriHoaDonToiThieu ?? 0);
+        $heSo         = (float) ($quyTac->HeSoNhanDiem ?? 1);
+        $laSinhNhat   = ((int) ($quyTac->NhanDoiSinhNhat ?? 0) === 1 && $this->laSinhNhatHomNay($ngaySinh));
 
         // Hóa đơn có đạt giá trị tối thiểu để nhận hệ số không
-        $hoaDonDuDieuKien = ($mucToiThieu > 0 && $tongThanhToan >= $mucToiThieu && $heSo > 1);
+        $apDungHeSo = ($mucToiThieu > 0 && $tongThanhToan >= $mucToiThieu && $heSo > 1);
 
-        // 3. Áp hệ số + nhân đôi sinh nhật
-        if ($laSinhNhat) {
-            // Sinh nhật: đủ điều kiện -> (Điểm * HeSo * 2); không đủ -> (Điểm * 2)
-            if ($hoaDonDuDieuKien) {
-                $diem = (int) floor($diem * $heSo * 2);
-            } else {
-                $diem *= 2;
-            }
-        } else {
-            if ($hoaDonDuDieuKien) {
+        // 1. Điểm cơ bản
+        $diemCoBan = $soTienQuyDoi > 0
+            ? (int) floor($tongThanhToan / $soTienQuyDoi) * (int) $quyTac->SoDiemNhan
+            : 0;
+
+        $diem = $diemCoBan;
+
+        // 2 & 3. Áp hệ số + nhân đôi sinh nhật — chỉ khi có điểm cơ bản
+        if ($diemCoBan > 0) {
+            if ($laSinhNhat) {
+                // Sinh nhật: đủ điều kiện -> (Điểm * HeSo * 2); không đủ -> (Điểm * 2)
+                $diem = $apDungHeSo ? (int) floor($diem * $heSo * 2) : $diem * 2;
+            } elseif ($apDungHeSo) {
                 $diem = (int) floor($diem * $heSo);
             }
         }
 
-        return $diem;
+        return [
+            'diem'            => $diem,
+            'diemCoBan'       => $diemCoBan,
+            'soTienQuyDoi'    => $soTienQuyDoi,
+            'soDiemNhan'      => (int) $quyTac->SoDiemNhan,
+            'mucToiThieu'     => $mucToiThieu,
+            'heSo'            => $heSo,
+            'apDungHeSo'      => $apDungHeSo,
+            'laSinhNhat'      => $laSinhNhat,
+        ];
     }
 
     /**
@@ -137,6 +141,23 @@ class DiemTichLuyService
             tieuDe:  'Điều chỉnh điểm do hủy hóa đơn',
             noiDung: "Hóa đơn {$maThamChieu} đã bị hủy. {$soDiem} điểm tích lũy đã được thu hồi."
         );
+
+        // Nếu khách lên hạng nhờ chính số điểm vừa bị hoàn lại, đảo ngược
+        // luôn việc lên hạng đó — khác với congDiem() chỉ tự động NÂNG,
+        // hoanDiem() cần tự động HẠ vì đây là đảo ngược 1 giao dịch đã xảy
+        // ra (hủy hóa đơn), không phải khách chủ động tiêu điểm.
+        $this->kiemTraHaHang($khachHang, $maThamChieu);
+    }
+
+    /**
+     * Hạng "xứng đáng" nhất với số điểm hiện có, không quan tâm hạng hiện
+     * tại đang là gì (dùng chung cho cả kiểm tra lên hạng lẫn hạ hạng).
+     */
+    private function hangXungDangTheoDiem(int $tongDiem): ?HangThanhVien
+    {
+        return HangThanhVien::where('DiemToiThieu', '<=', $tongDiem)
+            ->orderBy('ThuTuHang', 'desc')
+            ->first();
     }
 
     /**
@@ -147,13 +168,9 @@ class DiemTichLuyService
         $khachHang->refresh();
 
         $hangHienTai = HangThanhVien::find($khachHang->MaHangThanhVien);
+        $hangMoi     = $this->hangXungDangTheoDiem((int) $khachHang->TongDiem);
 
-        $hangMoi = HangThanhVien::where('DiemToiThieu', '<=', $khachHang->TongDiem)
-            ->where('ThuTuHang', '>', $hangHienTai->ThuTuHang ?? 0)
-            ->orderBy('ThuTuHang', 'desc')
-            ->first();
-
-        if (!$hangMoi) return;
+        if (!$hangMoi || $hangMoi->ThuTuHang <= ($hangHienTai->ThuTuHang ?? 0)) return;
 
         $maHangCu = $khachHang->MaHangThanhVien;
         $khachHang->update(['MaHangThanhVien' => $hangMoi->MaHangThanhVien]);
@@ -184,6 +201,51 @@ class DiemTichLuyService
             maKH:    $khachHang->MaKhachHang,
             tieuDe:  'Chúc mừng! Bạn đã lên hạng ' . $hangMoi->TenHang,
             noiDung: "Tài khoản của bạn đã được nâng lên hạng {$hangMoi->TenHang}. Chúc mừng!"
+        );
+    }
+
+    /**
+     * Hạ hạng nếu sau khi hoàn điểm (huỷ hóa đơn), khách không còn đủ điểm
+     * để giữ hạng hiện tại. Chỉ gọi từ hoanDiem() — không dùng cho trường
+     * hợp khách chủ động tiêu điểm (đổi voucher), vì đó là lựa chọn của
+     * khách chứ không phải đảo ngược một giao dịch đã xảy ra.
+     */
+    private function kiemTraHaHang(KhachHang $khachHang, string $maThamChieu): void
+    {
+        $khachHang->refresh();
+
+        $hangHienTai = HangThanhVien::find($khachHang->MaHangThanhVien);
+        if (!$hangHienTai) return;
+
+        $hangXungDang = $this->hangXungDangTheoDiem((int) $khachHang->TongDiem);
+        if (!$hangXungDang || $hangXungDang->ThuTuHang >= $hangHienTai->ThuTuHang) return;
+
+        $maHangCu = $khachHang->MaHangThanhVien;
+        $khachHang->update(['MaHangThanhVien' => $hangXungDang->MaHangThanhVien]);
+
+        $tongChiTieu = (float) DB::table('hoadon')
+            ->where('MaKhachHang', $khachHang->MaKhachHang)
+            ->where('TrangThai', 'DaThanhToan')
+            ->sum('TongTien');
+
+        $lastLSH = LichSuHangThanhVien::orderBy('MaLichSuHang', 'desc')->first();
+        $soLSH   = $lastLSH ? ((int) substr($lastLSH->MaLichSuHang, 3)) + 1 : 1;
+
+        LichSuHangThanhVien::create([
+            'MaLichSuHang'           => 'LSH' . str_pad($soLSH, 3, '0', STR_PAD_LEFT),
+            'MaKhachHang'            => $khachHang->MaKhachHang,
+            'MaHangThanhVienCu'      => $maHangCu,
+            'MaHangThanhVienMoi'     => $hangXungDang->MaHangThanhVien,
+            'ThoiGianThayDoi'        => now(),
+            'LyDoThayDoi'            => "Hạ về hạng {$hangXungDang->TenHang} do hoàn điểm từ hóa đơn bị hủy {$maThamChieu}",
+            'DiemTaiThoiDiemTH'      => (string) $khachHang->TongDiem,
+            'TongChiTieuTaiThoiDiem' => $tongChiTieu,
+        ]);
+
+        $this->taoThongBao(
+            maKH:    $khachHang->MaKhachHang,
+            tieuDe:  'Điều chỉnh hạng thành viên',
+            noiDung: "Do hóa đơn {$maThamChieu} đã bị hủy và hoàn điểm, hạng của bạn được điều chỉnh về {$hangXungDang->TenHang}."
         );
     }
 

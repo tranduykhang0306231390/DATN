@@ -109,7 +109,7 @@ export default function QuanLyPhanHoi() {
             <div className="admin-toolbar">
                 <input
                     className="admin-input"
-                    placeholder="Tìm theo nội dung, khách hàng, mã HĐ…"
+                    placeholder="Tìm theo nội dung, khách hàng, SĐT, mã HĐ…"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && applyFilter()}
@@ -141,6 +141,7 @@ export default function QuanLyPhanHoi() {
                         <tr>
                             <th>Mã</th>
                             <th>Khách hàng</th>
+                            <th>SĐT</th>
                             <th>Đánh giá</th>
                             <th>Nội dung</th>
                             <th>Hóa đơn</th>
@@ -152,17 +153,18 @@ export default function QuanLyPhanHoi() {
                     <tbody>
                         {loading ? (
                             <tr>
-                                <td colSpan={8} className="admin-state">Đang tải…</td>
+                                <td colSpan={9} className="admin-state">Đang tải…</td>
                             </tr>
                         ) : list.length === 0 ? (
                             <tr>
-                                <td colSpan={8} className="admin-state">Chưa có phản hồi nào.</td>
+                                <td colSpan={9} className="admin-state">Chưa có phản hồi nào.</td>
                             </tr>
                         ) : (
                             list.map((ph) => (
                                 <tr key={ph.MaPhanHoi}>
                                     <td className="admin-mono">{ph.MaPhanHoi}</td>
                                     <td>{ph.TenKhachHang || ph.MaKhachHang}</td>
+                                    <td className="admin-nowrap">{ph.SoDienThoai || '—'}</td>
                                     <td className="admin-nowrap"><Sao diem={ph.DiemDanhGia} /></td>
                                     <td style={{ maxWidth: 300, color: '#475569' }}>
                                         {ph.NoiDungCuaKhachHang}

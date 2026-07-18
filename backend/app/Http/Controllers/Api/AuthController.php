@@ -125,6 +125,42 @@ class AuthController extends Controller
         ]);
     }
 
+    /**
+     * Cho phép nhân viên/admin đang đăng nhập tự cập nhật thông tin tài khoản của mình.
+     * Không cho đổi VaiTro hay TrangThai qua đây.
+     */
+    public function updateStaffProfile(Request $request)
+    {
+        $nhanVien = auth('nhanvien')->user();
+
+        $data = $request->validate(
+            [
+                'HoTen'       => ['required', 'string', 'max:100'],
+                'TenDangNhap' => ['required', 'string', 'max:50', 'unique:nhanvien,TenDangNhap,' . $nhanVien->MaNhanVien . ',MaNhanVien'],
+                'MatKhau'     => ['nullable', 'string', 'min:6'],
+            ],
+            [
+                'HoTen.required'       => 'Họ tên không được để trống.',
+                'TenDangNhap.required' => 'Tên đăng nhập không được để trống.',
+                'TenDangNhap.unique'   => 'Tên đăng nhập đã được sử dụng.',
+                'MatKhau.min'          => 'Mật khẩu tối thiểu 6 ký tự.',
+            ]
+        );
+
+        $nhanVien->HoTen       = $data['HoTen'];
+        $nhanVien->TenDangNhap = $data['TenDangNhap'];
+        if (!empty($data['MatKhau'])) {
+            $nhanVien->MatKhau = Hash::make($data['MatKhau']);
+        }
+        $nhanVien->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Cập nhật tài khoản thành công',
+            'user'    => $nhanVien->fresh(),
+        ]);
+    }
+
     public function memberProfile()
     {
         return response()->json([

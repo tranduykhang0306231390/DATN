@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import Swal from "sweetalert2";
 import { ADMIN_MENU } from "../components/admin/adminMenu";
+<<<<<<< HEAD
 import { logoutSession } from "../api/authApi";
 
 const getStoredUser = () => {
@@ -12,6 +13,11 @@ const getStoredUser = () => {
         return {};
     }
 };
+=======
+import { updateStaffAccount } from "../api/authApi";
+import Modal from "../components/admin/Modal";
+import "../assets/css/admin.css";
+>>>>>>> origin/KhoiNguyen_QuanLyBanner
 
 // Mục "Tổng quan" đứng đầu, các nhóm còn lại lấy từ ADMIN_MENU
 const DASHBOARD_ITEM = {
@@ -48,8 +54,57 @@ export default function AdminLayout() {
     const [loggingOut, setLoggingOut] = useState(false);
     const navigate = useNavigate();
     const location = useLocation();
+<<<<<<< HEAD
     const user = getStoredUser();
+=======
+    const [user, setUser] = useState(JSON.parse(localStorage.getItem("user") || "{}"));
+>>>>>>> origin/KhoiNguyen_QuanLyBanner
     const role = localStorage.getItem("role");
+
+    // ── Cấu hình tài khoản admin ─────────────────────────
+    const [accModalOpen, setAccModalOpen] = useState(false);
+    const [accForm, setAccForm] = useState({ HoTen: "", TenDangNhap: "", MatKhau: "" });
+    const [accSaving, setAccSaving] = useState(false);
+    const [accError, setAccError] = useState("");
+
+    const openAccountConfig = () => {
+        setAccForm({ HoTen: user.HoTen ?? "", TenDangNhap: user.TenDangNhap ?? "", MatKhau: "" });
+        setAccError("");
+        setAccModalOpen(true);
+    };
+
+    const setAccField = (key, value) => setAccForm((f) => ({ ...f, [key]: value }));
+
+    const handleSaveAccount = async () => {
+        setAccSaving(true);
+        setAccError("");
+        const payload = {
+            HoTen: accForm.HoTen,
+            TenDangNhap: accForm.TenDangNhap,
+        };
+        if (accForm.MatKhau) payload.MatKhau = accForm.MatKhau;
+        try {
+            const res = await updateStaffAccount(payload);
+            const updatedUser = res.data?.user;
+            if (updatedUser) {
+                localStorage.setItem("user", JSON.stringify(updatedUser));
+                setUser(updatedUser);
+            }
+            setAccModalOpen(false);
+            Swal.fire({
+                icon: "success",
+                title: "Đã cập nhật tài khoản",
+                timer: 1500,
+                showConfirmButton: false,
+            });
+        } catch (err) {
+            const res = err.response?.data;
+            const firstErr = res?.errors ? Object.values(res.errors)[0]?.[0] : null;
+            setAccError(firstErr || res?.message || "Có lỗi xảy ra, vui lòng thử lại");
+        } finally {
+            setAccSaving(false);
+        }
+    };
 
     const handleLogout = async () => {
         if (loggingOut) return;
@@ -88,7 +143,7 @@ export default function AdminLayout() {
                     <span style={styles.logoIcon}>🍽</span>
                     {sidebarOpen && (
                         <span style={styles.logoText}>
-                            BUFFET VIP <span style={styles.logoTag}>ADMIN</span>
+                            BUFFET <span style={styles.logoTag}>ADMIN</span>
                         </span>
                     )}
                 </div>
@@ -124,15 +179,27 @@ export default function AdminLayout() {
                 <div
                     style={{
                         ...styles.sidebarFooter,
-                        justifyContent: sidebarOpen ? "flex-start" : "center",
+                        justifyContent: sidebarOpen ? "space-between" : "center",
                     }}
                 >
-                    <div style={styles.avatar}>{user.HoTen?.charAt(0) || "?"}</div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, overflow: "hidden" }}>
+                        <div style={styles.avatar}>{user.HoTen?.charAt(0) || "?"}</div>
+                        {sidebarOpen && (
+                            <div style={{ overflow: "hidden" }}>
+                                <div style={styles.footerName}>{user.HoTen}</div>
+                                <div style={styles.footerRole}>{role}</div>
+                            </div>
+                        )}
+                    </div>
                     {sidebarOpen && (
-                        <div style={{ overflow: "hidden" }}>
-                            <div style={styles.footerName}>{user.HoTen}</div>
-                            <div style={styles.footerRole}>{role}</div>
-                        </div>
+                        <button
+                            type="button"
+                            style={styles.btnAccountConfig}
+                            onClick={openAccountConfig}
+                            title="Cấu hình tài khoản admin"
+                        >
+                            ⚙️
+                        </button>
                     )}
                 </div>
             </aside>
@@ -168,6 +235,74 @@ export default function AdminLayout() {
                     <Outlet />
                 </div>
             </div>
+
+            {/* Modal cấu hình tài khoản admin */}
+            <Modal
+                open={accModalOpen}
+                title="Cấu hình tài khoản admin"
+                onClose={() => setAccModalOpen(false)}
+                width={480}
+                footer={
+                    <>
+                        <button
+                            type="button"
+                            className="admin-btn admin-btn--ghost"
+                            onClick={() => setAccModalOpen(false)}
+                            disabled={accSaving}
+                        >
+                            Hủy
+                        </button>
+                        <button
+                            type="button"
+                            className="admin-btn admin-btn--primary"
+                            onClick={handleSaveAccount}
+                            disabled={accSaving}
+                        >
+                            {accSaving ? "Đang lưu…" : "Lưu"}
+                        </button>
+                    </>
+                }
+            >
+                {accError && <div className="admin-form-error">{accError}</div>}
+
+                <div className="admin-form">
+                    <div className="admin-field admin-field--full">
+                        <label>Họ tên</label>
+                        <input
+                            className="admin-input"
+                            value={accForm.HoTen}
+                            onChange={(e) => setAccField("HoTen", e.target.value)}
+                        />
+                    </div>
+
+                    <div className="admin-field admin-field--full">
+                        <label>Tên đăng nhập</label>
+                        <input
+                            className="admin-input"
+                            value={accForm.TenDangNhap}
+                            onChange={(e) => setAccField("TenDangNhap", e.target.value)}
+                            autoComplete="off"
+                        />
+                    </div>
+
+                    <div className="admin-field admin-field--full">
+                        <label>
+                            Mật khẩu mới{" "}
+                            <span style={{ color: "#94a3b8", fontWeight: 400 }}>
+                                (để trống nếu không đổi)
+                            </span>
+                        </label>
+                        <input
+                            type="password"
+                            className="admin-input"
+                            value={accForm.MatKhau}
+                            onChange={(e) => setAccField("MatKhau", e.target.value)}
+                            placeholder="Tối thiểu 6 ký tự"
+                            autoComplete="new-password"
+                        />
+                    </div>
+                </div>
+            </Modal>
         </div>
     );
 }
@@ -286,6 +421,19 @@ const styles = {
         color: "#94a3b8",
         fontSize: 11,
         marginTop: 1,
+    },
+    btnAccountConfig: {
+        width: 28,
+        height: 28,
+        flexShrink: 0,
+        border: "1px solid #334155",
+        borderRadius: 8,
+        background: "transparent",
+        cursor: "pointer",
+        fontSize: 13,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
     },
 
     // Main

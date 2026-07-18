@@ -1,6 +1,28 @@
 // src/components/staff/StaffComponents.jsx
 // Các component dùng chung cho trang staff
+<<<<<<< HEAD
 import { TRANG_THAI_CONFIG } from './staffUtils';
+=======
+
+// ─── Format helpers ──────────────────────────────────────────────────────────
+export const fmt = (n) =>
+    Number(n).toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
+
+export const fmtDate = (str) =>
+    str ? new Date(str).toLocaleString('vi-VN') : '—';
+
+// ─── Hằng số dùng chung ──────────────────────────────────────────────────────
+export const TRANG_THAI_CONFIG = {
+    ChuaThanhToan: { badgeClass: 'badge badge-gold',    label: 'Đang phục vụ' },
+    DaThanhToan: { badgeClass: 'badge badge-success', label: 'Đã thanh toán' },
+    
+    DaHuy:       { badgeClass: 'badge badge-danger',  label: 'Đã hủy' },
+};
+
+export const BUOI_LABEL = { Trua: '🌤 Trưa', Toi: '🌙 Tối' };
+export const NGAY_LABEL = { NgayThuong: 'Ngày thường', CuoiTuan: 'Cuối tuần' };
+export const NHOM_LABEL = { GiamTien: 'Giảm tiền', PhanTram: 'Giảm %', TangMon: 'Tặng món' };
+>>>>>>> origin/KhoiNguyen_QuanLyBanner
 
 // ─── PageTitle ───────────────────────────────────────────────────────────────
 export function PageTitle({ children }) {

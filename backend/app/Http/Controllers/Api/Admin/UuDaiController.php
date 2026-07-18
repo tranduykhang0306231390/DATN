@@ -1,5 +1,4 @@
 <?php
-// app/Http/Controllers/Api/Admin/UuDaiController.php
 
 namespace App\Http\Controllers\Api\Admin;
 
@@ -13,240 +12,634 @@ use Illuminate\Validation\ValidationException;
 
 class UuDaiController extends Controller
 {
-    private const NHOM = ['GiamTien', 'PhanTram', 'TangMon'];
+    private const NHOM = [
+        'GiamTien',
+        'PhanTram',
+        'TangMon',
+    ];
+
+    private const TRANG_THAI = [
+        'HoatDong',
+        'NgungApDung',
+    ];
 
     public function __construct(
         private SequentialCodeService $codes
-    ) {}
+    ) {
+    }
 
     /**
-     * Dữ liệu phụ cho form (danh sách hạng thành viên để chọn).
-     * Đăng ký route này TRƯỚC route /uu-dai/{ma}.
+     * Dữ liệu phụ cho form ưu đãi.
+     *
+     * Route này phải được khai báo trước:
+     * /uu-dai/{ma}
      */
     public function tuyChon()
     {
-        $hang = DB::table('hangthanhvien')
-            ->select('MaHangThanhVien', 'TenHang')
+        $hangThanhVien = DB::table('hangthanhvien')
+            ->select([
+                'MaHangThanhVien',
+                'TenHang',
+            ])
             ->orderBy('ThuTuHang')
+            ->orderBy('DiemToiThieu')
             ->get();
 
         return response()->json([
             'success' => true,
-            'data'    => ['hangThanhVien' => $hang],
-        ]);
-    }
-
-    /**
-     * Danh sách ưu đãi (tìm kiếm + lọc + phân trang).
-     * params: search, trang_thai, nhom, hang, per_page, page
-     */
-    public function index(Request $request)
-    {
-        $query = UuDai::query();
-
-        if ($kw = trim((string) $request->query('search'))) {
-            $query->where(function ($sub) use ($kw) {
-                $sub->where('TenUuDai', 'like', "%{$kw}%")
-                    ->orWhere('MaUuDai', 'like', "%{$kw}%");
-            });
-        }
-        if ($tt = $request->query('trang_thai')) {
-            $query->where('TrangThai', $tt);
-        }
-        if ($nhom = $request->query('nhom')) {
-            $query->where('NhomUuDai', $nhom);
-        }
-        if ($hang = $request->query('hang')) {
-            $query->where('MaHangThanhVien', $hang);
-        }
-
-        $query->orderBy('MaUuDai', 'desc');
-
-        $perPage   = max(1, min(100, (int) $request->query('per_page', 10)));
-        $paginator = $query->paginate($perPage);
-
-        return response()->json([
-            'success'    => true,
-            'data'       => $paginator->items(),
-            'pagination' => [
-                'current_page' => $paginator->currentPage(),
-                'last_page'    => $paginator->lastPage(),
-                'per_page'     => $paginator->perPage(),
-                'total'        => $paginator->total(),
+            'data' => [
+                'hangThanhVien' => $hangThanhVien,
             ],
         ]);
     }
 
-    public function show(string $ma)
+    /**
+     * Danh sách ưu đãi.
+     *
+     * Query params:
+     * - search
+     * - trang_thai
+     * - nhom
+     * - hang
+     * - per_page
+     * - page
+     */
+    public function index(Request $request)
     {
-        $ud = UuDai::find($ma);
+        $filters = $request->validate([
+            'search' => [
+                'nullable',
+                'string',
+                'max:255',
+            ],
 
-        if (!$ud) {
-            return response()->json(['success' => false, 'message' => 'Không tìm thấy ưu đãi'], 404);
+            'trang_thai' => [
+                'nullable',
+                Rule::in(self::TRANG_THAI),
+            ],
+
+            'nhom' => [
+                'nullable',
+                Rule::in(self::NHOM),
+            ],
+
+            'hang' => [
+                'nullable',
+                'string',
+                'exists:hangthanhvien,MaHangThanhVien',
+            ],
+
+            'per_page' => [
+                'nullable',
+                'integer',
+                'between:1,100',
+            ],
+
+            'page' => [
+                'nullable',
+                'integer',
+                'min:1',
+            ],
+        ]);
+
+        $query = UuDai::query();
+
+        $keyword = trim(
+            (string) ($filters['search'] ?? '')
+        );
+
+        if ($keyword !== '') {
+            $query->where(function ($subQuery) use ($keyword) {
+                $subQuery
+                    ->where(
+                        'TenUuDai',
+                        'like',
+                        "%{$keyword}%"
+                    )
+                    ->orWhere(
+                        'MaUuDai',
+                        'like',
+                        "%{$keyword}%"
+                    )
+                    ->orWhere(
+                        'MoTa',
+                        'like',
+                        "%{$keyword}%"
+                    );
+            });
         }
 
-        return response()->json(['success' => true, 'data' => $ud]);
-    }
+        if (!empty($filters['trang_thai'])) {
+            $query->where(
+                'TrangThai',
+                $filters['trang_thai']
+            );
+        }
 
-    /**
-     * Thêm ưu đãi mới. Số lượng tồn ban đầu = số lượng phát hành.
-     */
-    public function store(Request $request)
-    {
-        $data = $this->validateData($request);
+        if (!empty($filters['nhom'])) {
+            $query->where(
+                'NhomUuDai',
+                $filters['nhom']
+            );
+        }
 
-        $ud = DB::transaction(function () use ($data) {
-            $ud = new UuDai();
-            $ud->MaUuDai         = $this->codes->next('uudai', 'MaUuDai', 'UD');
-            $ud->TenUuDai        = $data['TenUuDai'];
-            $ud->SoDiemCanDoi    = $data['SoDiemCanDoi'];
-            $ud->GiaTriGiam      = $data['GiaTriGiam'];
-            $ud->MoTa            = $data['MoTa'] ?? null;
-            $ud->SoLuongPhatHanh = $data['SoLuongPhatHanh'];
-            $ud->SoLuongTon      = $data['SoLuongPhatHanh'];
-            $ud->NgayBatDau      = $data['NgayBatDau'];
-            $ud->NgayKetThuc     = $data['NgayKetThuc'];
-            $ud->TrangThai       = 'HoatDong';
-            $ud->MaHangThanhVien = $data['MaHangThanhVien'] ?: null;
-            $ud->NhomUuDai       = $data['NhomUuDai'];
-            $ud->CoTheDungChung  = (int) ($data['CoTheDungChung'] ?? 0);
-            $ud->ThuTuApDung     = $data['ThuTuApDung'] ?? 1;
-            $ud->save();
+        if (!empty($filters['hang'])) {
+            $query->where(
+                'MaHangThanhVien',
+                $filters['hang']
+            );
+        }
 
-            return $ud;
-        });
+        /*
+         * Sắp theo phần số của mã ưu đãi.
+         * Ví dụ UD100 phải mới hơn UD99.
+         */
+        $query->orderByRaw(
+            'CAST(SUBSTRING(MaUuDai, 3) AS UNSIGNED) DESC'
+        );
+
+        $paginator = $query->paginate(
+            $filters['per_page'] ?? 10
+        );
 
         return response()->json([
             'success' => true,
-            'message' => 'Thêm ưu đãi thành công',
-            'data'    => $ud,
+            'data' => $paginator->items(),
+
+            'pagination' => [
+                'current_page' => $paginator->currentPage(),
+                'last_page' => $paginator->lastPage(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total(),
+            ],
+        ]);
+    }
+
+    /**
+     * Xem chi tiết ưu đãi.
+     */
+    public function show(string $ma)
+    {
+        $uuDai = UuDai::find($ma);
+
+        if (!$uuDai) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Không tìm thấy ưu đãi.',
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $uuDai,
+        ]);
+    }
+
+    /**
+     * Thêm ưu đãi mới.
+     *
+     * Số lượng tồn ban đầu bằng số lượng phát hành.
+     * Ngày bắt đầu và kết thúc không được nằm trong quá khứ.
+     */
+    public function store(Request $request)
+    {
+        $this->normalizeRequest($request);
+
+        $data = $this->validateData(
+            $request,
+            true
+        );
+
+        $uuDai = DB::transaction(
+            function () use ($data) {
+                $uuDai = new UuDai();
+
+                $uuDai->MaUuDai =
+                    $this->codes->next(
+                        'uudai',
+                        'MaUuDai',
+                        'UD'
+                    );
+
+                $this->fillUuDai(
+                    $uuDai,
+                    $data
+                );
+
+                /*
+                 * Khi tạo mới chưa có voucher nào được cấp.
+                 */
+                $uuDai->SoLuongTon =
+                    (int) $data['SoLuongPhatHanh'];
+
+                $uuDai->TrangThai = 'HoatDong';
+
+                $uuDai->save();
+
+                return $uuDai;
+            }
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Thêm ưu đãi thành công.',
+            'data' => $uuDai,
         ], 201);
     }
 
     /**
      * Cập nhật ưu đãi.
-     * Khi đổi số lượng phát hành, giữ nguyên số đã phát ra và tính lại tồn kho.
+     *
+     * Khi thay đổi số lượng phát hành:
+     * - Giữ nguyên số voucher đã cấp.
+     * - Tính lại số lượng tồn.
+     * - Không cho giảm tổng phát hành thấp hơn số đã cấp.
      */
-    public function update(Request $request, string $ma)
-    {
-        $ud = UuDai::find($ma);
-
-        if (!$ud) {
-            return response()->json(['success' => false, 'message' => 'Không tìm thấy ưu đãi'], 404);
-        }
+    public function update(
+        Request $request,
+        string $ma
+    ) {
+        $this->normalizeRequest($request);
 
         $data = $this->validateData($request);
 
-        $ud = DB::transaction(function () use ($ma, $data) {
-            $ud = UuDai::where('MaUuDai', $ma)->lockForUpdate()->first();
-            if (!$ud) return null;
+        $uuDai = DB::transaction(
+            function () use ($ma, $data) {
+                $uuDai = UuDai::query()
+                    ->where('MaUuDai', $ma)
+                    ->lockForUpdate()
+                    ->first();
 
-            $daPhatRa = max(
-                0,
-                (int) $ud->SoLuongPhatHanh - (int) $ud->SoLuongTon
-            );
-            $newPhatHanh = (int) $data['SoLuongPhatHanh'];
+                if (!$uuDai) {
+                    return null;
+                }
 
-            if ($newPhatHanh < $daPhatRa) {
-                throw ValidationException::withMessages([
-                    'SoLuongPhatHanh' => [
-                        "Số lượng phát hành không thể thấp hơn {$daPhatRa} voucher đã cấp.",
-                    ],
-                ]);
+                $soLuongDaPhat = max(
+                    0,
+                    (int) $uuDai->SoLuongPhatHanh
+                        - (int) $uuDai->SoLuongTon
+                );
+
+                $soLuongPhatHanhMoi =
+                    (int) $data['SoLuongPhatHanh'];
+
+                if ($soLuongPhatHanhMoi < $soLuongDaPhat) {
+                    throw ValidationException::withMessages([
+                        'SoLuongPhatHanh' => [
+                            "Số lượng phát hành không thể thấp hơn {$soLuongDaPhat} voucher đã được cấp.",
+                        ],
+                    ]);
+                }
+
+                $this->fillUuDai(
+                    $uuDai,
+                    $data
+                );
+
+                $uuDai->SoLuongTon =
+                    $soLuongPhatHanhMoi - $soLuongDaPhat;
+
+                $uuDai->save();
+
+                return $uuDai;
             }
+        );
 
-            $ud->SoLuongTon      = $newPhatHanh - $daPhatRa;
-            $ud->TenUuDai        = $data['TenUuDai'];
-            $ud->SoDiemCanDoi    = $data['SoDiemCanDoi'];
-            $ud->GiaTriGiam      = $data['GiaTriGiam'];
-            $ud->MoTa            = $data['MoTa'] ?? null;
-            $ud->SoLuongPhatHanh = $newPhatHanh;
-            $ud->NgayBatDau      = $data['NgayBatDau'];
-            $ud->NgayKetThuc     = $data['NgayKetThuc'];
-            $ud->MaHangThanhVien = $data['MaHangThanhVien'] ?: null;
-            $ud->NhomUuDai       = $data['NhomUuDai'];
-            $ud->CoTheDungChung  = (int) ($data['CoTheDungChung'] ?? 0);
-            $ud->ThuTuApDung     = $data['ThuTuApDung'] ?? 1;
-            $ud->save();
-
-            return $ud;
-        });
-
-        if (!$ud) {
-            return response()->json(['success' => false, 'message' => 'Không tìm thấy ưu đãi'], 404);
+        if (!$uuDai) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Không tìm thấy ưu đãi.',
+            ], 404);
         }
 
         return response()->json([
             'success' => true,
-            'message' => 'Cập nhật ưu đãi thành công',
-            'data'    => $ud,
+            'message' => 'Cập nhật ưu đãi thành công.',
+            'data' => $uuDai,
         ]);
     }
 
     /**
-     * Bật / tắt ưu đãi (HoatDong <-> NgungApDung).
+     * Bật hoặc ngừng áp dụng ưu đãi.
+     *
+     * HoatDong <-> NgungApDung
      */
     public function toggleTrangThai(string $ma)
     {
-        $ud = UuDai::find($ma);
+        $uuDai = DB::transaction(
+            function () use ($ma) {
+                $uuDai = UuDai::query()
+                    ->where('MaUuDai', $ma)
+                    ->lockForUpdate()
+                    ->first();
 
-        if (!$ud) {
-            return response()->json(['success' => false, 'message' => 'Không tìm thấy ưu đãi'], 404);
-        }
+                if (!$uuDai) {
+                    return null;
+                }
 
-        $ud = DB::transaction(function () use ($ma) {
-            $ud = UuDai::where('MaUuDai', $ma)->lockForUpdate()->first();
-            if (!$ud) return null;
+                $uuDai->TrangThai =
+                    $uuDai->TrangThai === 'HoatDong'
+                        ? 'NgungApDung'
+                        : 'HoatDong';
 
-            $ud->TrangThai = $ud->TrangThai === 'HoatDong' ? 'NgungApDung' : 'HoatDong';
-            $ud->save();
+                $uuDai->save();
 
-            return $ud;
-        });
+                return $uuDai;
+            }
+        );
 
-        if (!$ud) {
-            return response()->json(['success' => false, 'message' => 'Không tìm thấy ưu đãi'], 404);
+        if (!$uuDai) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Không tìm thấy ưu đãi.',
+            ], 404);
         }
 
         return response()->json([
             'success' => true,
-            'message' => $ud->TrangThai === 'HoatDong' ? 'Đã kích hoạt ưu đãi' : 'Đã ngừng ưu đãi',
-            'data'    => $ud,
+
+            'message' =>
+                $uuDai->TrangThai === 'HoatDong'
+                    ? 'Đã kích hoạt ưu đãi.'
+                    : 'Đã ngừng áp dụng ưu đãi.',
+
+            'data' => $uuDai,
         ]);
     }
 
     /**
-     * Quy tắc validate dùng chung cho store & update.
+     * Validation dùng chung cho tạo và cập nhật.
+     *
+     * Khi tạo mới:
+     * - Ngày bắt đầu không được trong quá khứ.
+     * - Ngày kết thúc không được trong quá khứ.
+     *
+     * Cả tạo và cập nhật:
+     * - Ngày kết thúc không được trước ngày bắt đầu.
      */
-    private function validateData(Request $request): array
-    {
-        $data = $request->validate([
-            'TenUuDai'        => ['required', 'string', 'max:100'],
-            'NhomUuDai'       => ['required', Rule::in(self::NHOM)],
-            'GiaTriGiam'      => ['required', 'numeric', 'min:0'],
-            'SoDiemCanDoi'    => ['required', 'integer', 'min:0'],
-            'SoLuongPhatHanh' => ['required', 'integer', 'min:0'],
-            'NgayBatDau'      => ['required', 'date'],
-            'NgayKetThuc'     => ['required', 'date', 'after_or_equal:NgayBatDau'],
-            'MaHangThanhVien' => ['nullable', 'exists:hangthanhvien,MaHangThanhVien'],
-            'CoTheDungChung'  => ['nullable', 'boolean'],
-            'ThuTuApDung'     => ['nullable', 'integer', 'min:1'],
-            'MoTa'            => ['nullable', 'string', 'max:255'],
-        ]);
+    private function validateData(
+        Request $request,
+        bool $laTaoMoi = false
+    ): array {
+        $data = $request->validate(
+            [
+                'TenUuDai' => [
+                    'required',
+                    'string',
+                    'max:100',
+                ],
 
-        // Ưu đãi phần trăm thì giá trị giảm phải nằm trong 0–100
-        if ($data['NhomUuDai'] === 'PhanTram' && $data['GiaTriGiam'] > 100) {
+                'NhomUuDai' => [
+                    'required',
+                    Rule::in(self::NHOM),
+                ],
+
+                'GiaTriGiam' => [
+                    'required',
+                    'numeric',
+                    'gt:0',
+                ],
+
+                /*
+                 * Giá trị hóa đơn tối thiểu để áp dụng voucher.
+                 * Dùng để hạn chế voucher được áp dụng cho hóa đơn quá nhỏ
+                 * hoặc hạn chế các trường hợp dùng chung không hợp lý.
+                 */
+                'GiaTriHoaDonToiThieu' => [
+                    'nullable',
+                    'numeric',
+                    'min:0',
+                ],
+
+                'SoDiemCanDoi' => [
+                    'required',
+                    'integer',
+                    'min:0',
+                ],
+
+                'SoLuongPhatHanh' => [
+                    'required',
+                    'integer',
+                    'min:0',
+                ],
+
+                'NgayBatDau' => [
+                    'required',
+                    'date',
+
+                    ...(
+                        $laTaoMoi
+                            ? ['after_or_equal:today']
+                            : []
+                    ),
+                ],
+
+                'NgayKetThuc' => [
+                    'required',
+                    'date',
+                    'after_or_equal:NgayBatDau',
+
+                    ...(
+                        $laTaoMoi
+                            ? ['after_or_equal:today']
+                            : []
+                    ),
+                ],
+
+                'MaHangThanhVien' => [
+                    'nullable',
+                    'exists:hangthanhvien,MaHangThanhVien',
+                ],
+
+                'CoTheDungChung' => [
+                    'nullable',
+                    'boolean',
+                ],
+
+                'ThuTuApDung' => [
+                    'nullable',
+                    'integer',
+                    'min:1',
+                ],
+
+                'MoTa' => [
+                    'nullable',
+                    'string',
+                    'max:255',
+                ],
+            ],
+            [
+                'TenUuDai.required' =>
+                    'Vui lòng nhập tên ưu đãi.',
+
+                'NhomUuDai.required' =>
+                    'Vui lòng chọn nhóm ưu đãi.',
+
+                'NhomUuDai.in' =>
+                    'Nhóm ưu đãi không hợp lệ.',
+
+                'GiaTriGiam.required' =>
+                    'Vui lòng nhập giá trị ưu đãi.',
+
+                'GiaTriGiam.gt' =>
+                    'Giá trị giảm hoặc quy đổi phải lớn hơn 0.',
+
+                'GiaTriHoaDonToiThieu.min' =>
+                    'Giá trị hóa đơn tối thiểu không được nhỏ hơn 0.',
+
+                'SoDiemCanDoi.required' =>
+                    'Vui lòng nhập số điểm cần đổi.',
+
+                'SoLuongPhatHanh.required' =>
+                    'Vui lòng nhập số lượng phát hành.',
+
+                'NgayBatDau.required' =>
+                    'Vui lòng chọn ngày bắt đầu.',
+
+                'NgayBatDau.after_or_equal' =>
+                    'Ngày bắt đầu không được nằm trong quá khứ.',
+
+                'NgayKetThuc.required' =>
+                    'Vui lòng chọn ngày kết thúc.',
+
+                'NgayKetThuc.after_or_equal' =>
+                    'Ngày kết thúc không được nằm trong quá khứ hoặc trước ngày bắt đầu.',
+
+                'MaHangThanhVien.exists' =>
+                    'Hạng thành viên được chọn không tồn tại.',
+            ]
+        );
+
+        /*
+         * Ưu đãi phần trăm chỉ chấp nhận giá trị từ trên 0 đến 100.
+         */
+        if (
+            $data['NhomUuDai'] === 'PhanTram'
+            && (float) $data['GiaTriGiam'] > 100
+        ) {
             throw ValidationException::withMessages([
-                'GiaTriGiam' => ['Ưu đãi phần trăm không được vượt quá 100%.'],
+                'GiaTriGiam' => [
+                    'Ưu đãi phần trăm không được vượt quá 100%.',
+                ],
             ]);
         }
 
-        if ((float) $data['GiaTriGiam'] <= 0) {
-            throw ValidationException::withMessages([
-                'GiaTriGiam' => ['Giá trị giảm hoặc quy đổi phải lớn hơn 0.'],
-            ]);
-        }
+        /*
+         * Ưu đãi tặng món hiện vẫn giữ GiaTriGiam theo cấu trúc
+         * dữ liệu hiện tại. Không tự thay đổi API hoặc database.
+         */
+        $data['GiaTriHoaDonToiThieu'] =
+            (float) ($data['GiaTriHoaDonToiThieu'] ?? 0);
+
+        $data['CoTheDungChung'] =
+            (int) ($data['CoTheDungChung'] ?? 0);
+
+        $data['ThuTuApDung'] =
+            (int) ($data['ThuTuApDung'] ?? 1);
+
+        $data['MaHangThanhVien'] =
+            !empty($data['MaHangThanhVien'])
+                ? $data['MaHangThanhVien']
+                : null;
 
         return $data;
+    }
+
+    /**
+     * Gán dữ liệu dùng chung cho store và update.
+     */
+    private function fillUuDai(
+        UuDai $uuDai,
+        array $data
+    ): void {
+        $uuDai->TenUuDai =
+            trim($data['TenUuDai']);
+
+        $uuDai->SoDiemCanDoi =
+            (int) $data['SoDiemCanDoi'];
+
+        $uuDai->GiaTriGiam =
+            $data['GiaTriGiam'];
+
+        $uuDai->GiaTriHoaDonToiThieu =
+            $data['GiaTriHoaDonToiThieu'];
+
+        $uuDai->MoTa =
+            $data['MoTa'] ?? null;
+
+        $uuDai->SoLuongPhatHanh =
+            (int) $data['SoLuongPhatHanh'];
+
+        $uuDai->NgayBatDau =
+            $data['NgayBatDau'];
+
+        $uuDai->NgayKetThuc =
+            $data['NgayKetThuc'];
+
+        $uuDai->MaHangThanhVien =
+            $data['MaHangThanhVien'];
+
+        $uuDai->NhomUuDai =
+            $data['NhomUuDai'];
+
+        $uuDai->CoTheDungChung =
+            $data['CoTheDungChung'];
+
+        $uuDai->ThuTuApDung =
+            $data['ThuTuApDung'];
+    }
+
+    /**
+     * Chuẩn hóa dữ liệu request trước khi validation.
+     */
+    private function normalizeRequest(Request $request): void
+    {
+        $normalized = [];
+
+        if ($request->has('TenUuDai')) {
+            $normalized['TenUuDai'] = trim(
+                (string) $request->input('TenUuDai')
+            );
+        }
+
+        if ($request->has('MoTa')) {
+            $moTa = trim(
+                (string) $request->input('MoTa')
+            );
+
+            $normalized['MoTa'] =
+                $moTa !== '' ? $moTa : null;
+        }
+
+        if ($request->has('MaHangThanhVien')) {
+            $maHang = trim(
+                (string) $request->input('MaHangThanhVien')
+            );
+
+            $normalized['MaHangThanhVien'] =
+                $maHang !== '' ? $maHang : null;
+        }
+
+        /*
+         * Các input number không bắt buộc thường được frontend gửi là "".
+         * Chuyển về giá trị mặc định để tránh lỗi validation không cần thiết.
+         */
+        if (
+            $request->has('GiaTriHoaDonToiThieu')
+            && $request->input('GiaTriHoaDonToiThieu') === ''
+        ) {
+            $normalized['GiaTriHoaDonToiThieu'] = 0;
+        }
+
+        if (
+            $request->has('ThuTuApDung')
+            && $request->input('ThuTuApDung') === ''
+        ) {
+            $normalized['ThuTuApDung'] = 1;
+        }
+
+        if ($normalized !== []) {
+            $request->merge($normalized);
+        }
     }
 }

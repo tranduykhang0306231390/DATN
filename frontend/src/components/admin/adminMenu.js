@@ -88,6 +88,12 @@ export const ADMIN_MENU = [
                 path: '/admin/cau-hinh-website',
                 color: '#f43f5e',
             },
+            {
+                
+                label: 'Cấu hình banner',
+                path: '/admin/banner',
+                color: '#10b981',
+            },
         ],
     },
     {
@@ -96,7 +102,7 @@ export const ADMIN_MENU = [
         items: [
             {
                 
-                label: 'lịch sử thây đổi quy tắc',
+                label: 'Lịch sử đổi quy tắc',
                 path: '/admin/lich-su-quy-tac',
                 color: '#6366f1',
             },

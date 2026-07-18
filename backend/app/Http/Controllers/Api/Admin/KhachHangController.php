@@ -89,7 +89,7 @@ class KhachHangController extends Controller
 
     /**
      * Cập nhật thông tin khách hàng.
-     * Nếu đổi hạng thì tự ghi vào lichsuhangthanhvien.
+     * Hạng thành viên KHÔNG được chỉnh sửa ở đây vì được hệ thống tự nâng hạng.
      */
     public function update(Request $request, string $ma)
     {
@@ -100,6 +100,7 @@ class KhachHangController extends Controller
         }
 
         $data = $request->validate([
+<<<<<<< HEAD
             'HoTen'           => ['required', 'string', 'max:100'],
             'NgaySinh'        => ['nullable', 'date', 'before:today'],
             'GioiTinh'        => ['nullable', Rule::in(['Nam', 'Nu'])],
@@ -164,6 +165,21 @@ class KhachHangController extends Controller
                 'message' => 'Không thể cập nhật khách hàng lúc này. Vui lòng thử lại.',
             ], 500);
         }
+=======
+            'HoTen'       => ['required', 'string', 'max:100'],
+            'NgaySinh'    => ['nullable', 'date'],
+            'GioiTinh'    => ['nullable', Rule::in(['Nam', 'Nu'])],
+            'Email'       => ['nullable', 'email', 'max:100', Rule::unique('khachhang', 'Email')->ignore($ma, 'MaKhachHang')],
+            'SoDienThoai' => ['required', 'string', 'max:15', Rule::unique('khachhang', 'SoDienThoai')->ignore($ma, 'MaKhachHang')],
+        ]);
+
+        $kh->HoTen       = $data['HoTen'];
+        $kh->NgaySinh    = $data['NgaySinh'] ?: null;
+        $kh->GioiTinh    = $data['GioiTinh'] ?: null;
+        $kh->Email       = $data['Email'] ?: null;
+        $kh->SoDienThoai = $data['SoDienThoai'];
+        $kh->save();
+>>>>>>> origin/KhoiNguyen_QuanLyBanner
 
         return response()->json([
             'success' => true,

@@ -4,20 +4,35 @@ import Swal from 'sweetalert2';
 import '../../assets/css/admin.css';
 import uuDaiApi from '../../api/uuDaiApi';
 import Modal from '../../components/admin/Modal';
+import AdminDateInput from '../../components/admin/AdminDateInput';
 
 const PER_PAGE = 10;
 
+// Thứ tự áp dụng gắn liền với nhóm ưu đãi, KHÔNG cho nhập tay.
+//
+// Vì sao thứ tự này bảo vệ nhà hàng:
+// Phần trăm được tính trên số tiền CÒN LẠI sau các lần giảm trước đó.
+// Nên đưa các khoản giảm cố định (tặng món, giảm tiền) lên trước sẽ làm
+// nhỏ đi phần gốc mà % áp lên, tổng giảm vì thế thấp hơn.
+//
+// Ví dụ hóa đơn 1.000.000đ, có voucher giảm 200.000đ và voucher giảm 20%:
+//   Giảm % trước:   1.000.000 × 20% = 200.000 → còn 800.000 → −200.000 = 600.000
+//   Giảm tiền trước: 1.000.000 − 200.000 = 800.000 → × 20% = 160.000 → còn 640.000
+// Chênh lệch 40.000đ nghiêng về phía nhà hàng.
 const NHOM_OPTIONS = [
-    { value: 'GiamTien', label: 'Giảm tiền' },
-    { value: 'PhanTram', label: 'Giảm %' },
-    { value: 'TangMon', label: 'Tặng món' },
+    { value: 'TangMon',  label: 'Tặng món',  thuTu: 1, moTa: 'Trừ giá trị món tặng trước tiên' },
+    { value: 'GiamTien', label: 'Giảm tiền', thuTu: 2, moTa: 'Trừ số tiền cố định' },
+    { value: 'PhanTram', label: 'Giảm %',    thuTu: 3, moTa: 'Tính trên số tiền còn lại, áp dụng sau cùng' },
 ];
 
 const nhomLabel = (v) => NHOM_OPTIONS.find((n) => n.value === v)?.label || v;
+const nhomInfo  = (v) => NHOM_OPTIONS.find((n) => n.value === v) || NHOM_OPTIONS[1];
+const thuTuTheoNhom = (v) => nhomInfo(v).thuTu;
 
 const EMPTY_FORM = {
     TenUuDai: '',
     NhomUuDai: 'GiamTien',
+    GiaTriHoaDonToiThieu: 0,
     GiaTriGiam: 0,
     SoDiemCanDoi: 0,
     SoLuongPhatHanh: 0,
@@ -100,6 +115,7 @@ export default function QuanLyUuDai() {
         setForm({
             TenUuDai: ud.TenUuDai ?? '',
             NhomUuDai: ud.NhomUuDai ?? 'GiamTien',
+            GiaTriHoaDonToiThieu: Number(ud.GiaTriHoaDonToiThieu) || 0,
             GiaTriGiam: Number(ud.GiaTriGiam) || 0,
             SoDiemCanDoi: Number(ud.SoDiemCanDoi) || 0,
             SoLuongPhatHanh: Number(ud.SoLuongPhatHanh) || 0,
@@ -114,7 +130,13 @@ export default function QuanLyUuDai() {
         setModalOpen(true);
     };
 
-    const setField = (key, value) => setForm((f) => ({ ...f, [key]: value }));
+    const setField = (key, value) =>
+        setForm((f) => ({
+            ...f,
+            [key]: value,
+            // Đổi nhóm ưu đãi thì thứ tự áp dụng tự đổi theo
+            ...(key === 'NhomUuDai' ? { ThuTuApDung: thuTuTheoNhom(value) } : {}),
+        }));
 
     const handleSubmit = async () => {
         // Khi thêm mới: không cho phép ngày bắt đầu / kết thúc nằm trong quá khứ
@@ -137,7 +159,8 @@ export default function QuanLyUuDai() {
             GiaTriGiam: Number(form.GiaTriGiam),
             SoDiemCanDoi: Number(form.SoDiemCanDoi),
             SoLuongPhatHanh: Number(form.SoLuongPhatHanh),
-            ThuTuApDung: Number(form.ThuTuApDung),
+            ThuTuApDung: thuTuTheoNhom(form.NhomUuDai),
+            GiaTriHoaDonToiThieu: Number(form.GiaTriHoaDonToiThieu) || 0,
             MaHangThanhVien: form.MaHangThanhVien || null,
         };
         try {
@@ -326,6 +349,23 @@ export default function QuanLyUuDai() {
                     >
                         ← Trước
                     </button>
+
+                    <div className="admin-page-numbers">
+                        {pageList.map((p, i) =>
+                            p === '…' ? (
+                                <span key={`dots-${i}`} className="admin-page-dots">…</span>
+                            ) : (
+                                <button
+                                    key={p}
+                                    className={`admin-btn admin-btn--sm ${p === pagination.current_page ? 'admin-btn--primary' : 'admin-btn--ghost'}`}
+                                    onClick={() => goToPage(p)}
+                                >
+                                    {p}
+                                </button>
+                            )
+                        )}
+                    </div>
+
                     <button
                         className="admin-btn admin-btn--ghost admin-btn--sm"
                         disabled={pagination.current_page >= pagination.last_page}
@@ -407,6 +447,21 @@ export default function QuanLyUuDai() {
                     </div>
 
                     <div className="admin-field">
+                        <label>
+                            Hóa đơn tối thiểu (đ){' '}
+                            <span style={{ color: '#94a3b8', fontWeight: 400 }}>(0 = không giới hạn)</span>
+                        </label>
+                        <input
+                            type="number"
+                            min="0"
+                            className="admin-input"
+                            value={form.GiaTriHoaDonToiThieu}
+                            onChange={(e) => setField('GiaTriHoaDonToiThieu', e.target.value)}
+                        />
+                        
+                    </div>
+
+                    <div className="admin-field">
                         <label>Điểm cần để đổi</label>
                         <input
                             type="number"
@@ -417,6 +472,26 @@ export default function QuanLyUuDai() {
                         />
                     </div>
 
+                    
+
+                    <div className="admin-field">
+                        <label>Ngày bắt đầu</label>
+                        <AdminDateInput
+                            value={form.NgayBatDau}
+                            min={editing ? undefined : todayStr()}
+                            max={form.NgayKetThuc || undefined}
+                            onChange={(v) => setField('NgayBatDau', v)}
+                        />
+                    </div>
+
+                    <div className="admin-field">
+                        <label>Ngày kết thúc</label>
+                        <AdminDateInput
+                            value={form.NgayKetThuc}
+                            min={form.NgayBatDau || (editing ? undefined : todayStr())}
+                            onChange={(v) => setField('NgayKetThuc', v)}
+                        />
+                    </div>
                     <div className="admin-field">
                         <label>Số lượng phát hành</label>
                         <input
@@ -425,29 +500,6 @@ export default function QuanLyUuDai() {
                             className="admin-input"
                             value={form.SoLuongPhatHanh}
                             onChange={(e) => setField('SoLuongPhatHanh', e.target.value)}
-                        />
-                    </div>
-
-                    <div className="admin-field">
-                        <label>Ngày bắt đầu</label>
-                        <input
-                            type="date"
-                            className="admin-input"
-                            value={form.NgayBatDau}
-                            min={editing ? undefined : todayStr()}
-                            max={form.NgayKetThuc || undefined}
-                            onChange={(e) => setField('NgayBatDau', e.target.value)}
-                        />
-                    </div>
-
-                    <div className="admin-field">
-                        <label>Ngày kết thúc</label>
-                        <input
-                            type="date"
-                            className="admin-input"
-                            value={form.NgayKetThuc}
-                            min={form.NgayBatDau || (editing ? undefined : todayStr())}
-                            onChange={(e) => setField('NgayKetThuc', e.target.value)}
                         />
                     </div>
 
@@ -468,14 +520,37 @@ export default function QuanLyUuDai() {
                     </div>
 
                     <div className="admin-field">
-                        <label>Thứ tự áp dụng</label>
+                        <label>
+                            Thứ tự áp dụng{' '}
+                            <span style={{ color: '#94a3b8', fontWeight: 400 }}>(tự động)</span>
+                        </label>
                         <input
-                            type="number"
-                            min="1"
+                            type="text"
                             className="admin-input"
-                            value={form.ThuTuApDung}
-                            onChange={(e) => setField('ThuTuApDung', e.target.value)}
+                            value={`${thuTuTheoNhom(form.NhomUuDai)} — ${nhomLabel(form.NhomUuDai)}`}
+                            readOnly
+                            style={{ background: '#f1f5f9', cursor: 'not-allowed' }}
                         />
+                        <span style={{ fontSize: 12, color: '#64748b' }}>
+                            {nhomInfo(form.NhomUuDai).moTa}
+                        </span>
+                    </div>
+
+                    <div className="admin-field admin-field--full">
+                        <div
+                            style={{
+                                fontSize: 12,
+                                color: '#475569',
+                                background: '#f5f6fb',
+                                borderRadius: 10,
+                                padding: '10px 14px',
+                                lineHeight: 1.6,
+                            }}
+                        >
+                            <b>Thứ tự áp dụng do hệ thống quyết định</b> 
+                            <b> 1. Tặng món → 2. Giảm tiền → 3. Giảm %</b>.
+                            
+                        </div>
                     </div>
 
                     <div className="admin-field admin-field--full">
@@ -503,4 +578,8 @@ export default function QuanLyUuDai() {
             </Modal>
         </div>
     );
+<<<<<<< HEAD
 }
+=======
+} 
+>>>>>>> origin/KhoiNguyen_QuanLyBanner

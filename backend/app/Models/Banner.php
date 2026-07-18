@@ -1,4 +1,5 @@
 <?php
+// app/Models/Banner.php
 
 namespace App\Models;
 
@@ -6,15 +7,18 @@ use Illuminate\Database\Eloquent\Model;
 
 class Banner extends Model
 {
-    protected $table = "banner";
+    protected $table      = 'banner';
+    protected $primaryKey = 'MaBanner';
+    public    $incrementing = false;
+    protected $keyType    = 'string';
+    public    $timestamps = false;
 
-    protected $primaryKey = "MaBanner";
+    protected $fillable = [
+        'MaBanner', 'TieuDe', 'HinhAnh', 'Link', 'ThuTu', 'TrangThai',
+    ];
 
-    public $incrementing = false;
-
-    protected $keyType = "string";
-
-    public $timestamps = false;
-
-    protected $guarded = [];
+    protected $casts = [
+        'ThuTu'     => 'integer',
+        'TrangThai' => 'integer',   // 1 = hiện, 0 = ẩn
+    ];
 }

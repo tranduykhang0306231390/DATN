@@ -4,6 +4,7 @@ import Swal from 'sweetalert2';
 import '../../assets/css/admin.css';
 import khachHangApi from '../../api/khachHangApi';
 import Modal from '../../components/admin/Modal';
+import AdminDateInput from '../../components/admin/AdminDateInput';
 
 const EMPTY_FORM = {
     HoTen: '',
@@ -11,7 +12,6 @@ const EMPTY_FORM = {
     Email: '',
     NgaySinh: '',
     GioiTinh: '',
-    MaHangThanhVien: '',
 };
 
 export default function QuanLyKhachHang() {
@@ -29,7 +29,7 @@ export default function QuanLyKhachHang() {
     // Modal
     const [modalOpen, setModalOpen] = useState(false);
     const [editing, setEditing] = useState(null);
-    const [editingInfo, setEditingInfo] = useState({ TongDiem: 0, NgayDangKy: '' });
+    const [editingInfo, setEditingInfo] = useState({ TongDiem: 0, NgayDangKy: '', TenHang: '' });
     const [form, setForm] = useState(EMPTY_FORM);
     const [saving, setSaving] = useState(false);
     const [formError, setFormError] = useState('');
@@ -68,6 +68,7 @@ export default function QuanLyKhachHang() {
         setEditingInfo({
             TongDiem: kh.TongDiem ?? 0,
             NgayDangKy: (kh.NgayDangKy || '').slice(0, 10),
+            TenHang: kh.hangThanhVien?.TenHang || kh.MaHangThanhVien || '—',
         });
         setForm({
             HoTen: kh.HoTen ?? '',
@@ -75,7 +76,6 @@ export default function QuanLyKhachHang() {
             Email: kh.Email ?? '',
             NgaySinh: (kh.NgaySinh || '').slice(0, 10),
             GioiTinh: kh.GioiTinh ?? '',
-            MaHangThanhVien: kh.MaHangThanhVien ?? '',
         });
         setFormError('');
         setModalOpen(true);
@@ -92,7 +92,6 @@ export default function QuanLyKhachHang() {
             Email: form.Email || null,
             NgaySinh: form.NgaySinh || null,
             GioiTinh: form.GioiTinh || null,
-            MaHangThanhVien: form.MaHangThanhVien,
         };
         try {
             await khachHangApi.update(editing, payload);
@@ -320,6 +319,15 @@ export default function QuanLyKhachHang() {
                         <div style={{ color: '#64748b' }}>Ngày đăng ký</div>
                         <div style={{ fontWeight: 600 }}>{editingInfo.NgayDangKy || '—'}</div>
                     </div>
+                    <div>
+                        <div style={{ color: '#64748b' }}>
+                            Hạng thành viên{' '}
+                            <span title="Hạng thành viên được hệ thống tự động nâng theo điểm/chi tiêu, không thể chỉnh sửa thủ công.">
+                                ⓘ
+                            </span>
+                        </div>
+                        <div style={{ fontWeight: 700 }}>{editingInfo.TenHang}</div>
+                    </div>
                 </div>
 
                 <div className="admin-form">
@@ -353,11 +361,9 @@ export default function QuanLyKhachHang() {
 
                     <div className="admin-field">
                         <label>Ngày sinh</label>
-                        <input
-                            type="date"
-                            className="admin-input"
+                        <AdminDateInput
                             value={form.NgaySinh}
-                            onChange={(e) => setField('NgaySinh', e.target.value)}
+                            onChange={(v) => setField('NgaySinh', v)}
                         />
                     </div>
 
@@ -371,22 +377,6 @@ export default function QuanLyKhachHang() {
                             <option value="">—</option>
                             <option value="Nam">Nam</option>
                             <option value="Nu">Nữ</option>
-                        </select>
-                    </div>
-
-                    <div className="admin-field admin-field--full">
-                        <label>Hạng thành viên</label>
-                        <select
-                            className="admin-select"
-                            value={form.MaHangThanhVien}
-                            onChange={(e) => setField('MaHangThanhVien', e.target.value)}
-                        >
-                            <option value="">-- Chọn hạng --</option>
-                            {hangOptions.map((h) => (
-                                <option key={h.MaHangThanhVien} value={h.MaHangThanhVien}>
-                                    {h.TenHang}
-                                </option>
-                            ))}
                         </select>
                     </div>
                 </div>
