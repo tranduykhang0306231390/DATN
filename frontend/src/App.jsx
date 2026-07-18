@@ -1,4 +1,8 @@
-import { lazy, Suspense } from "react";
+import {
+    lazy,
+    Suspense,
+} from "react";
+
 import {
     BrowserRouter,
     Navigate,
@@ -7,84 +11,202 @@ import {
     useLocation,
 } from "react-router-dom";
 
-// ================= PUBLIC PAGES =================
-const Home = lazy(() => import("./pages/Home"));
-const LoginMember = lazy(() => import("./pages/auth/LoginMember"));
-const LoginStaff = lazy(() => import("./pages/auth/LoginStaff"));
-const Register = lazy(() => import("./pages/auth/Register"));
-const ForgotPassword = lazy(() => import("./pages/auth/ForgotPassword"));
-const ResetPassword = lazy(() => import("./pages/auth/ResetPassword"));
-const NotFound = lazy(() => import("./pages/NotFound"));
-// ================= MEMBER =================
-const MemberLayout = lazy(() => import("./layouts/MemberLayout"));
-const MemberRank = lazy(() => import("./pages/member/MemberRank"));
+/*
+|--------------------------------------------------------------------------
+| Protected routes
+|--------------------------------------------------------------------------
+*/
 
-// ================= STAFF =================
-const StaffLayout = lazy(() => import("./layouts/StaffLayout"));
-const StaffDashboard = lazy(() => import("./pages/staff/StaffDashboard"));
-const TaoHoaDon = lazy(() => import("./pages/staff/TaoHoaDon"));
-const QuanLyHoaDon = lazy(() => import("./pages/staff/QuanLyHoaDon"));
-
-// ================= ADMIN =================
-<<<<<<< HEAD
-const AdminLayout = lazy(() => import("./layouts/AdminLayout"));
-const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
-const QuanLyUuDai = lazy(() => import("./pages/admin/QuanLyUuDai"));
-const QuanLyLoaiVe = lazy(() => import("./pages/admin/QuanLyLoaiVe"));
-const QuanLyQuyTac = lazy(() => import("./pages/admin/QuanLyQuyTac"));
-const QuanLyHangThanhVien = lazy(() => import("./pages/admin/QuanLyHangThanhVien"));
-const QuanLyNhanVien = lazy(() => import("./pages/admin/QuanLyNhanVien"));
-const QuanLyKhachHang = lazy(() => import("./pages/admin/QuanLyKhachHang"));
-const LichSuQuyTac = lazy(() => import("./pages/admin/LichSuQuyTac"));
-const LichSuHang = lazy(() => import("./pages/admin/LichSuHang"));
-const LichSuDiem = lazy(() => import("./pages/admin/LichSuDiem"));
-const QuanLyThongBao = lazy(() => import("./pages/admin/QuanLyThongBao"));
-const QuanLyPhanHoi = lazy(() => import("./pages/admin/QuanLyPhanHoi"));
-const ThongKe = lazy(() => import("./pages/admin/ThongKe"));
-const QuanLyHoaDonAdmin = lazy(() => import("./pages/admin/QuanLyHoaDon"));
-const CauHinhWebsite = lazy(() => import("./pages/admin/CauHinhWebsite"));
-=======
-import AdminLayout from './layouts/AdminLayout';
-import AdminDashboard from "./pages/admin/AdminDashboard";
-import QuanLyUuDai from './pages/admin/QuanLyUuDai';
-import QuanLyLoaiVe from './pages/admin/QuanLyLoaiVe';
-import QuanLyQuyTac from './pages/admin/QuanLyQuyTac';
-import QuanLyHangThanhVien from './pages/admin/QuanLyHangThanhVien';
-import QuanLyNhanVien from './pages/admin/QuanLyNhanVien';
-import QuanLyKhachHang from './pages/admin/QuanLyKhachHang';
-import LichSuQuyTac from './pages/admin/LichSuQuyTac';
-import LichSuHang from './pages/admin/LichSuHang';
-import LichSuDiem from './pages/admin/LichSuDiem';
-import QuanLyThongBao from './pages/admin/QuanLyThongBao';
-import QuanLyPhanHoi from './pages/admin/QuanLyPhanHoi';
-import ThongKe from "./pages/admin/ThongKe";
-import QuanLyHoaDonAdmin from "./pages/admin/QuanLyHoaDon";
-import CauHinhWebsite from "./pages/admin/CauHinhWebsite";
-import QuanLyBanner from "./pages/admin/QuanLyBanner";
-
-
-
->>>>>>> origin/KhoiNguyen_QuanLyBanner
-
-// ================= PROTECTED ROUTES =================
 import {
-    MemberRoute,
-    StaffRoute,
     AdminRoute,
     GuestRoute,
+    MemberRoute,
+    StaffRoute,
 } from "./routes/ProtectedRoute";
-const PublicLayout = lazy(() => import("./layouts/PublicLayout"));
+
+/*
+|--------------------------------------------------------------------------
+| Public pages
+|--------------------------------------------------------------------------
+*/
+
+const PublicLayout = lazy(
+    () => import("./layouts/PublicLayout")
+);
+
+const Home = lazy(
+    () => import("./pages/Home")
+);
+
+const LoginMember = lazy(
+    () => import("./pages/auth/LoginMember")
+);
+
+const LoginStaff = lazy(
+    () => import("./pages/auth/LoginStaff")
+);
+
+const Register = lazy(
+    () => import("./pages/auth/Register")
+);
+
+const ForgotPassword = lazy(
+    () => import("./pages/auth/ForgotPassword")
+);
+
+const ResetPassword = lazy(
+    () => import("./pages/auth/ResetPassword")
+);
+
+const NotFound = lazy(
+    () => import("./pages/NotFound")
+);
+
+/*
+|--------------------------------------------------------------------------
+| Member
+|--------------------------------------------------------------------------
+*/
+
+const MemberLayout = lazy(
+    () => import("./layouts/MemberLayout")
+);
+
+const MemberRank = lazy(
+    () => import("./pages/member/MemberRank")
+);
+
+/*
+|--------------------------------------------------------------------------
+| Staff
+|--------------------------------------------------------------------------
+*/
+
+const StaffLayout = lazy(
+    () => import("./layouts/StaffLayout")
+);
+
+const StaffDashboard = lazy(
+    () => import("./pages/staff/StaffDashboard")
+);
+
+const TaoHoaDon = lazy(
+    () => import("./pages/staff/TaoHoaDon")
+);
+
+const QuanLyHoaDon = lazy(
+    () => import("./pages/staff/QuanLyHoaDon")
+);
+
+/*
+|--------------------------------------------------------------------------
+| Admin
+|--------------------------------------------------------------------------
+*/
+
+const AdminLayout = lazy(
+    () => import("./layouts/AdminLayout")
+);
+
+const AdminDashboard = lazy(
+    () => import("./pages/admin/AdminDashboard")
+);
+
+const QuanLyUuDai = lazy(
+    () => import("./pages/admin/QuanLyUuDai")
+);
+
+const QuanLyLoaiVe = lazy(
+    () => import("./pages/admin/QuanLyLoaiVe")
+);
+
+const QuanLyQuyTac = lazy(
+    () => import("./pages/admin/QuanLyQuyTac")
+);
+
+const QuanLyHangThanhVien = lazy(
+    () => import("./pages/admin/QuanLyHangThanhVien")
+);
+
+const QuanLyNhanVien = lazy(
+    () => import("./pages/admin/QuanLyNhanVien")
+);
+
+const QuanLyKhachHang = lazy(
+    () => import("./pages/admin/QuanLyKhachHang")
+);
+
+const LichSuQuyTac = lazy(
+    () => import("./pages/admin/LichSuQuyTac")
+);
+
+const LichSuHang = lazy(
+    () => import("./pages/admin/LichSuHang")
+);
+
+const LichSuDiem = lazy(
+    () => import("./pages/admin/LichSuDiem")
+);
+
+const QuanLyThongBao = lazy(
+    () => import("./pages/admin/QuanLyThongBao")
+);
+
+const QuanLyPhanHoi = lazy(
+    () => import("./pages/admin/QuanLyPhanHoi")
+);
+
+const ThongKe = lazy(
+    () => import("./pages/admin/ThongKe")
+);
+
+const QuanLyHoaDonAdmin = lazy(
+    () => import("./pages/admin/QuanLyHoaDon")
+);
+
+const CauHinhWebsite = lazy(
+    () => import("./pages/admin/CauHinhWebsite")
+);
+
+const QuanLyBanner = lazy(
+    () => import("./pages/admin/QuanLyBanner")
+);
+
+/*
+|--------------------------------------------------------------------------
+| Loading fallback
+|--------------------------------------------------------------------------
+*/
 
 const routeFallback = (
-    <div role="status" aria-live="polite" style={{ padding: "2rem", textAlign: "center" }}>
+    <div
+        role="status"
+        aria-live="polite"
+        style={{
+            padding: "2rem",
+            textAlign: "center",
+        }}
+    >
         Đang tải trang…
     </div>
 );
 
+/*
+|--------------------------------------------------------------------------
+| Redirect các đường dẫn Member cũ
+|--------------------------------------------------------------------------
+*/
+
 function MemberLegacyRedirect({ to }) {
     const location = useLocation();
 
-    return <Navigate to={to} replace state={location.state} />;
+    return (
+        <Navigate
+            to={to}
+            replace
+            state={location.state}
+        />
+    );
 }
 
 function App() {
@@ -92,213 +214,309 @@ function App() {
         <BrowserRouter>
             <Suspense fallback={routeFallback}>
                 <Routes>
+                    {/*
+                    |--------------------------------------------------------------------------
+                    | Public routes
+                    |--------------------------------------------------------------------------
+                    */}
 
-                {/* ---------------- PUBLIC ROUTES ---------------- */}
-                <Route element={<PublicLayout />}>
+                    <Route element={<PublicLayout />}>
+                        <Route
+                            index
+                            element={<Home />}
+                        />
+                    </Route>
 
-                    <Route
-                        path="/"
-                        element={<Home />}
-                    />
-
-                    <Route path="*" element={<NotFound />} />
-
-                </Route>
-
-                <Route path="/login" element={<GuestRoute><LoginMember /></GuestRoute>} />
-                <Route path="/member/login" element={<GuestRoute><LoginMember /></GuestRoute>} />
-                <Route path="/register" element={<GuestRoute><Register /></GuestRoute>} />
-                <Route path="/staff/login" element={<GuestRoute><LoginStaff /></GuestRoute>} />
-                <Route
-                    path="/forgot-password"
-                    element={<GuestRoute><ForgotPassword /></GuestRoute>}
-                />
-
-                <Route
-                    path="/reset-password"
-                    element={<GuestRoute><ResetPassword /></GuestRoute>}
-                />
-                {/* ---------------- MEMBER ROUTES ---------------- */}
-                <Route
-                    path="/member"
-                    element={
-                        <MemberRoute>
-                            <MemberLayout />
-                        </MemberRoute>
-                    }
-                >
-                    <Route index element={<MemberLegacyRedirect to="/member/rank" />} />
-                    <Route path="home" element={<MemberLegacyRedirect to="/member/rank" />} />
-                    <Route path="rank" element={<MemberRank />} />
-                    <Route
-                        path="ticket"
-                        element={<MemberLegacyRedirect to="/member/rank?tab=tickets" />}
-                    />
-                    <Route
-                        path="voucher"
-                        element={<MemberLegacyRedirect to="/member/rank?tab=vouchers" />}
-                    />
-                    <Route
-                        path="invoice"
-                        element={<MemberLegacyRedirect to="/member/rank?tab=transactions" />}
-                    />
-                </Route>
-
-                {/* ---------------- STAFF ROUTES ---------------- */}
-                <Route
-                    element={
-                        <StaffRoute>
-                            <StaffLayout />
-                        </StaffRoute>
-                    }
-                >
-                    <Route
-                        path="/staff/dashboard"
-                        element={<StaffDashboard />}
-                    />
+                    {/*
+                    |--------------------------------------------------------------------------
+                    | Authentication routes
+                    |--------------------------------------------------------------------------
+                    */}
 
                     <Route
-                        path="/staff/tao-hoa-don"
-                        element={<TaoHoaDon />}
-                    />
-
-                    <Route
-                        path="/staff/quan-ly-hoa-don"
+                        path="/login"
                         element={
-                            <QuanLyHoaDon />
+                            <GuestRoute>
+                                <LoginMember />
+                            </GuestRoute>
                         }
                     />
 
-                </Route>
-
-                {/* ---------------- ADMIN ROUTES ---------------- */}
-                <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
                     <Route
-                        path="/admin/dashboard"
+                        path="/member/login"
+                        element={
+                            <GuestRoute>
+                                <LoginMember />
+                            </GuestRoute>
+                        }
+                    />
+
+                    <Route
+                        path="/register"
+                        element={
+                            <GuestRoute>
+                                <Register />
+                            </GuestRoute>
+                        }
+                    />
+
+                    <Route
+                        path="/forgot-password"
+                        element={
+                            <GuestRoute>
+                                <ForgotPassword />
+                            </GuestRoute>
+                        }
+                    />
+
+                    <Route
+                        path="/reset-password"
+                        element={
+                            <GuestRoute>
+                                <ResetPassword />
+                            </GuestRoute>
+                        }
+                    />
+
+                    <Route
+                        path="/staff/login"
+                        element={
+                            <GuestRoute>
+                                <LoginStaff />
+                            </GuestRoute>
+                        }
+                    />
+
+                    {/*
+                    |--------------------------------------------------------------------------
+                    | Member routes
+                    |--------------------------------------------------------------------------
+                    */}
+
+                    <Route
+                        path="/member"
+                        element={
+                            <MemberRoute>
+                                <MemberLayout />
+                            </MemberRoute>
+                        }
+                    >
+                        <Route
+                            index
+                            element={
+                                <MemberLegacyRedirect
+                                    to="/member/rank"
+                                />
+                            }
+                        />
+
+                        <Route
+                            path="home"
+                            element={
+                                <MemberLegacyRedirect
+                                    to="/member/rank"
+                                />
+                            }
+                        />
+
+                        <Route
+                            path="rank"
+                            element={<MemberRank />}
+                        />
+
+                        <Route
+                            path="ticket"
+                            element={
+                                <MemberLegacyRedirect
+                                    to="/member/rank?tab=tickets"
+                                />
+                            }
+                        />
+
+                        <Route
+                            path="voucher"
+                            element={
+                                <MemberLegacyRedirect
+                                    to="/member/rank?tab=vouchers"
+                                />
+                            }
+                        />
+
+                        <Route
+                            path="invoice"
+                            element={
+                                <MemberLegacyRedirect
+                                    to="/member/rank?tab=transactions"
+                                />
+                            }
+                        />
+                    </Route>
+
+                    {/*
+                    |--------------------------------------------------------------------------
+                    | Staff routes
+                    |--------------------------------------------------------------------------
+                    */}
+
+                    <Route
+                        path="/staff"
+                        element={
+                            <StaffRoute>
+                                <StaffLayout />
+                            </StaffRoute>
+                        }
+                    >
+                        <Route
+                            index
+                            element={
+                                <Navigate
+                                    to="dashboard"
+                                    replace
+                                />
+                            }
+                        />
+
+                        <Route
+                            path="dashboard"
+                            element={<StaffDashboard />}
+                        />
+
+                        <Route
+                            path="tao-hoa-don"
+                            element={<TaoHoaDon />}
+                        />
+
+                        <Route
+                            path="quan-ly-hoa-don"
+                            element={<QuanLyHoaDon />}
+                        />
+                    </Route>
+
+                    {/*
+                    |--------------------------------------------------------------------------
+                    | Admin routes
+                    |--------------------------------------------------------------------------
+                    |
+                    | AdminRoute chỉ cần bọc AdminLayout một lần.
+                    | Toàn bộ route con đều được bảo vệ thông qua layout cha.
+                    |
+                    */}
+
+                    <Route
+                        path="/admin"
                         element={
                             <AdminRoute>
-                                <AdminDashboard />
+                                <AdminLayout />
                             </AdminRoute>
                         }
-                    />
-                    <Route
-                        path="/admin/uu-dai"
-                        element={
-                            <AdminRoute>
-                                <QuanLyUuDai />
-                            </AdminRoute>
-                        }
-                    />
-                    <Route
-                        path="/admin/loai-ve"
-                        element={
-                            <AdminRoute>
-                                <QuanLyLoaiVe />
-                            </AdminRoute>
-                        }
-                    />
-                    <Route
-                        path="/admin/quy-tac"
-                        element={
-                            <AdminRoute>
-                                <QuanLyQuyTac />
-                            </AdminRoute>
-                        }
-                    />
-                    <Route
-                        path="/admin/hang-thanh-vien"
-                        element={
-                            <AdminRoute>
+                    >
+                        <Route
+                            index
+                            element={
+                                <Navigate
+                                    to="dashboard"
+                                    replace
+                                />
+                            }
+                        />
+
+                        <Route
+                            path="dashboard"
+                            element={<AdminDashboard />}
+                        />
+
+                        <Route
+                            path="uu-dai"
+                            element={<QuanLyUuDai />}
+                        />
+
+                        <Route
+                            path="loai-ve"
+                            element={<QuanLyLoaiVe />}
+                        />
+
+                        <Route
+                            path="quy-tac"
+                            element={<QuanLyQuyTac />}
+                        />
+
+                        <Route
+                            path="hang-thanh-vien"
+                            element={
                                 <QuanLyHangThanhVien />
-                            </AdminRoute>
-                        }
-                    />
-                    <Route
-                        path="/admin/nhan-vien"
-                        element={
-                            <AdminRoute>
-                                <QuanLyNhanVien />
-                            </AdminRoute>
-                        }
-                    />
-                    <Route
-                        path="/admin/khach-hang"
-                        element={
-                            <AdminRoute>
-                                <QuanLyKhachHang />
-                            </AdminRoute>
-                        }
-                    />
-                    <Route
-                        path="/admin/lich-su-quy-tac"
-                        element={
-                            <AdminRoute>
-                                <LichSuQuyTac />
-                            </AdminRoute>
-                        }
-                    />
-                    <Route
-                        path="/admin/lich-su-hang"
-                        element={
-                            <AdminRoute>
-                                <LichSuHang />
-                            </AdminRoute>
-                        }
-                    />
-                    <Route
-                        path="/admin/lich-su-diem"
-                        element={
-                            <AdminRoute>
-                                <LichSuDiem />
-                            </AdminRoute>
-                        }
-                    />
-                    <Route
-                        path="/admin/thong-bao"
-                        element={
-                            <AdminRoute>
-                                <QuanLyThongBao />
-                            </AdminRoute>
-                        }
-                    />
-                    <Route
-                        path="/admin/phan-hoi"
-                        element={
-                            <AdminRoute>
-                                <QuanLyPhanHoi />
-                            </AdminRoute>
-                        }
-                    />
-                    <Route
-                        path="/admin/thong-ke"
-                        element={
-                            <AdminRoute>
-                                <ThongKe />
-                            </AdminRoute>
-                        }
-                    />
-                    <Route
-                        path="quan-ly-hoa-don"
-                        element={
-                            <AdminRoute>
-                                <QuanLyHoaDonAdmin />
-                            </AdminRoute>
-                        }
-                    />
-                    <Route
-                        path="cau-hinh-website"
-                        element={
-                            <AdminRoute>
-                                <CauHinhWebsite />
-                            </AdminRoute>
-                        }
-                    />
-                    <Route path="banner" element={<QuanLyBanner />} />
-                    
+                            }
+                        />
 
+                        <Route
+                            path="nhan-vien"
+                            element={<QuanLyNhanVien />}
+                        />
 
+                        <Route
+                            path="khach-hang"
+                            element={<QuanLyKhachHang />}
+                        />
 
-                </Route>
+                        <Route
+                            path="lich-su-quy-tac"
+                            element={<LichSuQuyTac />}
+                        />
+
+                        <Route
+                            path="lich-su-hang"
+                            element={<LichSuHang />}
+                        />
+
+                        <Route
+                            path="lich-su-diem"
+                            element={<LichSuDiem />}
+                        />
+
+                        <Route
+                            path="thong-bao"
+                            element={<QuanLyThongBao />}
+                        />
+
+                        <Route
+                            path="phan-hoi"
+                            element={<QuanLyPhanHoi />}
+                        />
+
+                        <Route
+                            path="thong-ke"
+                            element={<ThongKe />}
+                        />
+
+                        <Route
+                            path="quan-ly-hoa-don"
+                            element={<QuanLyHoaDonAdmin />}
+                        />
+
+                        <Route
+                            path="cau-hinh-website"
+                            element={<CauHinhWebsite />}
+                        />
+
+                        {/*
+                         * Quản lý banner chỉ nằm trong Admin.
+                         * Không thêm banner vào trang Home.
+                         */}
+                        <Route
+                            path="banner"
+                            element={<QuanLyBanner />}
+                        />
+                    </Route>
+
+                    {/*
+                    |--------------------------------------------------------------------------
+                    | Not found
+                    |--------------------------------------------------------------------------
+                    */}
+
+                    <Route
+                        path="*"
+                        element={<NotFound />}
+                    />
                 </Routes>
             </Suspense>
         </BrowserRouter>

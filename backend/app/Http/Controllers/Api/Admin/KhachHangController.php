@@ -1,11 +1,9 @@
 <?php
-// app/Http/Controllers/Api/Admin/KhachHangController.php
 
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\KhachHang;
-use App\Services\SequentialCodeService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -13,281 +11,526 @@ use Illuminate\Validation\Rule;
 
 class KhachHangController extends Controller
 {
-    public function __construct(
-        private SequentialCodeService $codes
-    ) {}
-
     /**
-     * Danh sách hạng để chọn khi sửa khách hàng.
-     * Đăng ký route này TRƯỚC route /khach-hang/{ma}.
+     * Danh sách hạng thành viên phục vụ bộ lọc và hiển thị.
+     *
+     * Endpoint này không dùng để thay đổi hạng khách hàng.
+     * Hạng thành viên phải được hệ thống tự động nâng theo nghiệp vụ.
      */
     public function tuyChon()
     {
-        $hang = DB::table('hangthanhvien')
-            ->select('MaHangThanhVien', 'TenHang')
+        $hangThanhVien = DB::table('hangthanhvien')
+            ->select([
+                'MaHangThanhVien',
+                'TenHang',
+            ])
             ->orderBy('ThuTuHang')
+            ->orderBy('DiemToiThieu')
             ->get();
 
         return response()->json([
             'success' => true,
-            'data'    => ['hangThanhVien' => $hang],
-        ]);
-    }
-
-    /**
-     * Danh sách khách hàng (tìm + lọc hạng/trạng thái + phân trang).
-     * params: search, hang, trang_thai, per_page, page
-     */
-    public function index(Request $request)
-    {
-        $query = KhachHang::with('hangThanhVien');
-
-        if ($kw = trim((string) $request->query('search'))) {
-            $query->where(function ($sub) use ($kw) {
-                $sub->where('HoTen', 'like', "%{$kw}%")
-                    ->orWhere('SoDienThoai', 'like', "%{$kw}%")
-                    ->orWhere('Email', 'like', "%{$kw}%")
-                    ->orWhere('MaKhachHang', 'like', "%{$kw}%");
-            });
-        }
-        if ($hang = $request->query('hang')) {
-            $query->where('MaHangThanhVien', $hang);
-        }
-        if ($tt = $request->query('trang_thai')) {
-            $query->where('TrangThai', $tt);
-        }
-
-        $query->orderBy('MaKhachHang', 'desc');
-
-        $perPage   = max(1, min(100, (int) $request->query('per_page', 10)));
-        $paginator = $query->paginate($perPage);
-
-        $paginator->getCollection()->transform(fn ($kh) => $kh->makeHidden('MatKhau'));
-
-        return response()->json([
-            'success'    => true,
-            'data'       => $paginator->items(),
-            'pagination' => [
-                'current_page' => $paginator->currentPage(),
-                'last_page'    => $paginator->lastPage(),
-                'per_page'     => $paginator->perPage(),
-                'total'        => $paginator->total(),
+            'data' => [
+                'hangThanhVien' => $hangThanhVien,
             ],
         ]);
     }
 
-    public function show(string $ma)
-    {
-        $kh = KhachHang::with('hangThanhVien')->find($ma);
-
-        if (!$kh) {
-            return response()->json(['success' => false, 'message' => 'Không tìm thấy khách hàng'], 404);
-        }
-
-        return response()->json(['success' => true, 'data' => $kh->makeHidden('MatKhau')]);
-    }
-
     /**
-     * Cập nhật thông tin khách hàng.
-     * Hạng thành viên KHÔNG được chỉnh sửa ở đây vì được hệ thống tự nâng hạng.
+     * Danh sách khách hàng.
+     *
+     * Query params:
+     * - search
+     * - hang
+     * - trang_thai
+     * - per_page
+     * - page
      */
-    public function update(Request $request, string $ma)
+    public function index(Request $request)
     {
-        $kh = KhachHang::find($ma);
+        $query = KhachHang::query()
+            ->with('hangThanhVien');
 
-        if (!$kh) {
-            return response()->json(['success' => false, 'message' => 'Không tìm thấy khách hàng'], 404);
+        $keyword = trim(
+            (string) $request->query('search', '')
+        );
+
+        if ($keyword !== '') {
+            $query->where(function ($subQuery) use ($keyword) {
+                $subQuery
+                    ->where('HoTen', 'like', "%{$keyword}%")
+                    ->orWhere(
+                        'SoDienThoai',
+                        'like',
+                        "%{$keyword}%"
+                    )
+                    ->orWhere(
+                        'Email',
+                        'like',
+                        "%{$keyword}%"
+                    )
+                    ->orWhere(
+                        'MaKhachHang',
+                        'like',
+                        "%{$keyword}%"
+                    );
+            });
         }
 
-        $data = $request->validate([
-<<<<<<< HEAD
-            'HoTen'           => ['required', 'string', 'max:100'],
-            'NgaySinh'        => ['nullable', 'date', 'before:today'],
-            'GioiTinh'        => ['nullable', Rule::in(['Nam', 'Nu'])],
-            'Email'           => ['required', 'email', 'max:100', Rule::unique('khachhang', 'Email')->ignore($ma, 'MaKhachHang')],
-            'SoDienThoai'     => ['required', 'regex:/^0[0-9]{9}$/', Rule::unique('khachhang', 'SoDienThoai')->ignore($ma, 'MaKhachHang')],
-            'MaHangThanhVien' => ['required', 'exists:hangthanhvien,MaHangThanhVien'],
-            'LyDoThayDoi'     => ['nullable', 'string', 'max:255'],
-        ]);
+        $maHang = trim(
+            (string) $request->query('hang', '')
+        );
 
-        $newHang = $data['MaHangThanhVien'];
-
-        DB::beginTransaction();
-        try {
-            $kh = KhachHang::where('MaKhachHang', $ma)->lockForUpdate()->first();
-            if (!$kh) {
-                DB::rollBack();
-                return response()->json(['success' => false, 'message' => 'Không tìm thấy khách hàng'], 404);
-            }
-
-            $oldHang = $kh->MaHangThanhVien;
-            $kh->HoTen           = trim($data['HoTen']);
-            $kh->NgaySinh        = $data['NgaySinh'] ?: null;
-            $kh->GioiTinh        = $data['GioiTinh'] ?: null;
-            $kh->Email           = strtolower(trim($data['Email']));
-            $kh->SoDienThoai     = trim($data['SoDienThoai']);
-            $kh->MaHangThanhVien = $newHang;
-            $kh->save();
-
-            // Ghi lịch sử nếu hạng thực sự thay đổi
-            if ($newHang !== $oldHang) {
-                $tongChiTieu = (float) DB::table('hoadon')
-                    ->where('MaKhachHang', $ma)
-                    ->where('TrangThai', 'DaThanhToan')
-                    ->sum('TongTien');
-
-                DB::table('lichsuhangthanhvien')->insert([
-                    'MaLichSuHang'           => $this->codes->next(
-                        'lichsuhangthanhvien',
-                        'MaLichSuHang',
-                        'LSH'
-                    ),
-                    'MaKhachHang'            => $ma,
-                    'MaHangThanhVienCu'      => $oldHang,
-                    'MaHangThanhVienMoi'     => $newHang,
-                    'ThoiGianThayDoi'        => now(),
-                    'LyDoThayDoi'            => $data['LyDoThayDoi'] ?? 'Điều chỉnh thủ công bởi quản trị viên',
-                    'DiemTaiThoiDiemTH'      => (string) $kh->TongDiem,
-                    'TongChiTieuTaiThoiDiem' => $tongChiTieu,
-                ]);
-            }
-
-            DB::commit();
-        } catch (\Throwable $e) {
-            DB::rollBack();
-            Log::error('Không thể cập nhật khách hàng', [
-                'customer_id' => $ma,
-                'staff_id' => auth('nhanvien')->id(),
-                'exception' => $e,
-            ]);
-            return response()->json([
-                'success' => false,
-                'message' => 'Không thể cập nhật khách hàng lúc này. Vui lòng thử lại.',
-            ], 500);
+        if ($maHang !== '') {
+            $query->where(
+                'MaHangThanhVien',
+                $maHang
+            );
         }
-=======
-            'HoTen'       => ['required', 'string', 'max:100'],
-            'NgaySinh'    => ['nullable', 'date'],
-            'GioiTinh'    => ['nullable', Rule::in(['Nam', 'Nu'])],
-            'Email'       => ['nullable', 'email', 'max:100', Rule::unique('khachhang', 'Email')->ignore($ma, 'MaKhachHang')],
-            'SoDienThoai' => ['required', 'string', 'max:15', Rule::unique('khachhang', 'SoDienThoai')->ignore($ma, 'MaKhachHang')],
-        ]);
 
-        $kh->HoTen       = $data['HoTen'];
-        $kh->NgaySinh    = $data['NgaySinh'] ?: null;
-        $kh->GioiTinh    = $data['GioiTinh'] ?: null;
-        $kh->Email       = $data['Email'] ?: null;
-        $kh->SoDienThoai = $data['SoDienThoai'];
-        $kh->save();
->>>>>>> origin/KhoiNguyen_QuanLyBanner
+        $trangThai = trim(
+            (string) $request->query('trang_thai', '')
+        );
+
+        if ($trangThai !== '') {
+            $query->where(
+                'TrangThai',
+                $trangThai
+            );
+        }
+
+        $query->orderByDesc('MaKhachHang');
+
+        $perPage = max(
+            1,
+            min(
+                100,
+                (int) $request->query('per_page', 10)
+            )
+        );
+
+        $paginator = $query->paginate($perPage);
+
+        $paginator
+            ->getCollection()
+            ->transform(
+                fn (KhachHang $khachHang) =>
+                    $khachHang->makeHidden('MatKhau')
+            );
 
         return response()->json([
             'success' => true,
-            'message' => 'Cập nhật khách hàng thành công',
-            'data'    => $kh->makeHidden('MatKhau'),
+            'data' => $paginator->items(),
+            'pagination' => [
+                'current_page' => $paginator->currentPage(),
+                'last_page' => $paginator->lastPage(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total(),
+            ],
         ]);
     }
 
     /**
-     * Khóa / mở tài khoản khách hàng (HoatDong <-> TamKhoa).
+     * Xem chi tiết khách hàng.
+     */
+    public function show(string $ma)
+    {
+        $khachHang = KhachHang::query()
+            ->with('hangThanhVien')
+            ->find($ma);
+
+        if (!$khachHang) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Không tìm thấy khách hàng.',
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $khachHang->makeHidden('MatKhau'),
+        ]);
+    }
+
+    /**
+     * Cập nhật thông tin cá nhân khách hàng.
+     *
+     * Không cho phép Admin thay đổi hạng thành viên tại endpoint này.
+     * Hạng thành viên phải được hệ thống tự động nâng theo tổng điểm,
+     * tổng chi tiêu và nghiệp vụ đang áp dụng.
+     */
+    public function update(
+        Request $request,
+        string $ma
+    ) {
+        $khachHangTonTai = KhachHang::query()
+            ->where('MaKhachHang', $ma)
+            ->exists();
+
+        if (!$khachHangTonTai) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Không tìm thấy khách hàng.',
+            ], 404);
+        }
+
+        $data = $request->validate(
+            [
+                'HoTen' => [
+                    'required',
+                    'string',
+                    'max:100',
+                ],
+
+                'NgaySinh' => [
+                    'nullable',
+                    'date',
+                    'before_or_equal:today',
+                ],
+
+                'GioiTinh' => [
+                    'nullable',
+                    Rule::in([
+                        'Nam',
+                        'Nu',
+                    ]),
+                ],
+
+                'Email' => [
+                    'required',
+                    'email',
+                    'max:100',
+                    Rule::unique(
+                        'khachhang',
+                        'Email'
+                    )->ignore(
+                        $ma,
+                        'MaKhachHang'
+                    ),
+                ],
+
+                'SoDienThoai' => [
+                    'required',
+                    'regex:/^0[0-9]{9}$/',
+                    Rule::unique(
+                        'khachhang',
+                        'SoDienThoai'
+                    )->ignore(
+                        $ma,
+                        'MaKhachHang'
+                    ),
+                ],
+
+                /*
+                 * Không cho phép gửi các trường thay đổi hạng thủ công.
+                 */
+                'MaHangThanhVien' => [
+                    'prohibited',
+                ],
+
+                'LyDoThayDoi' => [
+                    'prohibited',
+                ],
+            ],
+            [
+                'HoTen.required' =>
+                    'Vui lòng nhập họ và tên khách hàng.',
+
+                'NgaySinh.before_or_equal' =>
+                    'Ngày sinh không được lớn hơn ngày hiện tại.',
+
+                'GioiTinh.in' =>
+                    'Giới tính không hợp lệ.',
+
+                'Email.required' =>
+                    'Vui lòng nhập email khách hàng.',
+
+                'Email.email' =>
+                    'Email không đúng định dạng.',
+
+                'Email.unique' =>
+                    'Email này đã được sử dụng.',
+
+                'SoDienThoai.required' =>
+                    'Vui lòng nhập số điện thoại khách hàng.',
+
+                'SoDienThoai.regex' =>
+                    'Số điện thoại phải gồm 10 chữ số và bắt đầu bằng số 0.',
+
+                'SoDienThoai.unique' =>
+                    'Số điện thoại này đã được sử dụng.',
+
+                'MaHangThanhVien.prohibited' =>
+                    'Không được chỉnh sửa hạng thành viên thủ công.',
+
+                'LyDoThayDoi.prohibited' =>
+                    'Không được tạo lịch sử thay đổi hạng thủ công.',
+            ]
+        );
+
+        try {
+            $khachHang = DB::transaction(
+                function () use ($data, $ma) {
+                    $khachHang = KhachHang::query()
+                        ->where('MaKhachHang', $ma)
+                        ->lockForUpdate()
+                        ->first();
+
+                    if (!$khachHang) {
+                        return null;
+                    }
+
+                    $khachHang->HoTen = trim(
+                        $data['HoTen']
+                    );
+
+                    $khachHang->NgaySinh =
+                        $data['NgaySinh'] ?? null;
+
+                    $khachHang->GioiTinh =
+                        $data['GioiTinh'] ?? null;
+
+                    $khachHang->Email = strtolower(
+                        trim($data['Email'])
+                    );
+
+                    $khachHang->SoDienThoai = trim(
+                        $data['SoDienThoai']
+                    );
+
+                    /*
+                     * Không gán MaHangThanhVien tại đây.
+                     * Giá trị hạng hiện tại được giữ nguyên.
+                     */
+                    $khachHang->save();
+
+                    return $khachHang;
+                }
+            );
+
+            if (!$khachHang) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Không tìm thấy khách hàng.',
+                ], 404);
+            }
+
+            $khachHang->load('hangThanhVien');
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Cập nhật khách hàng thành công.',
+                'data' => $khachHang->makeHidden('MatKhau'),
+            ]);
+        } catch (\Throwable $exception) {
+            Log::error(
+                'Không thể cập nhật khách hàng',
+                [
+                    'customer_id' => $ma,
+                    'staff_id' => auth('nhanvien')->id(),
+                    'exception' => $exception,
+                ]
+            );
+
+            return response()->json([
+                'success' => false,
+                'message' =>
+                    'Không thể cập nhật khách hàng lúc này. Vui lòng thử lại.',
+            ], 500);
+        }
+    }
+
+    /**
+     * Khóa hoặc mở tài khoản khách hàng.
+     *
+     * HoatDong <-> TamKhoa
      */
     public function toggleTrangThai(string $ma)
     {
-        $kh = KhachHang::find($ma);
+        $khachHang = DB::transaction(
+            function () use ($ma) {
+                $khachHang = KhachHang::query()
+                    ->where('MaKhachHang', $ma)
+                    ->lockForUpdate()
+                    ->first();
 
-        if (!$kh) {
-            return response()->json(['success' => false, 'message' => 'Không tìm thấy khách hàng'], 404);
-        }
+                if (!$khachHang) {
+                    return null;
+                }
 
-        $kh = DB::transaction(function () use ($ma) {
-            $kh = KhachHang::where('MaKhachHang', $ma)->lockForUpdate()->first();
-            if (!$kh) return null;
+                $khachHang->TrangThai =
+                    $khachHang->TrangThai === 'HoatDong'
+                        ? 'TamKhoa'
+                        : 'HoatDong';
 
-            $kh->TrangThai = $kh->TrangThai === 'HoatDong' ? 'TamKhoa' : 'HoatDong';
-            $kh->save();
+                $khachHang->save();
 
-            return $kh;
-        });
+                return $khachHang;
+            }
+        );
 
-        if (!$kh) {
-            return response()->json(['success' => false, 'message' => 'Không tìm thấy khách hàng'], 404);
+        if (!$khachHang) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Không tìm thấy khách hàng.',
+            ], 404);
         }
 
         return response()->json([
             'success' => true,
-            'message' => $kh->TrangThai === 'HoatDong' ? 'Đã mở khóa tài khoản' : 'Đã khóa tài khoản',
-            'data'    => $kh->makeHidden('MatKhau'),
+            'message' =>
+                $khachHang->TrangThai === 'HoatDong'
+                    ? 'Đã mở khóa tài khoản.'
+                    : 'Đã khóa tài khoản.',
+            'data' => $khachHang->makeHidden('MatKhau'),
         ]);
     }
 
     /**
-     * Lịch sử thay đổi hạng thành viên (chỉ đọc).
+     * Lịch sử thay đổi hạng thành viên.
+     *
+     * Chỉ đọc. Việc ghi lịch sử được thực hiện bởi quy trình
+     * tự động nâng hạng của hệ thống.
      */
     public function lichSuHang(Request $request)
     {
         $query = DB::table('lichsuhangthanhvien as ls')
-            ->leftJoin('khachhang as kh', 'ls.MaKhachHang', '=', 'kh.MaKhachHang')
-            ->leftJoin('hangthanhvien as hc', 'ls.MaHangThanhVienCu', '=', 'hc.MaHangThanhVien')
-            ->leftJoin('hangthanhvien as hm', 'ls.MaHangThanhVienMoi', '=', 'hm.MaHangThanhVien')
-            ->select(
+            ->leftJoin(
+                'khachhang as kh',
+                'ls.MaKhachHang',
+                '=',
+                'kh.MaKhachHang'
+            )
+            ->leftJoin(
+                'hangthanhvien as hc',
+                'ls.MaHangThanhVienCu',
+                '=',
+                'hc.MaHangThanhVien'
+            )
+            ->leftJoin(
+                'hangthanhvien as hm',
+                'ls.MaHangThanhVienMoi',
+                '=',
+                'hm.MaHangThanhVien'
+            )
+            ->select([
                 'ls.*',
                 'kh.HoTen as TenKhachHang',
                 'hc.TenHang as TenHangCu',
-                'hm.TenHang as TenHangMoi'
-            );
+                'hm.TenHang as TenHangMoi',
+            ]);
 
-        if ($ma = trim((string) $request->query('ma_khach_hang'))) {
-            $query->where('ls.MaKhachHang', 'like', "%{$ma}%");
+        $maKhachHang = trim(
+            (string) $request->query(
+                'ma_khach_hang',
+                ''
+            )
+        );
+
+        if ($maKhachHang !== '') {
+            $query->where(
+                'ls.MaKhachHang',
+                'like',
+                "%{$maKhachHang}%"
+            );
         }
 
-        $query->orderBy('ls.MaLichSuHang', 'desc');
+        $query->orderByDesc('ls.MaLichSuHang');
 
-        $perPage   = max(1, min(100, (int) $request->query('per_page', 10)));
+        $perPage = max(
+            1,
+            min(
+                100,
+                (int) $request->query('per_page', 10)
+            )
+        );
+
         $paginator = $query->paginate($perPage);
 
         return response()->json([
-            'success'    => true,
-            'data'       => $paginator->items(),
+            'success' => true,
+            'data' => $paginator->items(),
             'pagination' => [
                 'current_page' => $paginator->currentPage(),
-                'last_page'    => $paginator->lastPage(),
-                'per_page'     => $paginator->perPage(),
-                'total'        => $paginator->total(),
+                'last_page' => $paginator->lastPage(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total(),
             ],
         ]);
     }
 
     /**
-     * Lịch sử giao dịch điểm (chỉ đọc).
+     * Lịch sử giao dịch điểm.
      */
     public function lichSuDiem(Request $request)
     {
         $query = DB::table('lichsugiaodichdiem as ls')
-            ->leftJoin('khachhang as kh', 'ls.MaKhachHang', '=', 'kh.MaKhachHang')
-            ->select('ls.*', 'kh.HoTen as TenKhachHang');
+            ->leftJoin(
+                'khachhang as kh',
+                'ls.MaKhachHang',
+                '=',
+                'kh.MaKhachHang'
+            )
+            ->select([
+                'ls.*',
+                'kh.HoTen as TenKhachHang',
+            ]);
 
-        if ($ma = trim((string) $request->query('ma_khach_hang'))) {
-            $query->where('ls.MaKhachHang', 'like', "%{$ma}%");
-        }
-        if ($loai = $request->query('loai_giao_dich')) {
-            $query->where('ls.LoaiGiaoDich', $loai);
+        $maKhachHang = trim(
+            (string) $request->query(
+                'ma_khach_hang',
+                ''
+            )
+        );
+
+        if ($maKhachHang !== '') {
+            $query->where(
+                'ls.MaKhachHang',
+                'like',
+                "%{$maKhachHang}%"
+            );
         }
 
+        $loaiGiaoDich = trim(
+            (string) $request->query(
+                'loai_giao_dich',
+                ''
+            )
+        );
+
+        if ($loaiGiaoDich !== '') {
+            $query->where(
+                'ls.LoaiGiaoDich',
+                $loaiGiaoDich
+            );
+        }
+
+        /*
+         * Sắp theo phần số của mã GDD thay vì chuỗi ký tự.
+         * Ví dụ GDD100 phải mới hơn GDD99.
+         */
         $query->orderByRaw(
             'CAST(SUBSTRING(ls.MaGiaoDichDiem, 4) AS UNSIGNED) DESC'
         );
 
-        $perPage   = max(1, min(100, (int) $request->query('per_page', 10)));
+        $perPage = max(
+            1,
+            min(
+                100,
+                (int) $request->query('per_page', 10)
+            )
+        );
+
         $paginator = $query->paginate($perPage);
 
         return response()->json([
-            'success'    => true,
-            'data'       => $paginator->items(),
+            'success' => true,
+            'data' => $paginator->items(),
             'pagination' => [
                 'current_page' => $paginator->currentPage(),
-                'last_page'    => $paginator->lastPage(),
-                'per_page'     => $paginator->perPage(),
-                'total'        => $paginator->total(),
+                'last_page' => $paginator->lastPage(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total(),
             ],
         ]);
     }

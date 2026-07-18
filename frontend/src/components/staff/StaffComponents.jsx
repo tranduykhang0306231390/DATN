@@ -1,140 +1,437 @@
 // src/components/staff/StaffComponents.jsx
-// Các component dùng chung cho trang staff
-<<<<<<< HEAD
+// Các component và helper dùng chung cho khu vực Staff.
+
 import { TRANG_THAI_CONFIG } from './staffUtils';
-=======
 
-// ─── Format helpers ──────────────────────────────────────────────────────────
-export const fmt = (n) =>
-    Number(n).toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
+/*
+|--------------------------------------------------------------------------
+| Re-export để tương thích với code cũ
+|--------------------------------------------------------------------------
+|
+| TRANG_THAI_CONFIG vẫn được quản lý tập trung trong staffUtils.js.
+| Những file đang import từ StaffComponents.jsx sẽ không bị lỗi.
+|
+*/
 
-export const fmtDate = (str) =>
-    str ? new Date(str).toLocaleString('vi-VN') : '—';
+export { TRANG_THAI_CONFIG };
 
-// ─── Hằng số dùng chung ──────────────────────────────────────────────────────
-export const TRANG_THAI_CONFIG = {
-    ChuaThanhToan: { badgeClass: 'badge badge-gold',    label: 'Đang phục vụ' },
-    DaThanhToan: { badgeClass: 'badge badge-success', label: 'Đã thanh toán' },
-    
-    DaHuy:       { badgeClass: 'badge badge-danger',  label: 'Đã hủy' },
+/*
+|--------------------------------------------------------------------------
+| Format helpers
+|--------------------------------------------------------------------------
+*/
+
+export const fmt = (value) => {
+    const number = Number(value);
+
+    if (!Number.isFinite(number)) {
+        return '0 ₫';
+    }
+
+    return number.toLocaleString('vi-VN', {
+        style: 'currency',
+        currency: 'VND',
+    });
 };
 
-export const BUOI_LABEL = { Trua: '🌤 Trưa', Toi: '🌙 Tối' };
-export const NGAY_LABEL = { NgayThuong: 'Ngày thường', CuoiTuan: 'Cuối tuần' };
-export const NHOM_LABEL = { GiamTien: 'Giảm tiền', PhanTram: 'Giảm %', TangMon: 'Tặng món' };
->>>>>>> origin/KhoiNguyen_QuanLyBanner
+export const fmtDate = (value) => {
+    if (!value) {
+        return '—';
+    }
 
-// ─── PageTitle ───────────────────────────────────────────────────────────────
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+        return '—';
+    }
+
+    return date.toLocaleString('vi-VN');
+};
+
+/*
+|--------------------------------------------------------------------------
+| Nhãn dùng chung
+|--------------------------------------------------------------------------
+*/
+
+export const BUOI_LABEL = {
+    Trua: '🌤 Trưa',
+    Toi: '🌙 Tối',
+};
+
+export const NGAY_LABEL = {
+    NgayThuong: 'Ngày thường',
+    CuoiTuan: 'Cuối tuần',
+};
+
+export const NHOM_LABEL = {
+    GiamTien: 'Giảm tiền',
+    PhanTram: 'Giảm %',
+    TangMon: 'Tặng món',
+};
+
+/*
+|--------------------------------------------------------------------------
+| PageTitle
+|--------------------------------------------------------------------------
+*/
+
 export function PageTitle({ children }) {
-    return <h2 className="staff-page-title">{children}</h2>;
+    return (
+        <h2 className="staff-page-title">
+            {children}
+        </h2>
+    );
 }
 
-// ─── StatCard ────────────────────────────────────────────────────────────────
-export function StatCard({ label, value, color, icon }) {
+/*
+|--------------------------------------------------------------------------
+| StatCard
+|--------------------------------------------------------------------------
+*/
+
+export function StatCard({
+    label,
+    value,
+    color,
+    icon,
+}) {
     return (
         <div className="stat-card">
-            <div className="stat-icon" style={{ background: color }}>{icon}</div>
+            <div
+                className="stat-icon"
+                style={{ background: color }}
+                aria-hidden="true"
+            >
+                {icon}
+            </div>
+
             <div>
-                <div className="stat-value">{value}</div>
-                <div className="stat-label">{label}</div>
+                <div className="stat-value">
+                    {value}
+                </div>
+
+                <div className="stat-label">
+                    {label}
+                </div>
             </div>
         </div>
     );
 }
 
-// ─── Table helpers ───────────────────────────────────────────────────────────
-export function Th({ children, align = 'left' }) {
-    return <th style={{ textAlign: align }}>{children}</th>;
+/*
+|--------------------------------------------------------------------------
+| Table helpers
+|--------------------------------------------------------------------------
+*/
+
+export function Th({
+    children,
+    align = 'left',
+}) {
+    return (
+        <th style={{ textAlign: align }}>
+            {children}
+        </th>
+    );
 }
 
-export function Td({ children, align = 'left', bold }) {
+export function Td({
+    children,
+    align = 'left',
+    bold = false,
+}) {
     return (
-        <td style={{ textAlign: align, fontWeight: bold ? 600 : 400 }}>
+        <td
+            style={{
+                textAlign: align,
+                fontWeight: bold ? 600 : 400,
+            }}
+        >
             {children}
         </td>
     );
 }
 
-// ─── TrangThaiBadge ──────────────────────────────────────────────────────────
+/*
+|--------------------------------------------------------------------------
+| Trạng thái
+|--------------------------------------------------------------------------
+*/
+
 export function TrangThaiBadge({ trangThai }) {
-    const cfg = TRANG_THAI_CONFIG[trangThai] || { badgeClass: 'badge', label: trangThai };
-    return <span className={cfg.badgeClass}>{cfg.label}</span>;
+    const config = TRANG_THAI_CONFIG[trangThai] ?? {
+        badgeClass: 'badge',
+        label: trangThai || 'Không xác định',
+    };
+
+    return (
+        <span className={config.badgeClass}>
+            {config.label}
+        </span>
+    );
 }
 
-// ─── Pagination ──────────────────────────────────────────────────────────────
-export function Pagination({ pagination, page, onPageChange }) {
-    if (!pagination || pagination.last_page <= 1) return null;
-    return (
-        <div className="pagination-row">
-            <button
-                className="page-btn"
-                disabled={page === 1}
-                onClick={() => onPageChange(page - 1)}
-            >‹ Trước</button>
+/*
+|--------------------------------------------------------------------------
+| Pagination
+|--------------------------------------------------------------------------
+|
+| itemLabel được thêm để component có thể dùng cho hóa đơn, nhân viên,
+| khách hàng, banner hoặc dữ liệu khác.
+|
+| Không truyền itemLabel thì vẫn giữ chữ "hóa đơn" để tương thích giao diện cũ.
+|
+*/
 
-            {Array.from({ length: pagination.last_page }, (_, i) => i + 1).map((p) => (
+export function Pagination({
+    pagination,
+    page,
+    onPageChange,
+    itemLabel = 'hóa đơn',
+}) {
+    if (
+        !pagination
+        || Number(pagination.last_page) <= 1
+    ) {
+        return null;
+    }
+
+    const currentPage = Number(
+        page || pagination.current_page || 1
+    );
+
+    const lastPage = Number(
+        pagination.last_page || 1
+    );
+
+    const total = Number(
+        pagination.total || 0
+    );
+
+    const handlePageChange = (targetPage) => {
+        const normalizedPage = Math.max(
+            1,
+            Math.min(lastPage, targetPage)
+        );
+
+        if (
+            normalizedPage === currentPage
+            || typeof onPageChange !== 'function'
+        ) {
+            return;
+        }
+
+        onPageChange(normalizedPage);
+    };
+
+    return (
+        <div
+            className="pagination-row"
+            aria-label="Phân trang"
+        >
+            <button
+                type="button"
+                className="page-btn"
+                disabled={currentPage <= 1}
+                onClick={() =>
+                    handlePageChange(currentPage - 1)
+                }
+            >
+                ‹ Trước
+            </button>
+
+            {Array.from(
+                { length: lastPage },
+                (_, index) => index + 1
+            ).map((pageNumber) => (
                 <button
-                    key={p}
-                    className={`page-btn${p === page ? ' active' : ''}`}
-                    onClick={() => onPageChange(p)}
-                >{p}</button>
+                    type="button"
+                    key={pageNumber}
+                    className={
+                        `page-btn${
+                            pageNumber === currentPage
+                                ? ' active'
+                                : ''
+                        }`
+                    }
+                    aria-current={
+                        pageNumber === currentPage
+                            ? 'page'
+                            : undefined
+                    }
+                    onClick={() =>
+                        handlePageChange(pageNumber)
+                    }
+                >
+                    {pageNumber}
+                </button>
             ))}
 
             <button
+                type="button"
                 className="page-btn"
-                disabled={page === pagination.last_page}
-                onClick={() => onPageChange(page + 1)}
-            >Sau ›</button>
+                disabled={currentPage >= lastPage}
+                onClick={() =>
+                    handlePageChange(currentPage + 1)
+                }
+            >
+                Sau ›
+            </button>
 
             <span className="page-info">
-                Trang {page}/{pagination.last_page} · {pagination.total} hóa đơn
+                Trang {currentPage}/{lastPage}
+                {' · '}
+                {total} {itemLabel}
             </span>
         </div>
     );
 }
 
-// ─── Modal ───────────────────────────────────────────────────────────────────
-export function Modal({ open, onClose, children }) {
-    if (!open) return null;
+/*
+|--------------------------------------------------------------------------
+| Modal
+|--------------------------------------------------------------------------
+*/
+
+export function Modal({
+    open,
+    onClose,
+    children,
+    ariaLabel = 'Hộp thoại',
+}) {
+    if (!open) {
+        return null;
+    }
+
+    const handleOverlayClick = () => {
+        if (typeof onClose === 'function') {
+            onClose();
+        }
+    };
+
     return (
-        <div className="modal-overlay" onClick={onClose}>
-            <div className="modal-box" onClick={(e) => e.stopPropagation()}>
+        <div
+            className="modal-overlay"
+            role="presentation"
+            onClick={handleOverlayClick}
+        >
+            <div
+                className="modal-box"
+                role="dialog"
+                aria-modal="true"
+                aria-label={ariaLabel}
+                onClick={(event) =>
+                    event.stopPropagation()
+                }
+            >
                 {children}
             </div>
         </div>
     );
 }
 
-// ─── InfoBlock (dùng trong modal chi tiết) ───────────────────────────────────
-export function InfoBlock({ title, children }) {
+/*
+|--------------------------------------------------------------------------
+| InfoBlock
+|--------------------------------------------------------------------------
+*/
+
+export function InfoBlock({
+    title,
+    children,
+}) {
     return (
         <div className="info-block">
-            <div className="info-block-title">{title}</div>
-            <div className="info-block-val">{children}</div>
+            <div className="info-block-title">
+                {title}
+            </div>
+
+            <div className="info-block-val">
+                {children}
+            </div>
         </div>
     );
 }
 
-// ─── SumRow (dòng tổng kết trong summary box) ────────────────────────────────
-export function SumRow({ label, value, color, bold, accent }) {
+/*
+|--------------------------------------------------------------------------
+| SumRow
+|--------------------------------------------------------------------------
+*/
+
+export function SumRow({
+    label,
+    value,
+    color,
+    bold = false,
+    accent = false,
+}) {
     return (
         <div className="sum-row">
-            <span style={{ color: '#6b7280' }}>{label}</span>
-            <span style={{
-                color:      accent ? '#b45309' : (color || '#111827'),
-                fontWeight: bold || accent ? 700 : 400,
-                fontSize:   accent ? 17 : 14,
-            }}>{value}</span>
+            <span
+                style={{
+                    color: '#6b7280',
+                }}
+            >
+                {label}
+            </span>
+
+            <span
+                style={{
+                    color: accent
+                        ? '#b45309'
+                        : (color || '#111827'),
+
+                    fontWeight:
+                        bold || accent
+                            ? 700
+                            : 400,
+
+                    fontSize:
+                        accent
+                            ? 17
+                            : 14,
+                }}
+            >
+                {value}
+            </span>
         </div>
     );
 }
 
-// ─── LoadingBox ──────────────────────────────────────────────────────────────
-export function LoadingBox({ text = 'Đang tải...' }) {
-    return <div className="loading-box">{text}</div>;
+/*
+|--------------------------------------------------------------------------
+| LoadingBox
+|--------------------------------------------------------------------------
+*/
+
+export function LoadingBox({
+    text = 'Đang tải...',
+}) {
+    return (
+        <div
+            className="loading-box"
+            role="status"
+            aria-live="polite"
+        >
+            {text}
+        </div>
+    );
 }
 
-// ─── EmptyBox ────────────────────────────────────────────────────────────────
-export function EmptyBox({ text = 'Không có dữ liệu' }) {
-    return <div className="empty-box">{text}</div>;
+/*
+|--------------------------------------------------------------------------
+| EmptyBox
+|--------------------------------------------------------------------------
+*/
+
+export function EmptyBox({
+    text = 'Không có dữ liệu',
+}) {
+    return (
+        <div className="empty-box">
+            {text}
+        </div>
+    );
 }

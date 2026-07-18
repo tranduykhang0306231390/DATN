@@ -1,202 +1,595 @@
 // src/layouts/AdminLayout.jsx
+
 import { useState } from "react";
-import { Outlet, useNavigate, useLocation } from "react-router-dom";
+import {
+    Outlet,
+    useLocation,
+    useNavigate,
+} from "react-router-dom";
 import Swal from "sweetalert2";
+
+import {
+    logoutSession,
+    updateStaffAccount,
+} from "../api/authApi";
+
 import { ADMIN_MENU } from "../components/admin/adminMenu";
-<<<<<<< HEAD
-import { logoutSession } from "../api/authApi";
+import Modal from "../components/admin/Modal";
+
+import "../assets/css/admin.css";
+
+/*
+|--------------------------------------------------------------------------
+| Local storage helpers
+|--------------------------------------------------------------------------
+*/
 
 const getStoredUser = () => {
     try {
-        return JSON.parse(localStorage.getItem("user") || "{}") || {};
+        const storedUser = localStorage.getItem("user");
+
+        if (!storedUser) {
+            return {};
+        }
+
+        const parsedUser = JSON.parse(storedUser);
+
+        return parsedUser && typeof parsedUser === "object"
+            ? parsedUser
+            : {};
     } catch {
         return {};
     }
 };
-=======
-import { updateStaffAccount } from "../api/authApi";
-import Modal from "../components/admin/Modal";
-import "../assets/css/admin.css";
->>>>>>> origin/KhoiNguyen_QuanLyBanner
 
-// Mục "Tổng quan" đứng đầu, các nhóm còn lại lấy từ ADMIN_MENU
+/*
+|--------------------------------------------------------------------------
+| Menu
+|--------------------------------------------------------------------------
+*/
+
 const DASHBOARD_ITEM = {
     icon: "🏠",
     label: "Tổng quan",
-    path: "/admin/dashboard", // chỉnh cho khớp route dashboard của bạn
+    path: "/admin/dashboard",
 };
 
-// Gộp phẳng để tra tên trang cho breadcrumb
-const FLAT_ITEMS = [DASHBOARD_ITEM, ...ADMIN_MENU.flatMap((s) => s.items)];
+const FLAT_ITEMS = [
+    DASHBOARD_ITEM,
+    ...ADMIN_MENU.flatMap((section) => section.items),
+];
 
-function AdminNavItem({ item, sidebarOpen, currentPath, onNavigate }) {
-    const active = currentPath === item.path;
+function isPathActive(currentPath, itemPath) {
+    if (currentPath === itemPath) {
+        return true;
+    }
+
+    /*
+     * Hỗ trợ các trang con như:
+     * /admin/banner/create
+     * /admin/nhan-vien/NV001
+     *
+     * Riêng dashboard chỉ active khi đúng chính xác route.
+     */
+    if (itemPath === DASHBOARD_ITEM.path) {
+        return false;
+    }
+
+    return currentPath.startsWith(`${itemPath}/`);
+}
+
+function AdminNavItem({
+    item,
+    sidebarOpen,
+    currentPath,
+    onNavigate,
+}) {
+    const active = isPathActive(
+        currentPath,
+        item.path
+    );
+
+    const handleNavigate = () => {
+        if (typeof onNavigate === "function") {
+            onNavigate(item.path);
+        }
+    };
 
     return (
-        <div
+        <button
+            type="button"
             style={{
                 ...styles.navItem,
-                background: active ? "#4f46e5" : "transparent",
-                color: active ? "#fff" : "#cbd5e1",
-                justifyContent: sidebarOpen ? "flex-start" : "center",
+
+                background:
+                    active
+                        ? "#4f46e5"
+                        : "transparent",
+
+                color:
+                    active
+                        ? "#ffffff"
+                        : "#cbd5e1",
+
+                justifyContent:
+                    sidebarOpen
+                        ? "flex-start"
+                        : "center",
             }}
-            onClick={() => onNavigate(item.path)}
+            onClick={handleNavigate}
             title={!sidebarOpen ? item.label : ""}
+            aria-current={active ? "page" : undefined}
         >
-            <span style={styles.navIcon}>{item.icon}</span>
-            {sidebarOpen && <span style={styles.navLabel}>{item.label}</span>}
-        </div>
+            <span
+                style={styles.navIcon}
+                aria-hidden="true"
+            >
+                {item.icon}
+            </span>
+
+            {sidebarOpen && (
+                <span style={styles.navLabel}>
+                    {item.label}
+                </span>
+            )}
+        </button>
     );
 }
 
 export default function AdminLayout() {
-    const [sidebarOpen, setSidebarOpen] = useState(true);
-    const [loggingOut, setLoggingOut] = useState(false);
     const navigate = useNavigate();
     const location = useLocation();
-<<<<<<< HEAD
-    const user = getStoredUser();
-=======
-    const [user, setUser] = useState(JSON.parse(localStorage.getItem("user") || "{}"));
->>>>>>> origin/KhoiNguyen_QuanLyBanner
-    const role = localStorage.getItem("role");
 
-    // ── Cấu hình tài khoản admin ─────────────────────────
-    const [accModalOpen, setAccModalOpen] = useState(false);
-    const [accForm, setAccForm] = useState({ HoTen: "", TenDangNhap: "", MatKhau: "" });
-    const [accSaving, setAccSaving] = useState(false);
-    const [accError, setAccError] = useState("");
+    const [sidebarOpen, setSidebarOpen] =
+        useState(true);
+
+    const [loggingOut, setLoggingOut] =
+        useState(false);
+
+    const [user, setUser] =
+        useState(getStoredUser);
+
+    const role =
+        localStorage.getItem("role") || "Admin";
+
+    /*
+    |--------------------------------------------------------------------------
+    | Cấu hình tài khoản Admin
+    |--------------------------------------------------------------------------
+    */
+
+    const [accModalOpen, setAccModalOpen] =
+        useState(false);
+
+    const [accForm, setAccForm] = useState({
+        HoTen: "",
+        TenDangNhap: "",
+        MatKhau: "",
+    });
+
+    const [accSaving, setAccSaving] =
+        useState(false);
+
+    const [accError, setAccError] =
+        useState("");
+
+    const currentPage =
+        FLAT_ITEMS.find((item) =>
+            isPathActive(
+                location.pathname,
+                item.path
+            )
+        );
 
     const openAccountConfig = () => {
-        setAccForm({ HoTen: user.HoTen ?? "", TenDangNhap: user.TenDangNhap ?? "", MatKhau: "" });
+        setAccForm({
+            HoTen: user.HoTen ?? "",
+            TenDangNhap:
+                user.TenDangNhap ?? "",
+            MatKhau: "",
+        });
+
         setAccError("");
         setAccModalOpen(true);
     };
 
-    const setAccField = (key, value) => setAccForm((f) => ({ ...f, [key]: value }));
+    const closeAccountConfig = () => {
+        if (accSaving) {
+            return;
+        }
+
+        setAccModalOpen(false);
+        setAccError("");
+
+        setAccForm((current) => ({
+            ...current,
+            MatKhau: "",
+        }));
+    };
+
+    const setAccField = (field, value) => {
+        setAccForm((current) => ({
+            ...current,
+            [field]: value,
+        }));
+
+        setAccError("");
+    };
+
+    const validateAccountForm = () => {
+        const hoTen =
+            accForm.HoTen.trim();
+
+        const tenDangNhap =
+            accForm.TenDangNhap.trim();
+
+        if (!hoTen) {
+            return "Vui lòng nhập họ tên Admin.";
+        }
+
+        if (hoTen.length > 100) {
+            return "Họ tên không được vượt quá 100 ký tự.";
+        }
+
+        if (!tenDangNhap) {
+            return "Vui lòng nhập tên đăng nhập.";
+        }
+
+        if (tenDangNhap.length > 50) {
+            return "Tên đăng nhập không được vượt quá 50 ký tự.";
+        }
+
+        if (
+            accForm.MatKhau
+            && accForm.MatKhau.length < 8
+        ) {
+            return "Mật khẩu mới phải có ít nhất 8 ký tự.";
+        }
+
+        if (
+            accForm.MatKhau
+            && accForm.MatKhau.length > 72
+        ) {
+            return "Mật khẩu mới không được vượt quá 72 ký tự.";
+        }
+
+        return "";
+    };
 
     const handleSaveAccount = async () => {
+        if (accSaving) {
+            return;
+        }
+
+        const validationMessage =
+            validateAccountForm();
+
+        if (validationMessage) {
+            setAccError(validationMessage);
+            return;
+        }
+
+        const payload = {
+            HoTen: accForm.HoTen.trim(),
+
+            TenDangNhap:
+                accForm.TenDangNhap.trim(),
+        };
+
+        if (accForm.MatKhau) {
+            payload.MatKhau =
+                accForm.MatKhau;
+        }
+
         setAccSaving(true);
         setAccError("");
-        const payload = {
-            HoTen: accForm.HoTen,
-            TenDangNhap: accForm.TenDangNhap,
-        };
-        if (accForm.MatKhau) payload.MatKhau = accForm.MatKhau;
+
         try {
-            const res = await updateStaffAccount(payload);
-            const updatedUser = res.data?.user;
+            const response =
+                await updateStaffAccount(
+                    payload
+                );
+
+            /*
+             * Hỗ trợ cả hai response:
+             * { user: {...} }
+             * và
+             * { data: {...} }
+             */
+            const updatedUser =
+                response.data?.user
+                ?? response.data?.data
+                ?? null;
+
             if (updatedUser) {
-                localStorage.setItem("user", JSON.stringify(updatedUser));
-                setUser(updatedUser);
+                const mergedUser = {
+                    ...user,
+                    ...updatedUser,
+                };
+
+                localStorage.setItem(
+                    "user",
+                    JSON.stringify(mergedUser)
+                );
+
+                setUser(mergedUser);
+            } else {
+                /*
+                 * Trong trường hợp API chỉ trả message,
+                 * vẫn cập nhật các field đã chỉnh sửa.
+                 */
+                const mergedUser = {
+                    ...user,
+                    HoTen: payload.HoTen,
+                    TenDangNhap:
+                        payload.TenDangNhap,
+                };
+
+                localStorage.setItem(
+                    "user",
+                    JSON.stringify(mergedUser)
+                );
+
+                setUser(mergedUser);
             }
+
             setAccModalOpen(false);
-            Swal.fire({
+
+            setAccForm({
+                HoTen: "",
+                TenDangNhap: "",
+                MatKhau: "",
+            });
+
+            await Swal.fire({
                 icon: "success",
-                title: "Đã cập nhật tài khoản",
+                title:
+                    "Đã cập nhật tài khoản",
+                text:
+                    "Thông tin tài khoản Admin đã được lưu.",
                 timer: 1500,
                 showConfirmButton: false,
             });
-        } catch (err) {
-            const res = err.response?.data;
-            const firstErr = res?.errors ? Object.values(res.errors)[0]?.[0] : null;
-            setAccError(firstErr || res?.message || "Có lỗi xảy ra, vui lòng thử lại");
+        } catch (error) {
+            const responseData =
+                error.response?.data;
+
+            const fieldErrors =
+                responseData?.errors;
+
+            const firstFieldError =
+                fieldErrors
+                    ? Object.values(
+                          fieldErrors
+                      ).flat()[0]
+                    : null;
+
+            setAccError(
+                firstFieldError
+                || responseData?.message
+                || "Không thể cập nhật tài khoản. Vui lòng thử lại."
+            );
         } finally {
             setAccSaving(false);
         }
     };
 
+    /*
+    |--------------------------------------------------------------------------
+    | Đăng xuất
+    |--------------------------------------------------------------------------
+    */
+
     const handleLogout = async () => {
-        if (loggingOut) return;
+        if (loggingOut) {
+            return;
+        }
 
         const result = await Swal.fire({
             title: "Đăng xuất?",
-            text: "Bạn có chắc muốn đăng xuất không?",
+            text:
+                "Bạn có chắc muốn đăng xuất khỏi hệ thống không?",
             icon: "question",
             showCancelButton: true,
             confirmButtonText: "Đăng xuất",
             cancelButtonText: "Hủy",
             confirmButtonColor: "#dc2626",
         });
-        if (result.isConfirmed) {
-            setLoggingOut(true);
-            try {
-                await logoutSession();
-            } catch {
-                // Vẫn xóa phiên cục bộ nếu token đã hết hạn hoặc mạng bị gián đoạn.
-            } finally {
-                localStorage.removeItem("token");
-                localStorage.removeItem("user");
-                localStorage.removeItem("role");
-                navigate("/staff/login", { replace: true });
-                setLoggingOut(false);
-            }
+
+        if (!result.isConfirmed) {
+            return;
+        }
+
+        setLoggingOut(true);
+
+        try {
+            await logoutSession();
+        } catch {
+            /*
+             * Vẫn xóa phiên cục bộ nếu:
+             * - token đã hết hạn;
+             * - server không phản hồi;
+             * - kết nối mạng bị gián đoạn.
+             */
+        } finally {
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            localStorage.removeItem("role");
+
+            navigate(
+                "/staff/login",
+                {
+                    replace: true,
+                }
+            );
+
+            setLoggingOut(false);
         }
     };
 
     return (
         <div style={styles.root}>
-            {/* ── SIDEBAR ─────────────────────────────────── */}
-            <aside style={{ ...styles.sidebar, width: sidebarOpen ? 240 : 60 }}>
+            {/* Sidebar */}
+            <aside
+                style={{
+                    ...styles.sidebar,
+
+                    width:
+                        sidebarOpen
+                            ? 240
+                            : 60,
+                }}
+            >
                 {/* Logo */}
                 <div style={styles.sidebarLogo}>
-                    <span style={styles.logoIcon}>🍽</span>
+                    <span
+                        style={styles.logoIcon}
+                        aria-hidden="true"
+                    >
+                        🍽
+                    </span>
+
                     {sidebarOpen && (
                         <span style={styles.logoText}>
-                            BUFFET <span style={styles.logoTag}>ADMIN</span>
+                            BUFFET
+
+                            <span
+                                style={styles.logoTag}
+                            >
+                                ADMIN
+                            </span>
                         </span>
                     )}
                 </div>
 
                 {/* Menu */}
-                <nav style={styles.nav}>
+                <nav
+                    style={styles.nav}
+                    aria-label="Điều hướng quản trị"
+                >
                     <AdminNavItem
                         item={DASHBOARD_ITEM}
                         sidebarOpen={sidebarOpen}
-                        currentPath={location.pathname}
+                        currentPath={
+                            location.pathname
+                        }
                         onNavigate={navigate}
                     />
 
-                    {ADMIN_MENU.map((section) => (
-                        <div key={section.key} style={styles.navGroup}>
-                            {sidebarOpen && (
-                                <div style={styles.navGroupTitle}>{section.title}</div>
-                            )}
-                            {section.items.map((item) => (
-                                <AdminNavItem
-                                    key={item.path}
-                                    item={item}
-                                    sidebarOpen={sidebarOpen}
-                                    currentPath={location.pathname}
-                                    onNavigate={navigate}
-                                />
-                            ))}
-                        </div>
-                    ))}
+                    {ADMIN_MENU.map(
+                        (section) => (
+                            <div
+                                key={section.key}
+                                style={
+                                    styles.navGroup
+                                }
+                            >
+                                {sidebarOpen && (
+                                    <div
+                                        style={
+                                            styles.navGroupTitle
+                                        }
+                                    >
+                                        {
+                                            section.title
+                                        }
+                                    </div>
+                                )}
+
+                                {section.items.map(
+                                    (item) => (
+                                        <AdminNavItem
+                                            key={
+                                                item.path
+                                            }
+                                            item={
+                                                item
+                                            }
+                                            sidebarOpen={
+                                                sidebarOpen
+                                            }
+                                            currentPath={
+                                                location.pathname
+                                            }
+                                            onNavigate={
+                                                navigate
+                                            }
+                                        />
+                                    )
+                                )}
+                            </div>
+                        )
+                    )}
                 </nav>
 
-                {/* User info ở dưới */}
+                {/* Thông tin tài khoản Admin */}
                 <div
                     style={{
                         ...styles.sidebarFooter,
-                        justifyContent: sidebarOpen ? "space-between" : "center",
+
+                        justifyContent:
+                            sidebarOpen
+                                ? "space-between"
+                                : "center",
                     }}
                 >
-                    <div style={{ display: "flex", alignItems: "center", gap: 10, overflow: "hidden" }}>
-                        <div style={styles.avatar}>{user.HoTen?.charAt(0) || "?"}</div>
+                    <div
+                        style={
+                            styles.accountSummary
+                        }
+                    >
+                        <div
+                            style={styles.avatar}
+                            aria-hidden="true"
+                        >
+                            {user.HoTen
+                                ?.trim()
+                                .charAt(0)
+                                .toUpperCase()
+                                || "A"}
+                        </div>
+
                         {sidebarOpen && (
-                            <div style={{ overflow: "hidden" }}>
-                                <div style={styles.footerName}>{user.HoTen}</div>
-                                <div style={styles.footerRole}>{role}</div>
+                            <div
+                                style={
+                                    styles.accountText
+                                }
+                            >
+                                <div
+                                    style={
+                                        styles.footerName
+                                    }
+                                    title={
+                                        user.HoTen
+                                        || "Admin"
+                                    }
+                                >
+                                    {user.HoTen
+                                        || "Quản trị viên"}
+                                </div>
+
+                                <div
+                                    style={
+                                        styles.footerRole
+                                    }
+                                >
+                                    {role}
+                                </div>
                             </div>
                         )}
                     </div>
+
                     {sidebarOpen && (
                         <button
                             type="button"
-                            style={styles.btnAccountConfig}
-                            onClick={openAccountConfig}
-                            title="Cấu hình tài khoản admin"
+                            style={
+                                styles.btnAccountConfig
+                            }
+                            onClick={
+                                openAccountConfig
+                            }
+                            title="Cấu hình tài khoản Admin"
+                            aria-label="Cấu hình tài khoản Admin"
                         >
                             ⚙️
                         </button>
@@ -204,101 +597,193 @@ export default function AdminLayout() {
                 </div>
             </aside>
 
-            {/* ── MAIN ────────────────────────────────────── */}
+            {/* Main */}
             <div style={styles.main}>
-                {/* Header */}
                 <header style={styles.header}>
                     <button
+                        type="button"
                         style={styles.btnToggle}
-                        onClick={() => setSidebarOpen(!sidebarOpen)}
-                        title="Ẩn/hiện menu"
+                        onClick={() =>
+                            setSidebarOpen(
+                                (current) =>
+                                    !current
+                            )
+                        }
+                        title={
+                            sidebarOpen
+                                ? "Thu gọn menu"
+                                : "Mở rộng menu"
+                        }
+                        aria-label={
+                            sidebarOpen
+                                ? "Thu gọn menu"
+                                : "Mở rộng menu"
+                        }
                     >
-                        {sidebarOpen ? "◀" : "▶"}
+                        {sidebarOpen
+                            ? "◀"
+                            : "▶"}
                     </button>
 
                     <div style={styles.pageName}>
-                        {FLAT_ITEMS.find((m) => m.path === location.pathname)?.label ||
-                            "Tổng quan"}
+                        {currentPage?.label
+                            || "Tổng quan"}
                     </div>
 
                     <button
-                        style={styles.btnLogout}
+                        type="button"
+                        style={{
+                            ...styles.btnLogout,
+
+                            opacity:
+                                loggingOut
+                                    ? 0.7
+                                    : 1,
+
+                            cursor:
+                                loggingOut
+                                    ? "not-allowed"
+                                    : "pointer",
+                        }}
                         onClick={handleLogout}
                         disabled={loggingOut}
                     >
-                        🚪 {loggingOut ? "Đang đăng xuất..." : "Đăng xuất"}
+                        🚪{" "}
+
+                        {loggingOut
+                            ? "Đang đăng xuất..."
+                            : "Đăng xuất"}
                     </button>
                 </header>
 
-                {/* Nội dung trang */}
-                <div style={styles.content}>
+                <main style={styles.content}>
                     <Outlet />
-                </div>
+                </main>
             </div>
 
-            {/* Modal cấu hình tài khoản admin */}
+            {/* Modal cấu hình tài khoản */}
             <Modal
                 open={accModalOpen}
-                title="Cấu hình tài khoản admin"
-                onClose={() => setAccModalOpen(false)}
+                title="Cấu hình tài khoản Admin"
+                onClose={closeAccountConfig}
                 width={480}
                 footer={
                     <>
                         <button
                             type="button"
                             className="admin-btn admin-btn--ghost"
-                            onClick={() => setAccModalOpen(false)}
+                            onClick={
+                                closeAccountConfig
+                            }
                             disabled={accSaving}
                         >
                             Hủy
                         </button>
+
                         <button
                             type="button"
                             className="admin-btn admin-btn--primary"
-                            onClick={handleSaveAccount}
+                            onClick={
+                                handleSaveAccount
+                            }
                             disabled={accSaving}
                         >
-                            {accSaving ? "Đang lưu…" : "Lưu"}
+                            {accSaving
+                                ? "Đang lưu…"
+                                : "Lưu thay đổi"}
                         </button>
                     </>
                 }
             >
-                {accError && <div className="admin-form-error">{accError}</div>}
+                {accError && (
+                    <div
+                        className="admin-form-error"
+                        role="alert"
+                    >
+                        {accError}
+                    </div>
+                )}
 
                 <div className="admin-form">
                     <div className="admin-field admin-field--full">
-                        <label>Họ tên</label>
+                        <label
+                            htmlFor="admin-account-full-name"
+                        >
+                            Họ tên
+                        </label>
+
                         <input
+                            id="admin-account-full-name"
                             className="admin-input"
                             value={accForm.HoTen}
-                            onChange={(e) => setAccField("HoTen", e.target.value)}
+                            onChange={(event) =>
+                                setAccField(
+                                    "HoTen",
+                                    event.target.value
+                                )
+                            }
+                            maxLength={100}
+                            autoComplete="name"
+                            disabled={accSaving}
                         />
                     </div>
 
                     <div className="admin-field admin-field--full">
-                        <label>Tên đăng nhập</label>
+                        <label
+                            htmlFor="admin-account-username"
+                        >
+                            Tên đăng nhập
+                        </label>
+
                         <input
+                            id="admin-account-username"
                             className="admin-input"
-                            value={accForm.TenDangNhap}
-                            onChange={(e) => setAccField("TenDangNhap", e.target.value)}
-                            autoComplete="off"
+                            value={
+                                accForm.TenDangNhap
+                            }
+                            onChange={(event) =>
+                                setAccField(
+                                    "TenDangNhap",
+                                    event.target.value
+                                )
+                            }
+                            maxLength={50}
+                            autoComplete="username"
+                            disabled={accSaving}
                         />
                     </div>
 
                     <div className="admin-field admin-field--full">
-                        <label>
+                        <label
+                            htmlFor="admin-account-password"
+                        >
                             Mật khẩu mới{" "}
-                            <span style={{ color: "#94a3b8", fontWeight: 400 }}>
+
+                            <span
+                                style={
+                                    styles.optionalText
+                                }
+                            >
                                 (để trống nếu không đổi)
                             </span>
                         </label>
+
                         <input
+                            id="admin-account-password"
                             type="password"
                             className="admin-input"
                             value={accForm.MatKhau}
-                            onChange={(e) => setAccField("MatKhau", e.target.value)}
-                            placeholder="Tối thiểu 6 ký tự"
+                            onChange={(event) =>
+                                setAccField(
+                                    "MatKhau",
+                                    event.target.value
+                                )
+                            }
+                            placeholder="Tối thiểu 8 ký tự"
+                            minLength={8}
+                            maxLength={72}
                             autoComplete="new-password"
+                            disabled={accSaving}
                         />
                     </div>
                 </div>
@@ -311,184 +796,258 @@ const styles = {
     root: {
         display: "flex",
         minHeight: "100vh",
-        fontFamily: "'Inter', 'Segoe UI', sans-serif",
+        fontFamily:
+            "'Inter', 'Segoe UI', sans-serif",
     },
 
-    // Sidebar
+    /*
+    |--------------------------------------------------------------------------
+    | Sidebar
+    |--------------------------------------------------------------------------
+    */
+
     sidebar: {
-        background: "#1e293b",
         display: "flex",
         flexDirection: "column",
-        transition: "width .25s ease",
-        overflow: "hidden",
         flexShrink: 0,
         position: "sticky",
         top: 0,
         height: "100vh",
+        overflow: "hidden",
+        background: "#1e293b",
+        transition: "width 0.25s ease",
     },
+
     sidebarLogo: {
         display: "flex",
         alignItems: "center",
         gap: 10,
-        padding: "20px 16px",
-        borderBottom: "1px solid #334155",
         minHeight: 64,
+        padding: "20px 16px",
+        borderBottom:
+            "1px solid #334155",
     },
-    logoIcon: { fontSize: 22, flexShrink: 0 },
+
+    logoIcon: {
+        flexShrink: 0,
+        fontSize: 22,
+    },
+
     logoText: {
-        color: "#f8fafc",
-        fontWeight: 700,
-        fontSize: 15,
-        letterSpacing: 1,
-        whiteSpace: "nowrap",
         display: "flex",
         alignItems: "center",
         gap: 6,
-    },
-    logoTag: {
-        fontSize: 10,
+        color: "#f8fafc",
+        fontSize: 15,
         fontWeight: 700,
-        color: "#c7d2fe",
-        background: "#4f46e5",
+        letterSpacing: 1,
+        whiteSpace: "nowrap",
+    },
+
+    logoTag: {
         padding: "2px 6px",
         borderRadius: 5,
+        background: "#4f46e5",
+        color: "#c7d2fe",
+        fontSize: 10,
+        fontWeight: 700,
         letterSpacing: 0.5,
     },
+
     nav: {
-        flex: 1,
-        padding: "12px 8px",
         display: "flex",
+        flex: 1,
         flexDirection: "column",
         gap: 4,
         overflowY: "auto",
+        padding: "12px 8px",
     },
+
     navGroup: {
         display: "flex",
         flexDirection: "column",
         gap: 4,
         marginTop: 10,
     },
+
     navGroupTitle: {
+        padding: "4px 12px",
         color: "#64748b",
         fontSize: 10,
         fontWeight: 700,
         letterSpacing: 0.8,
         textTransform: "uppercase",
-        padding: "4px 12px",
     },
+
     navItem: {
         display: "flex",
         alignItems: "center",
+        width: "100%",
         gap: 10,
         padding: "10px 12px",
+        border: "none",
         borderRadius: 8,
+        background: "transparent",
         cursor: "pointer",
-        transition: "background .15s",
+        fontFamily: "inherit",
         fontSize: 14,
         fontWeight: 500,
+        textAlign: "left",
+        transition:
+            "background 0.15s ease",
     },
-    navIcon: { fontSize: 18, flexShrink: 0 },
-    navLabel: { whiteSpace: "nowrap" },
+
+    navIcon: {
+        flexShrink: 0,
+        fontSize: 18,
+    },
+
+    navLabel: {
+        overflow: "hidden",
+        textOverflow: "ellipsis",
+        whiteSpace: "nowrap",
+    },
+
     sidebarFooter: {
         display: "flex",
         alignItems: "center",
         gap: 10,
-        padding: "14px 12px",
-        borderTop: "1px solid #334155",
+        minHeight: 64,
+        padding: "12px",
+        borderTop:
+            "1px solid #334155",
     },
+
+    accountSummary: {
+        display: "flex",
+        minWidth: 0,
+        alignItems: "center",
+        gap: 10,
+        overflow: "hidden",
+    },
+
+    accountText: {
+        minWidth: 0,
+        overflow: "hidden",
+    },
+
     avatar: {
+        display: "flex",
         width: 34,
         height: 34,
-        borderRadius: "50%",
-        background: "#4f46e5",
-        color: "#fff",
-        fontWeight: 700,
-        fontSize: 15,
-        display: "flex",
+        flexShrink: 0,
         alignItems: "center",
         justifyContent: "center",
-        flexShrink: 0,
+        borderRadius: "50%",
+        background: "#4f46e5",
+        color: "#ffffff",
+        fontSize: 15,
+        fontWeight: 700,
     },
+
     footerName: {
+        overflow: "hidden",
         color: "#f1f5f9",
         fontSize: 13,
         fontWeight: 600,
-        whiteSpace: "nowrap",
-        overflow: "hidden",
         textOverflow: "ellipsis",
-    },
-    footerRole: {
-        color: "#94a3b8",
-        fontSize: 11,
-        marginTop: 1,
-    },
-    btnAccountConfig: {
-        width: 28,
-        height: 28,
-        flexShrink: 0,
-        border: "1px solid #334155",
-        borderRadius: 8,
-        background: "transparent",
-        cursor: "pointer",
-        fontSize: 13,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
+        whiteSpace: "nowrap",
     },
 
-    // Main
-    main: {
-        flex: 1,
+    footerRole: {
+        marginTop: 1,
+        color: "#94a3b8",
+        fontSize: 11,
+    },
+
+    btnAccountConfig: {
         display: "flex",
-        flexDirection: "column",
+        width: 30,
+        height: 30,
+        flexShrink: 0,
+        alignItems: "center",
+        justifyContent: "center",
+        border:
+            "1px solid #475569",
+        borderRadius: 8,
+        background: "transparent",
+        color: "#ffffff",
+        cursor: "pointer",
+        fontSize: 13,
+    },
+
+    /*
+    |--------------------------------------------------------------------------
+    | Main
+    |--------------------------------------------------------------------------
+    */
+
+    main: {
+        display: "flex",
+        flex: 1,
         minWidth: 0,
+        flexDirection: "column",
         background: "#f3f4f6",
     },
+
     header: {
-        height: 56,
-        background: "#fff",
-        borderBottom: "1px solid #e5e7eb",
         display: "flex",
+        zIndex: 10,
+        height: 56,
+        flexShrink: 0,
         alignItems: "center",
-        padding: "0 20px",
         gap: 14,
         position: "sticky",
         top: 0,
-        zIndex: 10,
+        padding: "0 20px",
+        borderBottom:
+            "1px solid #e5e7eb",
+        background: "#ffffff",
     },
+
     btnToggle: {
+        display: "flex",
         width: 32,
         height: 32,
-        border: "1px solid #e5e7eb",
-        borderRadius: 8,
-        background: "#f9fafb",
-        cursor: "pointer",
-        fontSize: 13,
-        color: "#374151",
-        display: "flex",
+        flexShrink: 0,
         alignItems: "center",
         justifyContent: "center",
-        flexShrink: 0,
-    },
-    pageName: {
-        flex: 1,
-        fontWeight: 600,
-        fontSize: 15,
-        color: "#111827",
-    },
-    btnLogout: {
-        padding: "6px 14px",
-        background: "#dc2626",
-        color: "#fff",
-        border: "none",
+        border:
+            "1px solid #e5e7eb",
         borderRadius: 8,
+        background: "#f9fafb",
+        color: "#374151",
         cursor: "pointer",
         fontSize: 13,
-        fontWeight: 600,
-        flexShrink: 0,
     },
+
+    pageName: {
+        flex: 1,
+        color: "#111827",
+        fontSize: 15,
+        fontWeight: 600,
+    },
+
+    btnLogout: {
+        flexShrink: 0,
+        padding: "7px 14px",
+        border: "none",
+        borderRadius: 8,
+        background: "#dc2626",
+        color: "#ffffff",
+        fontFamily: "inherit",
+        fontSize: 13,
+        fontWeight: 600,
+    },
+
     content: {
         flex: 1,
+        minWidth: 0,
         overflow: "auto",
+    },
+
+    optionalText: {
+        color: "#94a3b8",
+        fontWeight: 400,
     },
 };
