@@ -112,15 +112,20 @@ export default function QuanLyHoaDon() {
     };
 
     // Hủy hóa đơn ĐÃ THANH TOÁN — hoàn điểm đã tích + trả lại voucher đã dùng.
-    // Không đụng tới hạng thành viên (hệ thống chỉ tự động nâng hạng).
+    // Nếu điểm hoàn lại làm khách không còn đủ điều kiện giữ hạng hiện tại,
+    // hệ thống sẽ tự động hạ hạng lại (đảo ngược đúng những gì hóa đơn này
+    // đã gây ra) — khác với việc tích điểm bình thường (chỉ tự động nâng).
     const handleHuyDaThanhToan = async (maHD) => {
         const confirm = await Swal.fire({
             title: `Hủy hóa đơn ${maHD} đã thanh toán?`,
             html: 'Hệ thống sẽ <b>hoàn lại điểm</b> đã tích và <b>trả lại voucher</b> đã dùng cho khách.<br>' +
-                  'Hạng thành viên sẽ không tự động hạ xuống. Thao tác này không thể hoàn tác.',
+                  'Nếu khách không còn đủ điểm giữ hạng hiện tại, hạng thành viên sẽ <b>tự động điều chỉnh lại</b>.<br>' +
+                  'Thao tác này không thể hoàn tác.',
             icon: 'warning',
             input: 'text',
-            inputPlaceholder: 'Lý do hủy (không bắt buộc)',
+            inputLabel: 'Lý do hủy (bắt buộc)',
+            inputPlaceholder: 'VD: khách gọi nhầm món, yêu cầu hoàn tiền...',
+            inputValidator: (value) => (!value?.trim() ? 'Vui lòng nhập lý do hủy' : undefined),
             showCancelButton: true,
             confirmButtonText: 'Xác nhận hủy',
             cancelButtonText: 'Không',
@@ -130,14 +135,18 @@ export default function QuanLyHoaDon() {
         try {
             const res = await hoaDonAdminApi.huyDaThanhToan(maHD, confirm.value);
             const d = res.data?.data;
+            const dong = [];
+            if (d?.DiemDaHoan > 0) dong.push(`Đã hoàn ${d.DiemDaHoan} điểm`);
+            if (d?.SoVoucherHoan > 0) dong.push(`trả lại ${d.SoVoucherHoan} voucher`);
+            let html = dong.length ? dong.join(', ') + '.' : undefined;
+            if (d?.DaHaHang && d?.TenHangMoi) {
+                html = (html ? html + '<br>' : '') + `Khách đã được điều chỉnh hạng xuống <b>${d.TenHangMoi}</b>.`;
+            }
             Swal.fire({
                 icon: 'success',
                 title: 'Đã hủy hóa đơn',
-                html: d?.DiemDaHoan > 0 || d?.SoVoucherHoan > 0
-                    ? `Đã hoàn ${d.DiemDaHoan} điểm` +
-                      (d.SoVoucherHoan > 0 ? ` và trả lại ${d.SoVoucherHoan} voucher.` : '.')
-                    : undefined,
-                timer: 2200,
+                html,
+                timer: 2600,
                 showConfirmButton: false,
             });
             setDetailOpen(false);

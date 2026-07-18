@@ -24,6 +24,9 @@ class HoaDon extends Model
         'MaHangThanhVien',
         'MaVoucher',
         'SoBan',
+        'LyDoHuy',
+        'ThoiGianHuy',
+        'MaNhanVienHuy',
     ];
 
     public function chiTietHoaDon()
@@ -37,6 +40,10 @@ class HoaDon extends Model
     public function nhanVien()
     {
         return $this->belongsTo(NhanVien::class, 'MaNhanVien', 'MaNhanVien');
+    }
+    public function nhanVienHuy()
+    {
+        return $this->belongsTo(NhanVien::class, 'MaNhanVienHuy', 'MaNhanVien');
     }
     public function hangThanhVien()
     {

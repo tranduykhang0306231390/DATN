@@ -135,6 +135,23 @@ class DiemTichLuyService
             tieuDe:  'Hóa đơn bị hủy',
             noiDung: "Hóa đơn {$maThamChieu} đã bị hủy. {$soDiem} điểm đã được hoàn lại."
         );
+
+        // Nếu khách lên hạng nhờ chính số điểm vừa bị hoàn lại, đảo ngược
+        // luôn việc lên hạng đó — khác với congDiem() chỉ tự động NÂNG,
+        // hoanDiem() cần tự động HẠ vì đây là đảo ngược 1 giao dịch đã xảy
+        // ra (hủy hóa đơn), không phải khách chủ động tiêu điểm.
+        $this->kiemTraHaHang($khachHang, $maThamChieu);
+    }
+
+    /**
+     * Hạng "xứng đáng" nhất với số điểm hiện có, không quan tâm hạng hiện
+     * tại đang là gì (dùng chung cho cả kiểm tra lên hạng lẫn hạ hạng).
+     */
+    private function hangXungDangTheoDiem(int $tongDiem): ?HangThanhVien
+    {
+        return HangThanhVien::where('DiemToiThieu', '<=', $tongDiem)
+            ->orderBy('ThuTuHang', 'desc')
+            ->first();
     }
 
     /**
@@ -145,13 +162,9 @@ class DiemTichLuyService
         $khachHang->refresh();
 
         $hangHienTai = HangThanhVien::find($khachHang->MaHangThanhVien);
+        $hangMoi     = $this->hangXungDangTheoDiem((int) $khachHang->TongDiem);
 
-        $hangMoi = HangThanhVien::where('DiemToiThieu', '<=', $khachHang->TongDiem)
-            ->where('ThuTuHang', '>', $hangHienTai->ThuTuHang ?? 0)
-            ->orderBy('ThuTuHang', 'desc')
-            ->first();
-
-        if (!$hangMoi) return;
+        if (!$hangMoi || $hangMoi->ThuTuHang <= ($hangHienTai->ThuTuHang ?? 0)) return;
 
         $maHangCu = $khachHang->MaHangThanhVien;
         $khachHang->update(['MaHangThanhVien' => $hangMoi->MaHangThanhVien]);
@@ -181,6 +194,51 @@ class DiemTichLuyService
             maKH:    $khachHang->MaKhachHang,
             tieuDe:  'Chúc mừng! Bạn đã lên hạng ' . $hangMoi->TenHang,
             noiDung: "Tài khoản của bạn đã được nâng lên hạng {$hangMoi->TenHang}. Chúc mừng!"
+        );
+    }
+
+    /**
+     * Hạ hạng nếu sau khi hoàn điểm (huỷ hóa đơn), khách không còn đủ điểm
+     * để giữ hạng hiện tại. Chỉ gọi từ hoanDiem() — không dùng cho trường
+     * hợp khách chủ động tiêu điểm (đổi voucher), vì đó là lựa chọn của
+     * khách chứ không phải đảo ngược một giao dịch đã xảy ra.
+     */
+    private function kiemTraHaHang(KhachHang $khachHang, string $maThamChieu): void
+    {
+        $khachHang->refresh();
+
+        $hangHienTai = HangThanhVien::find($khachHang->MaHangThanhVien);
+        if (!$hangHienTai) return;
+
+        $hangXungDang = $this->hangXungDangTheoDiem((int) $khachHang->TongDiem);
+        if (!$hangXungDang || $hangXungDang->ThuTuHang >= $hangHienTai->ThuTuHang) return;
+
+        $maHangCu = $khachHang->MaHangThanhVien;
+        $khachHang->update(['MaHangThanhVien' => $hangXungDang->MaHangThanhVien]);
+
+        $tongChiTieu = (float) DB::table('hoadon')
+            ->where('MaKhachHang', $khachHang->MaKhachHang)
+            ->where('TrangThai', 'DaThanhToan')
+            ->sum('TongTien');
+
+        $lastLSH = LichSuHangThanhVien::orderBy('MaLichSuHang', 'desc')->first();
+        $soLSH   = $lastLSH ? ((int) substr($lastLSH->MaLichSuHang, 3)) + 1 : 1;
+
+        LichSuHangThanhVien::create([
+            'MaLichSuHang'           => 'LSH' . str_pad($soLSH, 3, '0', STR_PAD_LEFT),
+            'MaKhachHang'            => $khachHang->MaKhachHang,
+            'MaHangThanhVienCu'      => $maHangCu,
+            'MaHangThanhVienMoi'     => $hangXungDang->MaHangThanhVien,
+            'ThoiGianThayDoi'        => now(),
+            'LyDoThayDoi'            => "Hạ về hạng {$hangXungDang->TenHang} do hoàn điểm từ hóa đơn bị hủy {$maThamChieu}",
+            'DiemTaiThoiDiemTH'      => (string) $khachHang->TongDiem,
+            'TongChiTieuTaiThoiDiem' => $tongChiTieu,
+        ]);
+
+        $this->taoThongBao(
+            maKH:    $khachHang->MaKhachHang,
+            tieuDe:  'Điều chỉnh hạng thành viên',
+            noiDung: "Do hóa đơn {$maThamChieu} đã bị hủy và hoàn điểm, hạng của bạn được điều chỉnh về {$hangXungDang->TenHang}."
         );
     }
 

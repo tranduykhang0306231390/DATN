@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\HoaDon;
 use App\Models\ChiTietHoaDon;
+use App\Models\HangThanhVien;
 use App\Models\KhachHang;
 use App\Models\LoaiVe;
 use App\Models\VoucherKhachHang;
@@ -246,7 +247,9 @@ class HoaDonController extends Controller
     public function huyHoaDonDaThanhToan(Request $request, string $maHD)
     {
         $request->validate([
-            'ly_do' => ['nullable', 'string', 'max:255'],
+            'ly_do' => ['required', 'string', 'max:255'],
+        ], [
+            'ly_do.required' => 'Vui lòng nhập lý do hủy hóa đơn.',
         ]);
 
         $hoaDon = HoaDon::find($maHD);
@@ -272,15 +275,23 @@ class HoaDonController extends Controller
                 }
             }
 
-            // Hoàn điểm đã tích (nếu có khách hàng gắn với hóa đơn)
+            // Hoàn điểm đã tích (nếu có khách hàng gắn với hóa đơn) — có thể
+            // kéo theo tự động hạ hạng nếu khách không còn đủ điểm giữ hạng.
+            $hangTruoc = null;
+            $hangSau   = null;
             if ($hoaDon->MaKhachHang && $hoaDon->DiemTichLuy > 0) {
                 $khachHang = KhachHang::find($hoaDon->MaKhachHang);
                 if ($khachHang) {
+                    $hangTruoc = $khachHang->MaHangThanhVien;
                     $this->diemService->hoanDiem($khachHang, (int) $hoaDon->DiemTichLuy, $maHD);
+                    $hangSau = $khachHang->fresh()->MaHangThanhVien;
                 }
             }
 
-            $hoaDon->TrangThai = 'DaHuy';
+            $hoaDon->TrangThai     = 'DaHuy';
+            $hoaDon->LyDoHuy       = $request->input('ly_do');
+            $hoaDon->ThoiGianHuy   = now();
+            $hoaDon->MaNhanVienHuy = auth('nhanvien')->user()->MaNhanVien;
             $hoaDon->save();
 
             DB::commit();
@@ -292,6 +303,8 @@ class HoaDonController extends Controller
             ], 500);
         }
 
+        $daHaHang = $hangTruoc && $hangSau && $hangTruoc !== $hangSau;
+
         return response()->json([
             'success' => true,
             'message' => 'Đã hủy hóa đơn đã thanh toán',
@@ -299,6 +312,9 @@ class HoaDonController extends Controller
                 'MaHoaDon'      => $maHD,
                 'DiemDaHoan'    => (int) $hoaDon->DiemTichLuy,
                 'SoVoucherHoan' => $soVoucherHoan,
+                'LyDoHuy'       => $hoaDon->LyDoHuy,
+                'DaHaHang'      => $daHaHang,
+                'TenHangMoi'    => $daHaHang ? (HangThanhVien::find($hangSau)->TenHang ?? null) : null,
             ],
         ]);
     }
