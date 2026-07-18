@@ -18,14 +18,15 @@ class PhanHoiController extends Controller
         $query = DB::table('phanhoikhachhang as ph')
             ->leftJoin('khachhang as kh', 'ph.MaKhachHang', '=', 'kh.MaKhachHang')
             ->leftJoin('nhanvien as nv', 'ph.MaNhanVien', '=', 'nv.MaNhanVien')
-            ->select('ph.*', 'kh.HoTen as TenKhachHang', 'nv.HoTen as TenNhanVien');
+            ->select('ph.*', 'kh.HoTen as TenKhachHang', 'kh.SoDienThoai', 'nv.HoTen as TenNhanVien');
 
         if ($kw = trim((string) $request->query('search'))) {
             $query->where(function ($sub) use ($kw) {
                 $sub->where('ph.NoiDungCuaKhachHang', 'like', "%{$kw}%")
                     ->orWhere('ph.MaPhanHoi', 'like', "%{$kw}%")
                     ->orWhere('ph.MaHoaDon', 'like', "%{$kw}%")
-                    ->orWhere('kh.HoTen', 'like', "%{$kw}%");
+                    ->orWhere('kh.HoTen', 'like', "%{$kw}%")
+                    ->orWhere('kh.SoDienThoai', 'like', "%{$kw}%");
             });
         }
         if ($tt = $request->query('trang_thai')) {

@@ -83,7 +83,7 @@ class KhachHangController extends Controller
 
     /**
      * Cập nhật thông tin khách hàng.
-     * Nếu đổi hạng thì tự ghi vào lichsuhangthanhvien.
+     * Hạng thành viên KHÔNG được chỉnh sửa ở đây vì được hệ thống tự nâng hạng.
      */
     public function update(Request $request, string $ma)
     {
@@ -94,58 +94,19 @@ class KhachHangController extends Controller
         }
 
         $data = $request->validate([
-            'HoTen'           => ['required', 'string', 'max:100'],
-            'NgaySinh'        => ['nullable', 'date'],
-            'GioiTinh'        => ['nullable', Rule::in(['Nam', 'Nu'])],
-            'Email'           => ['nullable', 'email', 'max:100', Rule::unique('khachhang', 'Email')->ignore($ma, 'MaKhachHang')],
-            'SoDienThoai'     => ['required', 'string', 'max:15', Rule::unique('khachhang', 'SoDienThoai')->ignore($ma, 'MaKhachHang')],
-            'MaHangThanhVien' => ['required', 'exists:hangthanhvien,MaHangThanhVien'],
+            'HoTen'       => ['required', 'string', 'max:100'],
+            'NgaySinh'    => ['nullable', 'date'],
+            'GioiTinh'    => ['nullable', Rule::in(['Nam', 'Nu'])],
+            'Email'       => ['nullable', 'email', 'max:100', Rule::unique('khachhang', 'Email')->ignore($ma, 'MaKhachHang')],
+            'SoDienThoai' => ['required', 'string', 'max:15', Rule::unique('khachhang', 'SoDienThoai')->ignore($ma, 'MaKhachHang')],
         ]);
 
-        $oldHang = $kh->MaHangThanhVien;
-        $newHang = $data['MaHangThanhVien'];
-
-        DB::beginTransaction();
-        try {
-            $kh->HoTen           = $data['HoTen'];
-            $kh->NgaySinh        = $data['NgaySinh'] ?: null;
-            $kh->GioiTinh        = $data['GioiTinh'] ?: null;
-            $kh->Email           = $data['Email'] ?: null;
-            $kh->SoDienThoai     = $data['SoDienThoai'];
-            $kh->MaHangThanhVien = $newHang;
-            $kh->save();
-
-            // Ghi lịch sử nếu hạng thực sự thay đổi
-            if ($newHang !== $oldHang) {
-                $tongChiTieu = (float) DB::table('hoadon')
-                    ->where('MaKhachHang', $ma)
-                    ->where('TrangThai', 'DaThanhToan')
-                    ->sum('TongTien');
-
-                $lastLS = DB::table('lichsuhangthanhvien')->orderBy('MaLichSuHang', 'desc')->first();
-                $soLS   = $lastLS ? ((int) substr($lastLS->MaLichSuHang, 3)) + 1 : 1;
-                $maLS   = 'LSH' . str_pad($soLS, 3, '0', STR_PAD_LEFT);
-
-                DB::table('lichsuhangthanhvien')->insert([
-                    'MaLichSuHang'           => $maLS,
-                    'MaKhachHang'            => $ma,
-                    'MaHangThanhVienCu'      => $oldHang,
-                    'MaHangThanhVienMoi'     => $newHang,
-                    'ThoiGianThayDoi'        => now(),
-                    'LyDoThayDoi'            => $request->input('LyDoThayDoi') ?: 'Điều chỉnh thủ công bởi quản trị viên',
-                    'DiemTaiThoiDiemTH'      => (string) $kh->TongDiem,
-                    'TongChiTieuTaiThoiDiem' => $tongChiTieu,
-                ]);
-            }
-
-            DB::commit();
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json([
-                'success' => false,
-                'message' => 'Có lỗi khi cập nhật: ' . $e->getMessage(),
-            ], 500);
-        }
+        $kh->HoTen       = $data['HoTen'];
+        $kh->NgaySinh    = $data['NgaySinh'] ?: null;
+        $kh->GioiTinh    = $data['GioiTinh'] ?: null;
+        $kh->Email       = $data['Email'] ?: null;
+        $kh->SoDienThoai = $data['SoDienThoai'];
+        $kh->save();
 
         return response()->json([
             'success' => true,

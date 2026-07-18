@@ -88,6 +88,12 @@ export const ADMIN_MENU = [
                 path: '/admin/cau-hinh-website',
                 color: '#f43f5e',
             },
+            {
+                
+                label: 'Cấu hình website',
+                path: '/admin/banner',
+                color: '#f43f5e',
+            },
         ],
     },
     {

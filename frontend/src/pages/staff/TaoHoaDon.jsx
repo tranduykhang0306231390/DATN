@@ -10,6 +10,7 @@ import {
     dot, ovl, box, mHead, mBody, mFoot, mClose,
     sumBox, sumRow, pointBox, pointBoxGray,
     btnClose, btnPay, btnFull, btnGrid, btnCell,
+    noteDuVoucher,
 } from './taoHoaDonStyles';
 
 const TONG_SO_BAN = 20;
@@ -246,6 +247,11 @@ export default function TaoHoaDon() {
             .finally(() => { if (!huy) setUocLoading(false); });
         return () => { huy = true; };
     }, [payOpen, bill, khachHang, selected]);
+
+    // Hóa đơn đã về 0đ -> không cần voucher nữa
+    const hetTien = !!uoc && uoc.TongThanhToan === 0 && selected.length > 0;
+    // Chọn nhiều hơn số thực sự được áp dụng
+    const duVoucher = !!uoc && selected.length > uoc.SoVoucherApDung;
 
     const handleThanhToan = async () => {
         setLoading(true);
@@ -555,12 +561,26 @@ export default function TaoHoaDon() {
                                     <div className="voucher-title">Voucher có thể áp dụng</div>
                                     {vouchers.map((v) => {
                                         const ck = selected.includes(v.MaVoucherKhachHang);
+                                        // Hóa đơn đã về 0đ -> khóa các voucher chưa chọn,
+                                        // tránh nhân viên tick nhầm làm khách tưởng bị mất voucher.
+                                        const khoa = hetTien && !ck;
                                         return (
                                             <label key={v.MaVoucherKhachHang} className="voucher-item"
-                                                style={{ borderColor: ck ? '#16a34a' : '#e5e7eb', background: ck ? '#f0fdf4' : '#fff' }}>
+                                                title={khoa ? 'Hóa đơn đã về 0đ, không cần dùng thêm voucher' : ''}
+                                                style={{
+                                                    borderColor: ck ? '#16a34a' : '#e5e7eb',
+                                                    background: ck ? '#f0fdf4' : khoa ? '#f8fafc' : '#fff',
+                                                    opacity: khoa ? 0.5 : 1,
+                                                    cursor: khoa ? 'not-allowed' : 'pointer',
+                                                }}>
                                                 <input type="checkbox" checked={ck}
+                                                    disabled={khoa}
                                                     onChange={() => toggleVoucher(v.MaVoucherKhachHang)}
-                                                    style={{ marginRight: 10, accentColor: '#16a34a' }} />
+                                                    style={{
+                                                        marginRight: 10,
+                                                        accentColor: '#16a34a',
+                                                        cursor: khoa ? 'not-allowed' : 'pointer',
+                                                    }} />
                                                 <div style={{ flex: 1 }}>
                                                     <div className="voucher-name">{v.TenUuDai}</div>
                                                     <div className="voucher-sub">
@@ -573,6 +593,14 @@ export default function TaoHoaDon() {
                                             </label>
                                         );
                                     })}
+
+                                    {!hetTien && duVoucher && (
+                                        <div style={noteDuVoucher}>
+                                            ⚠️ Đã chọn {selected.length} voucher nhưng chỉ{' '}
+                                            <b>{uoc.SoVoucherApDung}</b> voucher được áp dụng
+                                            (trùng nhóm hoặc hết hạn). Số còn lại không bị trừ.
+                                        </div>
+                                    )}
                                 </div>
                             )}
 

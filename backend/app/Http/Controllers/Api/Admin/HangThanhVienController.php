@@ -14,10 +14,21 @@ class HangThanhVienController extends Controller
      * Danh sách quy tắc tích điểm để chọn khi gắn cho hạng.
      * Đăng ký route này TRƯỚC route /hang-thanh-vien/{ma}.
      */
-    public function tuyChon()
+    public function tuyChon(Request $request)
     {
+        // Mỗi quy tắc chỉ được gán cho MỘT hạng. Khi sửa hạng nào thì
+        // vẫn giữ lại quy tắc của chính hạng đó trong danh sách.
+        $maHangHienTai = $request->query('ma_hang');
+
+        $daDung = DB::table('hangthanhvien')
+            ->whereNotNull('MaQuyTac')
+            ->when($maHangHienTai, fn ($q) => $q->where('MaHangThanhVien', '!=', $maHangHienTai))
+            ->pluck('MaQuyTac')
+            ->all();
+
         $quyTac = DB::table('quytactichdiem')
             ->select('MaQuyTac', 'SoTienQuyDoi', 'SoDiemNhan', 'TrangThai')
+            ->whereNotIn('MaQuyTac', $daDung)
             ->orderBy('MaQuyTac')
             ->get();
 
@@ -25,6 +36,17 @@ class HangThanhVienController extends Controller
             'success' => true,
             'data'    => ['quyTac' => $quyTac],
         ]);
+    }
+
+    /**
+     * Quy tắc đã được hạng khác sử dụng chưa.
+     * $boQua: mã hạng đang sửa (không tính chính nó).
+     */
+    private function quyTacDaDung(string $maQuyTac, ?string $boQua = null): bool
+    {
+        return HangThanhVien::where('MaQuyTac', $maQuyTac)
+            ->when($boQua, fn ($q) => $q->where('MaHangThanhVien', '!=', $boQua))
+            ->exists();
     }
 
     /**
@@ -73,6 +95,13 @@ class HangThanhVienController extends Controller
     {
         $data = $this->validateData($request);
 
+        if ($this->quyTacDaDung($data['MaQuyTac'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Quy tắc tích điểm này đã được gán cho một hạng khác.',
+            ], 422);
+        }
+
         $last = HangThanhVien::orderBy('MaHangThanhVien', 'desc')->first();
         $so   = $last ? ((int) substr($last->MaHangThanhVien, 3)) + 1 : 1;
         $maHTV = 'HTV' . str_pad($so, 3, '0', STR_PAD_LEFT);
@@ -103,6 +132,13 @@ class HangThanhVienController extends Controller
         }
 
         $data = $this->validateData($request);
+
+        if ($this->quyTacDaDung($data['MaQuyTac'], $ma)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Quy tắc tích điểm này đã được gán cho một hạng khác.',
+            ], 422);
+        }
 
         $htv->TenHang            = $data['TenHang'];
         $htv->MoTa               = $data['MoTa'] ?? null;

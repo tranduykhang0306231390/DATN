@@ -25,6 +25,11 @@ export const getStaffProfile = () => {
     return axiosClient.get("/staff/profile");
 };
 
+/* ADMIN: cấu hình tài khoản của chính mình (họ tên, tên đăng nhập, mật khẩu) */
+export const updateStaffAccount = (data) => {
+    return axiosClient.put("/profile", data);
+};
+
 /* POINTS */
 export const getMemberPoints = () => {
     return axiosClient.get("/member/points");

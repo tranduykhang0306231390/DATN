@@ -1,9 +1,4 @@
-// src/pages/staff/taoHoaDonStyles.js
-//
-// Style của trang Tạo hóa đơn.
-// Cố ý dùng object inline thay vì file .css: inline style có độ ưu tiên
-// cao nhất nên position:fixed của modal luôn có hiệu lực, không bị rule
-// nào đè — đây là lý do modal từng bị lệch khỏi giữa màn hình.
+
 
 /* ── Chú thích màu ở sơ đồ bàn ── */
 export function dot(bg, bd) {
@@ -90,4 +85,11 @@ export const btnCell = {
     borderRadius: 8,
     whiteSpace: 'nowrap',
     boxSizing: 'border-box',
+};
+
+/* ── Khung nhắc ở danh sách voucher ── */
+export const noteDuVoucher = {
+    marginTop: 4, padding: '9px 12px', borderRadius: 8,
+    background: '#fffbeb', border: '1px solid #fde68a',
+    color: '#92400e', fontSize: 12.5, lineHeight: 1.5,
 };

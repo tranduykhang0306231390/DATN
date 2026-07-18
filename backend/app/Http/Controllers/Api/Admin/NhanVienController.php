@@ -14,7 +14,8 @@ class NhanVienController extends Controller
     
     public function index(Request $request)
     {
-        $query = NhanVien::query();
+        // Trang này chỉ quản lý tài khoản nhân viên, không hiển thị tài khoản admin.
+        $query = NhanVien::where('VaiTro', 'NhanVien');
 
         if ($kw = trim((string) $request->query('search'))) {
             $query->where(function ($sub) use ($kw) {
@@ -22,10 +23,6 @@ class NhanVienController extends Controller
                     ->orWhere('TenDangNhap', 'like', "%{$kw}%")
                     ->orWhere('MaNhanVien', 'like', "%{$kw}%");
             });
-        }
-
-        if ($vt = $request->query('vai_tro')) {
-            $query->where('VaiTro', $vt);
         }
 
         if ($tt = $request->query('trang_thai')) {
@@ -59,7 +56,7 @@ class NhanVienController extends Controller
      */
     public function show(string $ma)
     {
-        $nv = NhanVien::find($ma);
+        $nv = NhanVien::where('VaiTro', 'NhanVien')->find($ma);
 
         if (!$nv) {
             return response()->json([
@@ -83,7 +80,6 @@ class NhanVienController extends Controller
             'TenDangNhap' => ['required', 'string', 'max:50', Rule::unique('nhanvien', 'TenDangNhap')],
             'MatKhau'     => ['required', 'string', 'min:6'],
             'HoTen'       => ['required', 'string', 'max:100'],
-            'VaiTro'      => ['required', Rule::in(['Admin', 'NhanVien'])],
             'TrangThai'   => ['nullable', Rule::in(['HoatDong', 'TamKhoa'])],
         ]);
 
@@ -92,13 +88,13 @@ class NhanVienController extends Controller
         $so   = $last ? ((int) substr($last->MaNhanVien, 2)) + 1 : 1;
         $maNV = 'NV' . str_pad($so, 3, '0', STR_PAD_LEFT);
 
-        // Gán trực tiếp thay vì mass-assignment để không phụ thuộc $fillable
+        // Trang này chỉ tạo tài khoản nhân viên (VaiTro cố định = NhanVien)
         $nv = new NhanVien();
         $nv->MaNhanVien = $maNV;
         $nv->TenDangNhap = $data['TenDangNhap'];
         $nv->MatKhau     = Hash::make($data['MatKhau']);
         $nv->HoTen       = $data['HoTen'];
-        $nv->VaiTro      = $data['VaiTro'];
+        $nv->VaiTro      = 'NhanVien';
         $nv->TrangThai   = $data['TrangThai'] ?? 'HoatDong';
         $nv->save();
 
@@ -114,7 +110,7 @@ class NhanVienController extends Controller
      */
     public function update(Request $request, string $ma)
     {
-        $nv = NhanVien::find($ma);
+        $nv = NhanVien::where('VaiTro', 'NhanVien')->find($ma);
 
         if (!$nv) {
             return response()->json([
@@ -127,30 +123,11 @@ class NhanVienController extends Controller
             'TenDangNhap' => ['required', 'string', 'max:50', Rule::unique('nhanvien', 'TenDangNhap')->ignore($ma, 'MaNhanVien')],
             'MatKhau'     => ['nullable', 'string', 'min:6'],
             'HoTen'       => ['required', 'string', 'max:100'],
-            'VaiTro'      => ['required', Rule::in(['Admin', 'NhanVien'])],
             'TrangThai'   => ['required', Rule::in(['HoatDong', 'TamKhoa'])],
         ]);
 
-        // Không cho tự khóa hoặc tự hạ quyền chính mình để tránh mất quyền admin
-        $current = auth('nhanvien')->user();
-        if ($current && $current->MaNhanVien === $ma) {
-            if ($data['TrangThai'] === 'TamKhoa') {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Không thể tự khóa tài khoản của chính mình',
-                ], 422);
-            }
-            if ($data['VaiTro'] !== 'Admin') {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Không thể tự hạ quyền admin của chính mình',
-                ], 422);
-            }
-        }
-
         $nv->TenDangNhap = $data['TenDangNhap'];
         $nv->HoTen       = $data['HoTen'];
-        $nv->VaiTro      = $data['VaiTro'];
         $nv->TrangThai   = $data['TrangThai'];
         if (!empty($data['MatKhau'])) {
             $nv->MatKhau = Hash::make($data['MatKhau']);
@@ -169,21 +146,13 @@ class NhanVienController extends Controller
      */
     public function toggleTrangThai(string $ma)
     {
-        $nv = NhanVien::find($ma);
+        $nv = NhanVien::where('VaiTro', 'NhanVien')->find($ma);
 
         if (!$nv) {
             return response()->json([
                 'success' => false,
                 'message' => 'Không tìm thấy nhân viên',
             ], 404);
-        }
-
-        $current = auth('nhanvien')->user();
-        if ($current && $current->MaNhanVien === $ma && $nv->TrangThai === 'HoatDong') {
-            return response()->json([
-                'success' => false,
-                'message' => 'Không thể tự khóa tài khoản của chính mình',
-            ], 422);
         }
 
         $nv->TrangThai = $nv->TrangThai === 'HoatDong' ? 'TamKhoa' : 'HoatDong';

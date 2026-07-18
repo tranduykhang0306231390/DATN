@@ -21,6 +21,7 @@ export default function QuanLyHangThanhVien() {
     const [list, setList] = useState([]);
     const [pagination, setPagination] = useState({ current_page: 1, last_page: 1, total: 0 });
     const [quyTacOptions, setQuyTacOptions] = useState([]);
+    const [loadingQuyTac, setLoadingQuyTac] = useState(false);
     const [loading, setLoading] = useState(true);
 
     const [search, setSearch] = useState('');
@@ -47,23 +48,29 @@ export default function QuanLyHangThanhVien() {
     }, [search, page]);
 
     useEffect(() => {
-        hangThanhVienApi
-            .getOptions()
-            .then((res) => {
-                if (res.data?.success) setQuyTacOptions(res.data.data.quyTac || []);
-            })
-            .catch(() => {});
-    }, []);
-
-    useEffect(() => {
         loadList();
     }, [loadList]);
+
+    // Mỗi quy tắc chỉ gán được cho 1 hạng, nên phải nạp lại danh sách
+    // mỗi lần mở modal (danh sách thay đổi tùy đang thêm hay đang sửa hạng nào).
+    const loadQuyTac = useCallback(async (maHang) => {
+        setLoadingQuyTac(true);
+        try {
+            const res = await hangThanhVienApi.getOptions(maHang);
+            if (res.data?.success) setQuyTacOptions(res.data.data.quyTac || []);
+        } catch {
+            setQuyTacOptions([]);
+        } finally {
+            setLoadingQuyTac(false);
+        }
+    }, []);
 
     const openCreate = () => {
         setEditing(null);
         setForm(EMPTY_FORM);
         setFormError('');
         setModalOpen(true);
+        loadQuyTac(null);
     };
 
     const openEdit = (htv) => {
@@ -78,6 +85,7 @@ export default function QuanLyHangThanhVien() {
         });
         setFormError('');
         setModalOpen(true);
+        loadQuyTac(htv.MaHangThanhVien);
     };
 
     const setField = (key, value) => setForm((f) => ({ ...f, [key]: value }));
@@ -311,14 +319,23 @@ export default function QuanLyHangThanhVien() {
                             className="admin-select"
                             value={form.MaQuyTac}
                             onChange={(e) => setField('MaQuyTac', e.target.value)}
+                            disabled={loadingQuyTac}
                         >
-                            <option value="">-- Chọn quy tắc --</option>
+                            <option value="">
+                                {loadingQuyTac ? 'Đang tải…' : '-- Chọn quy tắc --'}
+                            </option>
                             {quyTacOptions.map((q) => (
                                 <option key={q.MaQuyTac} value={q.MaQuyTac}>
                                     {q.MaQuyTac} ({fmtMoney(q.SoTienQuyDoi)} = {q.SoDiemNhan}đ)
                                 </option>
                             ))}
                         </select>
+                        {!loadingQuyTac && quyTacOptions.length === 0 && (
+                            <span style={{ fontSize: 12, color: '#dc2626' }}>
+                                Không còn quy tắc nào trống. Mỗi quy tắc chỉ gán được cho một hạng —
+                                hãy tạo quy tắc mới ở trang Quy tắc tích điểm.
+                            </span>
+                        )}
                     </div>
 
                     <div className="admin-field">

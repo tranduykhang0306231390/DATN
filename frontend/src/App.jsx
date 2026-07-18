@@ -40,6 +40,7 @@ import QuanLyPhanHoi from './pages/admin/QuanLyPhanHoi';
 import ThongKe from "./pages/admin/ThongKe";
 import QuanLyHoaDonAdmin from "./pages/admin/QuanLyHoaDon";
 import CauHinhWebsite from "./pages/admin/CauHinhWebsite";
+import QuanLyBanner from "./pages/admin/QuanLyBanner";
 
 
 
@@ -240,13 +241,15 @@ function App() {
                         }
                     />
                     <Route
-                        path="/admin/cau-hinh-website"
+                        path="cau-hinh-website"
                         element={
                             <AdminRoute>
                                 <CauHinhWebsite />
                             </AdminRoute>
                         }
                     />
+                    <Route path="banner" element={<QuanLyBanner />} />
+                    
 
 
 

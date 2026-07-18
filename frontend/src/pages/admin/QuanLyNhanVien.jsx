@@ -5,14 +5,11 @@ import '../../assets/css/admin.css';
 import nhanVienApi from '../../api/nhanVienApi';
 import Modal from '../../components/admin/Modal';
 
-const vaiTroLabel = (v) => (v === 'Admin' ? 'Admin' : 'Nhân viên');
-
 const EMPTY_FORM = {
     TenDangNhap: '',
     MatKhau: '',
     HoTen: '',
-    VaiTro: 'NhanVien',
-    TrangThai: 'HoatDong', 
+    TrangThai: 'HoatDong',
 };
 
 export default function QuanLyNhanVien() {
@@ -24,7 +21,6 @@ export default function QuanLyNhanVien() {
 
     // Bộ lọc
     const [search, setSearch] = useState('');
-    const [vaiTro, setVaiTro] = useState('');
     const [trangThai, setTrangThai] = useState('');
     const [page, setPage] = useState(1);
 
@@ -38,7 +34,7 @@ export default function QuanLyNhanVien() {
     const loadList = useCallback(() => {
         setLoading(true);
         nhanVienApi
-            .getAll({ search, vai_tro: vaiTro, trang_thai: trangThai, page, per_page: 10 })
+            .getAll({ search, trang_thai: trangThai, page, per_page: 10 })
             .then((res) => {
                 if (res.data?.success) {
                     setList(res.data.data);
@@ -47,7 +43,7 @@ export default function QuanLyNhanVien() {
             })
             .catch(() => setList([]))
             .finally(() => setLoading(false));
-    }, [search, vaiTro, trangThai, page]);
+    }, [search, trangThai, page]);
 
     useEffect(() => {
         loadList();
@@ -66,7 +62,6 @@ export default function QuanLyNhanVien() {
             TenDangNhap: nv.TenDangNhap ?? '',
             MatKhau: '', // để trống = giữ mật khẩu cũ
             HoTen: nv.HoTen ?? '',
-            VaiTro: nv.VaiTro ?? 'NhanVien',
             TrangThai: nv.TrangThai ?? 'HoatDong',
         });
         setFormError('');
@@ -82,7 +77,6 @@ export default function QuanLyNhanVien() {
             TenDangNhap: form.TenDangNhap,
             MatKhau: form.MatKhau,
             HoTen: form.HoTen,
-            VaiTro: form.VaiTro,
             TrangThai: form.TrangThai,
         };
         try {
@@ -165,11 +159,6 @@ export default function QuanLyNhanVien() {
                     onChange={(e) => setSearch(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && applyFilter()}
                 />
-                <select className="admin-select" value={vaiTro} onChange={(e) => setVaiTro(e.target.value)}>
-                    <option value="">Tất cả vai trò</option>
-                    <option value="Admin">Admin</option>
-                    <option value="NhanVien">Nhân viên</option>
-                </select>
                 <select
                     className="admin-select"
                     value={trangThai}
@@ -192,7 +181,6 @@ export default function QuanLyNhanVien() {
                             <th>Mã</th>
                             <th>Tên đăng nhập</th>
                             <th>Họ tên</th>
-                            <th>Vai trò</th>
                             <th>Trạng thái</th>
                             <th className="admin-th-action">Thao tác</th>
                         </tr>
@@ -200,11 +188,11 @@ export default function QuanLyNhanVien() {
                     <tbody>
                         {loading ? (
                             <tr>
-                                <td colSpan={6} className="admin-state">Đang tải…</td>
+                                <td colSpan={5} className="admin-state">Đang tải…</td>
                             </tr>
                         ) : list.length === 0 ? (
                             <tr>
-                                <td colSpan={6} className="admin-state">Chưa có nhân viên nào.</td>
+                                <td colSpan={5} className="admin-state">Chưa có nhân viên nào.</td>
                             </tr>
                         ) : (
                             list.map((nv) => {
@@ -216,7 +204,6 @@ export default function QuanLyNhanVien() {
                                         <td>
                                             {nv.HoTen}
                                         </td>
-                                        <td>{vaiTroLabel(nv.VaiTro)}</td>
                                         <td>
                                             <span
                                                 className={`admin-badge ${nv.TrangThai === 'HoatDong' ? 'admin-badge--on' : 'admin-badge--off'}`}
@@ -322,18 +309,6 @@ export default function QuanLyNhanVien() {
                             onChange={(e) => setField('TenDangNhap', e.target.value)}
                             autoComplete="off"
                         />
-                    </div>
-
-                    <div className="admin-field">
-                        <label>Vai trò</label>
-                        <select
-                            className="admin-select"
-                            value={form.VaiTro}
-                            onChange={(e) => setField('VaiTro', e.target.value)}
-                        >
-                            <option value="NhanVien">Nhân viên</option>
-                            <option value="Admin">Admin</option>
-                        </select>
                     </div>
 
                     <div className="admin-field admin-field--full">

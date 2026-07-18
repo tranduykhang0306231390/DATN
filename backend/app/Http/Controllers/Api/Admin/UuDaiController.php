@@ -87,7 +87,7 @@ class UuDaiController extends Controller
      */
     public function store(Request $request)
     {
-        $data = $this->validateData($request);
+        $data = $this->validateData($request, true);
 
         $last = UuDai::orderBy('MaUuDai', 'desc')->first();
         $so   = $last ? ((int) substr($last->MaUuDai, 2)) + 1 : 1;
@@ -98,6 +98,7 @@ class UuDaiController extends Controller
         $ud->TenUuDai        = $data['TenUuDai'];
         $ud->SoDiemCanDoi    = $data['SoDiemCanDoi'];
         $ud->GiaTriGiam      = $data['GiaTriGiam'];
+        $ud->GiaTriHoaDonToiThieu = $data['GiaTriHoaDonToiThieu'] ?? 0;
         $ud->MoTa            = $data['MoTa'] ?? null;
         $ud->SoLuongPhatHanh = $data['SoLuongPhatHanh'];
         $ud->SoLuongTon      = $data['SoLuongPhatHanh']; // ban đầu chưa phát ra voucher nào
@@ -139,6 +140,7 @@ class UuDaiController extends Controller
         $ud->TenUuDai        = $data['TenUuDai'];
         $ud->SoDiemCanDoi    = $data['SoDiemCanDoi'];
         $ud->GiaTriGiam      = $data['GiaTriGiam'];
+        $ud->GiaTriHoaDonToiThieu = $data['GiaTriHoaDonToiThieu'] ?? 0;
         $ud->MoTa            = $data['MoTa'] ?? null;
         $ud->SoLuongPhatHanh = $newPhatHanh;
         $ud->NgayBatDau      = $data['NgayBatDau'];
@@ -179,21 +181,32 @@ class UuDaiController extends Controller
 
     /**
      * Quy tắc validate dùng chung cho store & update.
+     * $laTaoMoi: khi thêm ưu đãi mới, không cho ngày bắt đầu/kết thúc nằm trong quá khứ.
      */
-    private function validateData(Request $request): array
+    private function validateData(Request $request, bool $laTaoMoi = false): array
     {
         $data = $request->validate([
             'TenUuDai'        => ['required', 'string', 'max:100'],
             'NhomUuDai'       => ['required', Rule::in(self::NHOM)],
             'GiaTriGiam'      => ['required', 'numeric', 'min:0'],
+            'GiaTriHoaDonToiThieu' => ['nullable', 'numeric', 'min:0'],
             'SoDiemCanDoi'    => ['required', 'integer', 'min:0'],
             'SoLuongPhatHanh' => ['required', 'integer', 'min:0'],
-            'NgayBatDau'      => ['required', 'date'],
-            'NgayKetThuc'     => ['required', 'date', 'after_or_equal:NgayBatDau'],
+            'NgayBatDau'      => [
+                'required', 'date',
+                ...($laTaoMoi ? ['after_or_equal:today'] : []),
+            ],
+            'NgayKetThuc'     => [
+                'required', 'date', 'after_or_equal:NgayBatDau',
+                ...($laTaoMoi ? ['after_or_equal:today'] : []),
+            ],
             'MaHangThanhVien' => ['nullable', 'exists:hangthanhvien,MaHangThanhVien'],
             'CoTheDungChung'  => ['nullable', 'boolean'],
             'ThuTuApDung'     => ['nullable', 'integer', 'min:1'],
             'MoTa'            => ['nullable', 'string', 'max:255'],
+        ], [
+            'NgayBatDau.after_or_equal'  => 'Ngày bắt đầu không được nằm trong quá khứ.',
+            'NgayKetThuc.after_or_equal' => 'Ngày kết thúc không được nằm trong quá khứ hoặc trước ngày bắt đầu.',
         ]);
 
         // Ưu đãi phần trăm thì giá trị giảm phải nằm trong 0–100

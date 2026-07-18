@@ -252,6 +252,8 @@ class HoaDonController extends Controller
                 'DiemTichLuy'   => $kq['diemTichLuy'],
                 'LaSinhNhat'    => $kq['laSinhNhat'],
                 'SoVoucherApDung' => count($kq['maVoucherList']),
+                'TenHang'       => $kq['tenHang'],
+                'QuyTac'        => $kq['quyTacInfo'],
             ],
         ]);
     }
@@ -344,22 +346,43 @@ class HoaDonController extends Controller
                 ->where('TrangThai', 'ChuaSuDung')
                 ->where('NgayHetHan', '>=', now()->format('Y-m-d'))
                 ->get()
+                // Sắp theo thứ tự ưu tiên: giảm tiền/tặng món trước, giảm % sau cùng
                 ->sortBy('uuDai.ThuTuApDung');
 
             $nhomDaSuDung = [];
+            $conLai       = $tongTienGoc;   // số tiền còn phải trả sau mỗi lần giảm
+
             foreach ($vouchers as $v) {
-                if ($tongGiam >= $tongTienGoc) break;
+                if ($conLai <= 0) break;
 
                 $nhom = $v->uuDai->NhomUuDai;
                 if (isset($nhomDaSuDung[$nhom]) && !$v->uuDai->CoTheDungChung) continue;
 
-                $giam = $v->uuDai->NhomUuDai === 'PhanTram'
-                    ? $tongTienGoc * ($v->uuDai->GiaTriGiam / 100)
-                    : $v->uuDai->GiaTriGiam;
+                // ĐIỀU KIỆN 1 — Hóa đơn phải đạt giá trị tối thiểu của ưu đãi.
+                // Xét trên TỔNG GỐC vì điều kiện in trên voucher là
+                // "áp dụng cho hóa đơn từ X trở lên".
+                $mucToiThieu = (float) ($v->uuDai->GiaTriHoaDonToiThieu ?? 0);
+                if ($mucToiThieu > 0 && $tongTienGoc < $mucToiThieu) {
+                    continue;   // không đủ điều kiện -> giữ lại cho khách
+                }
 
-                $giam = min($giam, $tongTienGoc - $tongGiam);
+                // Phần trăm tính trên số tiền CÒN LẠI, không phải tổng gốc.
+                $giam = $nhom === 'PhanTram'
+                    ? $conLai * ($v->uuDai->GiaTriGiam / 100)
+                    : (float) $v->uuDai->GiaTriGiam;
+
+                // ĐIỀU KIỆN 2 — Voucher giảm tiền / tặng món phải dùng được
+                // TRỌN GIÁ TRỊ. Nếu số tiền còn lại nhỏ hơn giá trị voucher thì
+                // bỏ qua, giữ nguyên cho khách thay vì đốt phần thừa.
+                if ($nhom !== 'PhanTram' && $giam > $conLai) {
+                    continue;
+                }
+
+                // Chốt chặn cuối: không bao giờ giảm quá số còn lại
+                $giam = min($giam, $conLai);
                 if ($giam <= 0) continue;
 
+                $conLai   -= $giam;
                 $tongGiam += $giam;
                 $nhomDaSuDung[$nhom] = true;
                 $maVoucherList[]     = $v->MaVoucherKhachHang;
@@ -372,9 +395,13 @@ class HoaDonController extends Controller
         $diemTichLuy = 0;
         $maQuyTac    = null;
         $laSinhNhat  = false;
+        $tenHang     = null;
+        $quyTacInfo  = null;
 
         if ($khachHang) {
-            $quyTac = $khachHang->hangThanhVien->quyTac ?? null;
+            $tenHang = $khachHang->hangThanhVien->TenHang ?? null;
+            $quyTac  = $khachHang->hangThanhVien->quyTac ?? null;
+
             if ($quyTac && $quyTac->TrangThai === 'HoatDong') {
                 $diemTichLuy = $this->diemService->tinhDiem(
                     $quyTac,
@@ -384,6 +411,22 @@ class HoaDonController extends Controller
                 $maQuyTac   = $quyTac->MaQuyTac;
                 $laSinhNhat = (int) ($quyTac->NhanDoiSinhNhat ?? 0) === 1
                     && $this->diemService->laSinhNhatHomNay($khachHang->NgaySinh);
+
+                // Thông tin quy tắc để hiển thị cho nhân viên/khách xem
+                $mucToiThieu = (float) ($quyTac->GiaTriHoaDonToiThieu ?? 0);
+                $heSo        = (float) ($quyTac->HeSoNhanDiem ?? 1);
+
+                $quyTacInfo = [
+                    'MaQuyTac'             => $quyTac->MaQuyTac,
+                    'SoTienQuyDoi'         => (float) $quyTac->SoTienQuyDoi,
+                    'SoDiemNhan'           => (int) $quyTac->SoDiemNhan,
+                    'GiaTriHoaDonToiThieu' => $mucToiThieu,
+                    'HeSoNhanDiem'         => $heSo,
+                    // Hóa đơn này có đạt ngưỡng để được nhân hệ số không
+                    'ApDungHeSo'           => $mucToiThieu > 0
+                        && $tongThanhToan >= $mucToiThieu
+                        && $heSo > 1,
+                ];
             }
         }
 
@@ -395,6 +438,8 @@ class HoaDonController extends Controller
             'maQuyTac'      => $maQuyTac,
             'maVoucherList' => $maVoucherList,
             'laSinhNhat'    => $laSinhNhat,
+            'tenHang'       => $tenHang,
+            'quyTacInfo'    => $quyTacInfo,
         ];
     }
 

@@ -76,11 +76,13 @@ class LoaiVeController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'TenLoaiVe' => ['required', 'string', 'max:100'],
+            'TenLoaiVe' => ['required', 'string', 'max:100', Rule::unique('loaive', 'TenLoaiVe')],
             'BuoiAn'    => ['required', Rule::in(['Trua', 'Toi'])],
             'LoaiNgay'  => ['required', Rule::in(['NgayThuong', 'CuoiTuan'])],
             'GiaVe'     => ['required', 'numeric', 'min:0'],
             'TrangThai' => ['nullable', Rule::in(['HoatDong', 'TamNgung'])],
+        ], [
+            'TenLoaiVe.unique' => 'Tên loại vé này đã được sử dụng.',
         ]);
 
         $last = LoaiVe::orderBy('MaLoaiVe', 'desc')->first();
@@ -116,11 +118,13 @@ class LoaiVeController extends Controller
         }
 
         $data = $request->validate([
-            'TenLoaiVe' => ['required', 'string', 'max:100'],
+            'TenLoaiVe' => ['required', 'string', 'max:100', Rule::unique('loaive', 'TenLoaiVe')->ignore($ma, 'MaLoaiVe')],
             'BuoiAn'    => ['required', Rule::in(['Trua', 'Toi'])],
             'LoaiNgay'  => ['required', Rule::in(['NgayThuong', 'CuoiTuan'])],
             'GiaVe'     => ['required', 'numeric', 'min:0'],
             'TrangThai' => ['required', Rule::in(['HoatDong', 'TamNgung'])],
+        ], [
+            'TenLoaiVe.unique' => 'Tên loại vé này đã được sử dụng.',
         ]);
 
         $lv->TenLoaiVe = $data['TenLoaiVe'];

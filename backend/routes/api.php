@@ -23,6 +23,7 @@ use App\Http\Controllers\Api\Admin\ThongBaoController;
 use App\Http\Controllers\Api\Admin\PhanHoiController;
 use App\Http\Controllers\Api\Admin\ThongKeController;
 use App\Http\Controllers\Api\Admin\WebSettingController;
+use App\Http\Controllers\Api\Admin\BannerController as AdminBannerController;
 
 
 
@@ -115,6 +116,7 @@ Route::middleware('auth:nhanvien')->group(function () {
 
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/profile', [AuthController::class, 'staffProfile']);
+    Route::put('/profile', [AuthController::class, 'updateStaffProfile']);
 
     // Loại vé
     Route::get('/loai-ve', [LoaiVeController::class, 'index']);
@@ -199,7 +201,15 @@ Route::middleware('auth:nhanvien')->group(function () {
         Route::get('/thong-ke/tong-quan',           [ThongKeController::class, 'tongQuan']);
         Route::get('/thong-ke/chi-tiet',            [ThongKeController::class, 'chiTiet']);
 
-        
+
+        Route::get('/banner',                       [AdminBannerController::class, 'index']);
+        Route::post('/banner',                      [AdminBannerController::class, 'store']);
+        Route::put('/banner/{ma}',                  [AdminBannerController::class, 'update']);
+        Route::patch('/banner/{ma}/trang-thai',     [AdminBannerController::class, 'toggleTrangThai']);
+        Route::delete('/banner/{ma}',               [AdminBannerController::class, 'destroy']);
+
+        Route::get('/web-setting',                  [WebSettingController::class, 'show']);
+        Route::put('/web-setting',                  [WebSettingController::class, 'update']);
     });
    
 

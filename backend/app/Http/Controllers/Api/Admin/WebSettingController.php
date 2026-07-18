@@ -46,7 +46,7 @@ class WebSettingController extends Controller
 
         if (!$setting) {
             $setting = new WebSetting();
-            $setting->MaWebSetting = 'WS001';
+            
         }
 
         $setting->TenWebsite     = $data['TenWebsite'];
