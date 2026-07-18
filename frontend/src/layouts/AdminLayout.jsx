@@ -67,7 +67,7 @@ export default function AdminLayout() {
                     <span style={styles.logoIcon}>🍽</span>
                     {sidebarOpen && (
                         <span style={styles.logoText}>
-                            BUFFET VIP <span style={styles.logoTag}>ADMIN</span>
+                            BUFFET <span style={styles.logoTag}>ADMIN</span>
                         </span>
                     )}
                 </div>

@@ -67,7 +67,7 @@ export default function StaffLayout() {
                     <span style={styles.logoIcon}>🍽</span>
                     {sidebarOpen && (
                         <span style={styles.logoText}>
-                            BUFFET VIP <span style={styles.logoTag}>STAFF</span>
+                            BUFFET <span style={styles.logoTag}>STAFF</span>
                         </span>
                     )}
                 </div>

@@ -126,6 +126,12 @@ Route::middleware('auth:nhanvien')->group(function () {
     Route::post('/hoa-don', [HoaDonController::class, 'store']);
     Route::get('/hoa-don/{maHoaDon}', [HoaDonController::class, 'show']);
 
+    Route::post('/hoa-don',                      [HoaDonController::class, 'store']);       // mở bàn
+    Route::post('/hoa-don/{maHD}/them-mon',      [HoaDonController::class, 'themMon']);     // gọi thêm
+    Route::patch('/hoa-don/{maHD}/doi-ban',      [HoaDonController::class, 'doiBan']);      // đổi bàn
+    Route::patch('/hoa-don/{maHD}/huy-ban',      [HoaDonController::class, 'huyBan']);      // hủy bàn
+    Route::post('/hoa-don/{maHD}/uoc-tinh',      [HoaDonController::class, 'uocTinh']);
+
     Route::get('/quan-ly-hoa-don',               [HoaDonController::class, 'index']);
     Route::get('/quan-ly-hoa-don/ban-dang-treo', [HoaDonController::class, 'banDangTreo']);
     Route::get('/quan-ly-hoa-don/{maHD}',        [HoaDonController::class, 'show']);
