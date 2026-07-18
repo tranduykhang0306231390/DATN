@@ -596,6 +596,14 @@
 .admin-field .admin-select {
     width: 100%;
 }
+.admin-date-wrapper {
+    display: block;
+    width: 100%;
+}
+.admin-date-wrapper .react-datepicker-wrapper {
+    display: block;
+    width: 100%;
+}
 .admin-checkbox {
     flex-direction: row !important;
     align-items: center;

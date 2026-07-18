@@ -4,6 +4,7 @@ import Swal from 'sweetalert2';
 import '../../assets/css/admin.css';
 import khachHangApi from '../../api/khachHangApi';
 import Modal from '../../components/admin/Modal';
+import AdminDateInput from '../../components/admin/AdminDateInput';
 
 const gioiTinhLabel = (g) => (g === 'Nam' ? 'Nam' : g === 'Nu' ? 'Nữ' : '—');
 
@@ -360,11 +361,9 @@ export default function QuanLyKhachHang() {
 
                     <div className="admin-field">
                         <label>Ngày sinh</label>
-                        <input
-                            type="date"
-                            className="admin-input"
+                        <AdminDateInput
                             value={form.NgaySinh}
-                            onChange={(e) => setField('NgaySinh', e.target.value)}
+                            onChange={(v) => setField('NgaySinh', v)}
                         />
                     </div>
 

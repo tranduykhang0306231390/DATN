@@ -4,6 +4,7 @@ import Swal from 'sweetalert2';
 import '../../assets/css/admin.css';
 import quyTacApi from '../../api/quyTacApi';
 import Modal from '../../components/admin/Modal';
+import AdminDateInput from '../../components/admin/AdminDateInput';
 
 const EMPTY_FORM = {
     SoTienQuyDoi: 10000,
@@ -343,23 +344,19 @@ export default function QuanLyQuyTac() {
 
                     <div className="admin-field">
                         <label>Ngày áp dụng</label>
-                        <input
-                            type="date"
-                            className="admin-input"
+                        <AdminDateInput
                             value={form.NgayApDung}
                             max={form.NgayHetHan || undefined}
-                            onChange={(e) => setField('NgayApDung', e.target.value)}
+                            onChange={(v) => setField('NgayApDung', v)}
                         />
                     </div>
 
                     <div className="admin-field">
                         <label>Ngày hết hạn (tùy chọn)</label>
-                        <input
-                            type="date"
-                            className="admin-input"
+                        <AdminDateInput
                             value={form.NgayHetHan}
                             min={form.NgayApDung || undefined}
-                            onChange={(e) => setField('NgayHetHan', e.target.value)}
+                            onChange={(v) => setField('NgayHetHan', v)}
                         />
                     </div>
 

@@ -4,6 +4,7 @@ import Swal from 'sweetalert2';
 import '../../assets/css/admin.css';
 import uuDaiApi from '../../api/uuDaiApi';
 import Modal from '../../components/admin/Modal';
+import AdminDateInput from '../../components/admin/AdminDateInput';
 
 const PER_PAGE = 10;
 
@@ -493,24 +494,20 @@ export default function QuanLyUuDai() {
 
                     <div className="admin-field">
                         <label>Ngày bắt đầu</label>
-                        <input
-                            type="date"
-                            className="admin-input"
+                        <AdminDateInput
                             value={form.NgayBatDau}
                             min={editing ? undefined : todayStr()}
                             max={form.NgayKetThuc || undefined}
-                            onChange={(e) => setField('NgayBatDau', e.target.value)}
+                            onChange={(v) => setField('NgayBatDau', v)}
                         />
                     </div>
 
                     <div className="admin-field">
                         <label>Ngày kết thúc</label>
-                        <input
-                            type="date"
-                            className="admin-input"
+                        <AdminDateInput
                             value={form.NgayKetThuc}
                             min={form.NgayBatDau || (editing ? undefined : todayStr())}
-                            onChange={(e) => setField('NgayKetThuc', e.target.value)}
+                            onChange={(v) => setField('NgayKetThuc', v)}
                         />
                     </div>
                     <div className="admin-field">
