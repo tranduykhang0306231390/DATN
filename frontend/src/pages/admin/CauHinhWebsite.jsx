@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
 import '../../assets/css/admin.css';
 import webSettingApi from '../../api/webSettingApi';
+import { getBackendAssetUrl } from '../../utils/apiUrl';
 
 const EMPTY = {
     TenWebsite: '',
@@ -132,7 +133,7 @@ export default function CauHinhWebsite() {
                                     ) : (
                                         <>
                                             <img
-                                                src={`http://127.0.0.1:8000/logo/${form.Logo}`}
+                                                src={getBackendAssetUrl(`logo/${form.Logo}`)}
                                                 alt="Logo"
                                                 onError={() => setLogoLoi(true)}
                                                 style={{
