@@ -22,7 +22,17 @@ class MemberPointController extends Controller
         $pointTotals = LichSuGiaoDichDiem::query()
             ->where('MaKhachHang', $user->MaKhachHang)
             ->selectRaw(
-                'COALESCE(SUM(CASE WHEN SoDiemSau > SoDiemTruoc THEN SoDiemSau - SoDiemTruoc ELSE 0 END), 0) AS TongDiemNhan'
+                /*
+                 * Điểm đã nhận = điểm cộng từ hóa đơn (CongDiemHoaDon), TRỪ
+                 * phần đã bị thu hồi do chính hóa đơn đó bị hủy sau này
+                 * (HoanDiemHuyHD) — nếu không trừ, khách sẽ thấy "đã nhận"
+                 * nhiều điểm hơn số hóa đơn/chi tiêu còn hợp lệ, dù thực tế
+                 * điểm đó đã bị lấy lại (không phải khách chủ động dùng).
+                 */
+                "GREATEST(0, "
+                    . "COALESCE(SUM(CASE WHEN LoaiGiaoDich = 'CongDiemHoaDon' THEN SoDiemSau - SoDiemTruoc ELSE 0 END), 0) "
+                    . "- COALESCE(SUM(CASE WHEN LoaiGiaoDich = 'HoanDiemHuyHD' THEN SoDiemTruoc - SoDiemSau ELSE 0 END), 0)"
+                . ") AS TongDiemNhan"
             )
             ->selectRaw(
                 /*

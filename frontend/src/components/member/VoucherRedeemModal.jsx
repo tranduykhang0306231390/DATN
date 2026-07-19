@@ -69,17 +69,13 @@ function VoucherRedeemModal({
                         </div>
                         <div>
                             <dt>Điểm cần đổi</dt>
-                            <dd>−{formatMemberNumber(requiredPoints)}</dd>
+                            <dd>{requiredPoints > 0 ? `−${formatMemberNumber(requiredPoints)}` : "Miễn phí"}</dd>
                         </div>
                         <div className="is-remaining">
                             <dt>Dự kiến còn lại</dt>
                             <dd>{formatMemberNumber(previewPoints)}</dd>
                         </div>
                     </dl>
-
-                    <p className="voucher-redeem-dialog__note">
-                        Điểm chỉ được cập nhật sau khi backend xác nhận giao dịch thành công.
-                    </p>
 
                     {error && (
                         <div className="voucher-redeem-dialog__error" role="alert">

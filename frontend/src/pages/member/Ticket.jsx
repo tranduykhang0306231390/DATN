@@ -10,6 +10,7 @@ import "../../assets/css/member/ticket.css";
 
 function Ticket({ embedded = false }) {
     const [tickets, setTickets] = useState([]);
+    const [hienTai, setHienTai] = useState(null);
     const [status, setStatus] = useState("loading");
     const [retryKey, setRetryKey] = useState(0);
 
@@ -20,6 +21,7 @@ function Ticket({ embedded = false }) {
             .then((response) => {
                 if (!active) return;
                 setTickets(Array.isArray(response.data?.data) ? response.data.data : []);
+                setHienTai(response.data?.hien_tai || null);
                 setStatus("success");
             })
             .catch(() => {
@@ -30,6 +32,12 @@ function Ticket({ embedded = false }) {
             active = false;
         };
     }, [retryKey]);
+
+    const isTicketCurrent = (ticket) => (
+        Boolean(hienTai)
+        && ticket?.LoaiNgay === hienTai.LoaiNgay
+        && ticket?.BuoiAn === hienTai.BuoiAn
+    );
 
     return (
         <section
@@ -52,7 +60,7 @@ function Ticket({ embedded = false }) {
 
             {embedded && status === "success" && (
                 <div className="customer-ticket-page__embedded-meta" role="status">
-                    {tickets.length} loại vé đang áp dụng
+                    {tickets.length} loại vé
                 </div>
             )}
 
@@ -80,7 +88,7 @@ function Ticket({ embedded = false }) {
             {status === "success" && tickets.length === 0 && (
                 <EmptyState
                     icon={<FaTicketAlt />}
-                    title="Chưa có loại vé đang áp dụng"
+                    title="Chưa có loại vé nào"
                     description="Danh sách sẽ được cập nhật khi hệ thống có loại vé mới."
                 />
             )}
@@ -88,7 +96,11 @@ function Ticket({ embedded = false }) {
             {status === "success" && tickets.length > 0 && (
                 <div className="customer-ticket-page__grid">
                     {tickets.map((ticket) => (
-                        <TicketCard ticket={ticket} key={ticket.MaLoaiVe} />
+                        <TicketCard
+                            ticket={ticket}
+                            isCurrent={isTicketCurrent(ticket)}
+                            key={ticket.MaLoaiVe}
+                        />
                     ))}
                 </div>
             )}

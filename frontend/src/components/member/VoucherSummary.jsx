@@ -14,7 +14,6 @@ function VoucherSummary({ points, pointsLoading, storeCount, ownedCount }) {
                 <div>
                     <small>Điểm hiện có</small>
                     <strong>{pointsLoading ? "…" : formatMemberNumber(points?.TongDiem)}</strong>
-                    <p>Dữ liệu được đồng bộ từ tài khoản thành viên.</p>
                 </div>
             </article>
             <article>

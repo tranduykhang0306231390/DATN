@@ -1,5 +1,7 @@
 import Benefit from "../components/public/Benefit";
+import HotTicket from "../components/public/HotTicket";
 import LoginSection from "../components/public/LoginSection";
+import "../assets/css/public.css";
 
 const REWARDS_STEPS = [
     {
@@ -66,6 +68,8 @@ function Home() {
                     </div>
                 </div>
             </section>
+
+            <HotTicket />
 
             <Benefit />
         </div>

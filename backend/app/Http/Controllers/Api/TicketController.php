@@ -9,7 +9,13 @@ use Illuminate\Support\Facades\DB;
 class TicketController extends Controller
 {
     /**
-     * Danh sách vé cho khách tham khảo
+     * Danh sách vé cho khách tham khảo.
+     *
+     * Trả về toàn bộ vé đang hoạt động (không lọc theo thời điểm — đây là
+     * bảng giá tham khảo, khách có thể xem trước vé của buổi/ngày khác).
+     * Kèm theo ngày/buổi hiện tại để frontend gắn nhãn "Áp dụng bây giờ"
+     * cho đúng vé, khớp với bộ lọc nhân viên dùng khi tạo hóa đơn
+     * (LoaiVeController::index).
      */
     public function index()
     {
@@ -19,8 +25,20 @@ class TicketController extends Controller
 
         return response()->json([
             "success" => true,
-            "data" => $tickets
+            "data" => $tickets,
+            "hien_tai" => $this->thoiDiemHienTai(),
         ]);
+    }
+
+    private function thoiDiemHienTai(): array
+    {
+        $now = now();
+        $laCuoiTuan = in_array($now->dayOfWeek, [0, 6], true);
+
+        return [
+            'LoaiNgay' => $laCuoiTuan ? 'CuoiTuan' : 'NgayThuong',
+            'BuoiAn' => $now->hour < 16 ? 'Trua' : 'Toi',
+        ];
     }
 
     /**

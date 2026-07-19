@@ -26,6 +26,7 @@ import "../../assets/css/customer/account-invoice-detail.css";
 const getInvoiceStatus = (status) => {
     if (status === "DaThanhToan") return { label: "Đã thanh toán", tone: "success" };
     if (status === "ChuaThanhToan") return { label: "Chờ thanh toán", tone: "warning" };
+    if (status === "DaHuy") return { label: "Đã hủy", tone: "danger" };
     return { label: status || "Chưa xác định", tone: "neutral" };
 };
 

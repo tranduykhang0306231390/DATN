@@ -7,7 +7,6 @@ import {
     FaEye,
     FaFileInvoiceDollar,
     FaFilter,
-    FaHistory,
     FaMinus,
     FaReceipt,
     FaSearch,
@@ -78,6 +77,7 @@ const getInvoiceStatus = (status) => {
     const statuses = {
         DaThanhToan: { label: "Đã thanh toán", tone: "success" },
         ChuaThanhToan: { label: "Chờ thanh toán", tone: "warning" },
+        DaHuy: { label: "Đã hủy", tone: "danger" },
     };
 
     return statuses[status] || {
@@ -155,35 +155,6 @@ const hasDateRangeError = (filters) => (
     Boolean(filters.from && filters.to && filters.to < filters.from)
 );
 
-function HistorySummary({ total, currentPage, totalPages, currentPoints, label, loading }) {
-    return (
-        <div className="transaction-summary" aria-label="Tổng quan lịch sử">
-            <article className="transaction-summary__card transaction-summary__card--green">
-                <span className="transaction-summary__icon" aria-hidden="true"><FaReceipt /></span>
-                <div>
-                    <span>{label}</span>
-                    <strong>{loading && total === null ? "—" : formatMemberNumber(total ?? 0)}</strong>
-                </div>
-            </article>
-            <article className="transaction-summary__card transaction-summary__card--purple">
-                <span className="transaction-summary__icon" aria-hidden="true"><FaHistory /></span>
-                <div>
-                    <span>Trang đang xem</span>
-                    <strong>{currentPage}/{Math.max(1, totalPages)}</strong>
-                </div>
-            </article>
-            {currentPoints !== null && (
-                <article className="transaction-summary__card transaction-summary__card--gold">
-                    <span className="transaction-summary__icon" aria-hidden="true"><FaStar /></span>
-                    <div>
-                        <span>Điểm hiện có</span>
-                        <strong>{formatMemberNumber(currentPoints)}</strong>
-                    </div>
-                </article>
-            )}
-        </div>
-    );
-}
 
 function InvoiceHistoryTable({ items, detailLoadingCode, onViewDetail }) {
     return (
@@ -403,7 +374,6 @@ function Invoice({ embedded = false }) {
     const [invoiceItems, setInvoiceItems] = useState([]);
     const [invoicePage, setInvoicePage] = useState(1);
     const [invoiceLastPage, setInvoiceLastPage] = useState(1);
-    const [invoiceTotal, setInvoiceTotal] = useState(null);
     const [invoiceLoading, setInvoiceLoading] = useState(true);
     const [invoiceError, setInvoiceError] = useState(null);
     const [invoiceRetryKey, setInvoiceRetryKey] = useState(0);
@@ -414,7 +384,6 @@ function Invoice({ embedded = false }) {
     const [pointItems, setPointItems] = useState([]);
     const [pointPage, setPointPage] = useState(1);
     const [pointLastPage, setPointLastPage] = useState(1);
-    const [pointTotal, setPointTotal] = useState(null);
     const [pointLoading, setPointLoading] = useState(true);
     const [pointError, setPointError] = useState(null);
     const [pointRetryKey, setPointRetryKey] = useState(0);
@@ -475,7 +444,6 @@ function Invoice({ embedded = false }) {
 
                 setInvoiceItems(items);
                 setInvoiceLastPage(safeLastPage);
-                setInvoiceTotal(Math.max(0, Number(meta.total) || 0));
             } catch (error) {
                 if (active) setInvoiceError(error);
             } finally {
@@ -518,7 +486,6 @@ function Invoice({ embedded = false }) {
 
                 setPointItems(items);
                 setPointLastPage(safeLastPage);
-                setPointTotal(Math.max(0, Number(response.data?.total) || 0));
             } catch (error) {
                 if (active) setPointError(error);
             } finally {
@@ -689,9 +656,7 @@ function Invoice({ embedded = false }) {
             <div className="customer-shell">
                 {!embedded && (
                     <SectionHeading
-                        eyebrow="Hoạt động thành viên"
                         title="Lịch sử giao dịch"
-                        description="Theo dõi hóa đơn, biến động điểm và mở lại chi tiết giao dịch trong cùng một nơi."
                         action={currentPoints !== null ? (
                             <StatusBadge tone="success" icon={<FaStar />}>
                                 {formatMemberNumber(currentPoints)} điểm
@@ -758,15 +723,6 @@ function Invoice({ embedded = false }) {
                                 aria-labelledby="invoice-history-tab"
                                 className="transaction-panel"
                             >
-                                <HistorySummary
-                                    total={invoiceTotal}
-                                    currentPage={invoicePage}
-                                    totalPages={invoiceLastPage}
-                                    currentPoints={currentPoints}
-                                    label="Hóa đơn phù hợp"
-                                    loading={invoiceLoading}
-                                />
-
                                 <form onSubmit={handleInvoiceFilterSubmit} className="transaction-filter-form">
                                     <TransactionFilterBar
                                         ariaLabel="Lọc lịch sử hóa đơn"
@@ -909,7 +865,6 @@ function Invoice({ embedded = false }) {
                                             onViewDetail={loadInvoiceDetail}
                                         />
                                         <div className="transaction-pagination-wrap">
-                                            <span>{formatMemberNumber(invoiceTotal ?? 0)} kết quả</span>
                                             <Pagination
                                                 currentPage={invoicePage}
                                                 totalPages={invoiceLastPage}
@@ -928,15 +883,6 @@ function Invoice({ embedded = false }) {
                                 aria-labelledby="point-history-tab"
                                 className="transaction-panel"
                             >
-                                <HistorySummary
-                                    total={pointTotal}
-                                    currentPage={pointPage}
-                                    totalPages={pointLastPage}
-                                    currentPoints={currentPoints}
-                                    label="Giao dịch điểm phù hợp"
-                                    loading={pointLoading}
-                                />
-
                                 <form onSubmit={handlePointFilterSubmit} className="transaction-filter-form">
                                     <TransactionFilterBar
                                         ariaLabel="Lọc lịch sử tích điểm"
@@ -1094,7 +1040,6 @@ function Invoice({ embedded = false }) {
                                             onViewDetail={loadInvoiceDetail}
                                         />
                                         <div className="transaction-pagination-wrap">
-                                            <span>{formatMemberNumber(pointTotal ?? 0)} kết quả</span>
                                             <Pagination
                                                 currentPage={pointPage}
                                                 totalPages={pointLastPage}

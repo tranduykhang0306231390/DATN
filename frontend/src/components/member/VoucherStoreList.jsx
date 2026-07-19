@@ -33,16 +33,14 @@ function VoucherStoreList({
         >
             <div className="reward-voucher-panel__intro">
                 <div>
-                    <span>Reward catalogue</span>
                     <h2>Chọn phần thưởng dành cho bạn</h2>
-                    <p>Danh sách đã được backend giới hạn theo thời gian, tồn kho và hạng hiện tại.</p>
                 </div>
             </div>
 
             {!loading && vouchers.length > 0 && points && !hasRedeemableVoucher && (
                 <div className="reward-voucher-points-notice" role="status">
                     <FaExclamationCircle aria-hidden="true" />
-                    <span>Điểm hiện có chưa đủ để đổi các voucher trên trang này.</span>
+                    <span>Một vài voucher vừa hết hiệu lực. Vui lòng tải lại trang.</span>
                 </div>
             )}
 
@@ -51,8 +49,8 @@ function VoucherStoreList({
                 loading={loading}
                 error={error}
                 onRetry={onRetry}
-                emptyTitle="Hiện chưa có voucher phù hợp"
-                emptyDescription="Kho phần thưởng chưa có voucher phù hợp với hạng hoặc thời gian hiện tại."
+                emptyTitle="Chưa có voucher nào bạn có thể đổi"
+                emptyDescription="Kho chỉ hiển thị voucher bạn đủ điểm và đủ điều kiện đổi ngay. Tích thêm điểm để mở khóa các ưu đãi khác."
             >
                 {vouchers.map((voucher) => (
                     <VoucherStoreCard

@@ -179,9 +179,7 @@ function RankOverviewPanel({ activeModal, onCloseModal }) {
 
                     <section className="member-rank-section member-rank-section--point-summary" aria-labelledby="member-point-summary-title">
                         <SectionHeading
-                            eyebrow="Hoạt động thành viên"
                             title="Thống kê điểm"
-                            description="Tổng hợp điểm, hóa đơn và chi tiêu từ dữ liệu tài khoản hiện tại."
                             as="h2"
                             id="member-point-summary-title"
                         />
@@ -201,9 +199,7 @@ function RankOverviewPanel({ activeModal, onCloseModal }) {
             {!rankConfigError && membership.ranks.length > 0 && (
                 <section className="member-rank-section" aria-labelledby="tier-journey-title">
                     <SectionHeading
-                        eyebrow="Các mốc hạng"
                         title="Quyền lợi theo hạng"
-                        description="Chỉ các mốc và quyền lợi đang có trong cấu hình hệ thống được hiển thị."
                         as="h2"
                         id="tier-journey-title"
                     />

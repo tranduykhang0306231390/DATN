@@ -20,29 +20,19 @@ const TransactionHistoryPanel = lazy(() => import("../../components/member/Trans
 
 const TAB_HEADINGS = {
     rank: {
-        eyebrow: "",
         title: "Hạng và điểm",
-        description: "Thẻ thành viên, điểm hiện có và hành trình thăng hạng của bạn.",
     },
     tickets: {
-        eyebrow: "Giá vé",
-        title: "Các loại vé đang áp dụng",
-        description: "Tham khảo giá và thông tin vé được lấy trực tiếp từ hệ thống.",
+        title: "Bảng giá vé buffet",
     },
     vouchers: {
-        eyebrow: "Đổi điểm nhận quà",
         title: "Voucher thành viên",
-        description: "Đổi điểm và quản lý voucher của bạn trong cùng một nơi.",
     },
     "my-vouchers": {
-        eyebrow: "Đổi điểm nhận quà",
         title: "Voucher thành viên",
-        description: "Đổi điểm và quản lý voucher của bạn trong cùng một nơi.",
     },
     transactions: {
-        eyebrow: "Hoạt động tài khoản",
         title: "Lịch sử giao dịch",
-        description: "Tra cứu hóa đơn và biến động điểm trong cùng một nơi.",
     },
 };
 
@@ -117,9 +107,7 @@ function MemberRank() {
         <div className="account-center-page">
             <div className="customer-shell">
                 <SectionHeading
-                    eyebrow={heading.eyebrow}
                     title={heading.title}
-                    description={heading.description}
                     as="h1"
                     id="account-center-title"
                 />

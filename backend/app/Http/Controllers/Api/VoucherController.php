@@ -32,7 +32,7 @@ class VoucherController extends Controller
         );
     }
 
-    /** Kho voucher còn đủ điều kiện đổi ở thời điểm hiện tại. */
+    /** Kho voucher khách hàng có khả năng đổi ngay (đủ điểm, đúng hạng, còn hiệu lực). */
     public function voucherStore()
     {
         $user = auth('khachhang')->user();
@@ -43,6 +43,7 @@ class VoucherController extends Controller
             ->where('SoLuongTon', '>', 0)
             ->whereDate('NgayBatDau', '<=', $today)
             ->whereDate('NgayKetThuc', '>=', $today)
+            ->where('SoDiemCanDoi', '<=', max(0, (int) $user->TongDiem))
             ->where(function ($query) use ($user) {
                 $query->whereNull('MaHangThanhVien')
                     ->orWhere('MaHangThanhVien', $user->MaHangThanhVien);

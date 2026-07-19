@@ -24,30 +24,6 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
--- Cấu trúc bảng cho bảng `banner`
---
-
-CREATE TABLE `banner` (
-  `MaBanner` varchar(255) NOT NULL,
-  `TieuDe` varchar(255) NOT NULL,
-  `HinhAnh` varchar(255) NOT NULL,
-  `Link` varchar(255) DEFAULT NULL,
-  `ThuTu` int(11) NOT NULL DEFAULT 1,
-  `TrangThai` tinyint(1) NOT NULL DEFAULT 1
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Đang đổ dữ liệu cho bảng `banner`
---
-
-INSERT INTO `banner` (`MaBanner`, `TieuDe`, `HinhAnh`, `Link`, `ThuTu`, `TrangThai`) VALUES
-('BN001', 'Buffet Hải Sản', 'banner1.jpg', '/banner/banner1.jpg', 1, 1),
-('BN002', 'Buffet BBQ', 'banner2.jpg', '/banner/banner2.jpg', 2, 1),
-('BN003', 'Buffet Nhật', 'banner3.jpg', '/banner/banner3.jpg', 3, 1);
-
--- --------------------------------------------------------
-
---
 -- Cấu trúc bảng cho bảng `cache`
 --
 
@@ -649,12 +625,6 @@ INSERT INTO `web_settings` (`MaWebSetting`, `TenWebsite`, `Logo`, `DiaChi`, `Ema
 --
 -- Chỉ mục cho các bảng đã đổ
 --
-
---
--- Chỉ mục cho bảng `banner`
---
-ALTER TABLE `banner`
-  ADD PRIMARY KEY (`MaBanner`);
 
 --
 -- Chỉ mục cho bảng `cache`

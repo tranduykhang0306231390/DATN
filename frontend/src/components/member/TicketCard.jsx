@@ -10,16 +10,19 @@ const getDayTypeLabel = (dayType) => ({
     LeTet: "Lễ / Tết",
 }[dayType] || dayType || "Chưa xác định");
 
-function TicketCard({ ticket }) {
+function TicketCard({ ticket, isCurrent = false }) {
     const price = Number(ticket?.GiaVe);
 
     return (
-        <article className="customer-ticket-card">
+        <article className={`customer-ticket-card ${isCurrent ? "is-current" : ""}`}>
             <div className="customer-ticket-card__watermark" aria-hidden="true">BUFFET</div>
             <div className="customer-ticket-card__top">
                 <span className="customer-ticket-card__brand">Buffet</span>
                 <span className="customer-ticket-card__session">{getMealLabel(ticket?.BuoiAn)}</span>
             </div>
+            {isCurrent && (
+                <span className="customer-ticket-card__current-badge">Áp dụng bây giờ</span>
+            )}
             <h2>{ticket?.TenLoaiVe || "Loại vé"}</h2>
             <div className="customer-ticket-card__details">
                 {ticket?.LoaiVe && <span>{ticket.LoaiVe}</span>}

@@ -3,7 +3,6 @@
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\Api\AuthController;
-use App\Http\Controllers\Api\BannerController;
 use App\Http\Controllers\Api\HoaDonController;
 use App\Http\Controllers\Api\HoaDonKhachHangController;
 use App\Http\Controllers\Api\LoaiVeController;
@@ -17,7 +16,6 @@ use App\Http\Controllers\Api\TicketController;
 use App\Http\Controllers\Api\TraCuuKhachHangController;
 use App\Http\Controllers\Api\VoucherController;
 
-use App\Http\Controllers\Api\Admin\BannerController as AdminBannerController;
 use App\Http\Controllers\Api\Admin\HangThanhVienController;
 use App\Http\Controllers\Api\Admin\KhachHangController;
 use App\Http\Controllers\Api\Admin\NhanVienController;
@@ -56,8 +54,6 @@ Route::post('/logout', [AuthController::class, 'logout']);
 | Public website data
 |--------------------------------------------------------------------------
 */
-
-Route::get('/banner', [BannerController::class, 'index']);
 
 Route::get('/tickets', [TicketController::class, 'index']);
 Route::get('/tickets/hot', [TicketController::class, 'hot']);
@@ -587,37 +583,6 @@ Route::middleware('staff')->group(function () {
             Route::patch('/hoa-don/{maHD}/huy', [
                 HoaDonController::class,
                 'huyHoaDonDaThanhToan',
-            ]);
-
-            /*
-            |--------------------------------------------------------------------------
-            | Quản lý banner
-            |--------------------------------------------------------------------------
-            */
-
-            Route::get('/banner', [
-                AdminBannerController::class,
-                'index',
-            ]);
-
-            Route::post('/banner', [
-                AdminBannerController::class,
-                'store',
-            ]);
-
-            Route::put('/banner/{ma}', [
-                AdminBannerController::class,
-                'update',
-            ]);
-
-            Route::patch('/banner/{ma}/trang-thai', [
-                AdminBannerController::class,
-                'toggleTrangThai',
-            ]);
-
-            Route::delete('/banner/{ma}', [
-                AdminBannerController::class,
-                'destroy',
             ]);
 
             /*

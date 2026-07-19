@@ -1,4 +1,4 @@
-import { FaCalendarAlt, FaHistory, FaIdCard, FaStar } from "react-icons/fa";
+import { FaCalendarAlt, FaHistory, FaStar } from "react-icons/fa";
 import {
     formatMemberDate,
     formatMemberNumber,
@@ -27,12 +27,6 @@ function MemberCard({ user, points, membership, onShowHistory }) {
                 <div className="member-loyalty-card__identity">
                     <p>Thành viên</p>
                     <h2>{user.HoTen || "—"}</h2>
-                    {user.MaKhachHang && (
-                        <span>
-                            <FaIdCard aria-hidden="true" />
-                            {user.MaKhachHang}
-                        </span>
-                    )}
                 </div>
 
                 <div className="member-loyalty-card__rank">

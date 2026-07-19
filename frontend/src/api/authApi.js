@@ -41,20 +41,6 @@ export const getPointHistory = (params = {}) => {
     });
 };
 
-/* BANNER */
-export const getBanner = () => {
-    return axiosClient.get("/banner");
-};
-
-/* TICKET */
-export const getTickets = () => {
-    return axiosClient.get("/member/tickets");
-};
-
-export const getHotTickets = () => {
-    return axiosClient.get("/member/tickets/hot");
-};
-
 /* VOUCHER */
 export const getMyVoucher = (page = 1) => {
     return axiosClient.get("/member/my-vouchers", {

@@ -63,7 +63,6 @@ function MemberProgress({ membership }) {
         <section className="member-progress-card" aria-labelledby="membership-progress-title">
             <div className="member-progress-card__header">
                 <div>
-                    <span className="member-progress-card__eyebrow">Hành trình của bạn</span>
                     <h3 id="membership-progress-title">Tiến trình thăng hạng</h3>
                 </div>
                 {isHighestTier ? (
