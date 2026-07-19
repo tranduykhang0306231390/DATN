@@ -1,0 +1,217 @@
+# Hướng dẫn chạy demo dự án BUFFET VIP (DATN)
+
+Tài liệu này hướng dẫn từ A-Z để clone/pull code về và chạy được demo trên máy local, dành cho người **chưa từng setup dự án này bao giờ**. Toàn bộ lệnh bên dưới đã được kiểm chứng thực tế trên một database sạch trước khi đưa vào tài liệu này.
+
+## 0. Yêu cầu hệ thống
+
+Cài sẵn các phần mềm sau trước khi bắt đầu:
+
+| Phần mềm | Phiên bản đã kiểm chứng | Ghi chú |
+| --- | --- | --- |
+| PHP | 8.2.x | Bắt buộc `^8.2` theo `backend/composer.json` |
+| Composer | 2.x | |
+| Node.js | 20.x hoặc 22.x | Đã kiểm chứng với 22.15.0 |
+| npm | 10.x | Đi kèm Node.js |
+| MySQL | 5.7+/8.x | Có thể dùng XAMPP/WAMP/MySQL riêng, miễn có `mysql` client |
+
+Kiểm tra nhanh:
+
+```bash
+php --version
+composer --version
+node --version
+npm --version
+mysql --version
+```
+
+## 1. Clone code
+
+```bash
+git clone https://github.com/tranduykhang0306231390/DATN.git
+cd DATN
+```
+
+Cấu trúc thư mục chính:
+
+```text
+DATN/
+├── backend/     # Laravel API (PHP 8.2, Laravel 12)
+├── frontend/    # React + Vite (khách hàng/nhân viên/admin)
+└── database/    # database.sql (dump đầy đủ dữ liệu mẫu) + ghi chú
+```
+
+## 2. Cài đặt Backend (Laravel)
+
+### 2.1. Cài dependency
+
+```bash
+cd backend
+composer install
+```
+
+### 2.2. Tạo file `.env`
+
+```bash
+cp .env.example .env
+```
+
+Mở `backend/.env` và sửa đúng các dòng sau (phần còn lại giữ nguyên mặc định):
+
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=datn_buffet
+DB_USERNAME=root
+DB_PASSWORD=
+```
+
+> Đặt tên database tùy ý (ví dụ `datn_buffet`), miễn khớp với bước tạo database bên dưới.
+
+Sinh `APP_KEY` và `JWT_SECRET` (dự án dùng JWT riêng qua package `php-open-source-saver/jwt-auth`, không dùng Sanctum):
+
+```bash
+php artisan key:generate
+php artisan jwt:secret
+```
+
+Lệnh `jwt:secret` sẽ tự thêm dòng `JWT_SECRET=...` vào `.env`.
+
+### 2.3. Tạo database và import dữ liệu mẫu
+
+Tạo database rỗng (đổi tên nếu bạn dùng tên khác ở bước 2.2):
+
+```bash
+mysql -u root -e "CREATE DATABASE datn_buffet CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;"
+```
+
+Import toàn bộ cấu trúc bảng + dữ liệu mẫu có sẵn:
+
+```bash
+mysql -u root datn_buffet < ../database/database.sql
+```
+
+**Bước bắt buộc tiếp theo** — file `database.sql` là bản export đầy đủ (đã chứa tất cả bảng ở trạng thái mới nhất), nhưng bảng `migrations` bên trong dump chỉ ghi lại 10/19 migration gần đây. Nếu chạy thẳng `php artisan migrate` lúc này, Laravel sẽ cố tạo lại 9 bảng nền tảng (`users`, `cache`, `jobs`, `personal_access_tokens`, `web_settings`...) vốn **đã tồn tại sẵn** trong dump, và báo lỗi `Base table already exists`. Chạy đoạn SQL sau **đúng 1 lần** để đánh dấu các migration đó là đã áp dụng:
+
+```bash
+mysql -u root datn_buffet -e "
+INSERT INTO migrations (migration, batch) VALUES
+('0001_01_01_000000_create_users_table', 0),
+('0001_01_01_000001_create_cache_table', 0),
+('0001_01_01_000002_create_jobs_table', 0),
+('2026_06_23_151759_create_personal_access_tokens_table', 0),
+('2026_06_28_065314_add_rule_columns_to_quytactichdiem_table', 0),
+('2026_07_03_053657_create_banners_table', 0),
+('2026_07_03_055159_add_hinhanh_mota_to_loaive_table', 0),
+('2026_07_07_110808_create_web_settings_table', 0),
+('2026_07_07_140919_remove_diemthuong_from_quytactichdiem_table', 0);
+"
+```
+
+Sau đó chạy migrate như bình thường — sẽ báo "Nothing to migrate" (đúng, vì schema đã đầy đủ từ dump), và từ nay về sau `migrate` hoạt động bình thường cho mọi migration mới thêm sau này:
+
+```bash
+cd backend
+php artisan migrate
+```
+
+### 2.4. (Tùy chọn) Cấu hình VNPay sandbox
+
+Chỉ cần nếu muốn demo đầy đủ luồng **đặt bàn trước có đặt cọc qua VNPay**. Nếu bỏ qua, các chức năng còn lại của hệ thống vẫn chạy bình thường.
+
+Đăng ký tài khoản sandbox tại https://sandbox.vnpayment.vn/merchantv2, rồi điền vào `backend/.env`:
+
+```env
+VNPAY_TMN_CODE=<TmnCode của bạn>
+VNPAY_HASH_SECRET=<HashSecret của bạn>
+VNPAY_URL=https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
+VNPAY_RETURN_URL=http://localhost:5173/member/dat-ban/ket-qua
+```
+
+### 2.5. Chạy backend
+
+```bash
+cd backend
+php artisan serve
+```
+
+Mặc định chạy tại **http://127.0.0.1:8000**. Không cần thêm `--port` — cổng 8000 khớp sẵn với cấu hình CORS mặc định (`config/cors.php`) và fallback API URL ở phía frontend.
+
+Kiểm tra nhanh backend đã chạy đúng:
+
+```bash
+curl http://127.0.0.1:8000/api/dat-ban
+```
+
+Nhận được phản hồi dạng `{"success":false,"message":"Phiên đăng nhập không hợp lệ hoặc đã hết hạn."}` (HTTP 401) là đúng — nghĩa là API đã sống, chỉ là chưa đăng nhập.
+
+## 3. Cài đặt Frontend (Vite + React)
+
+Mở terminal **mới** (giữ backend đang chạy ở terminal cũ):
+
+```bash
+cd frontend
+npm install
+```
+
+Tạo file `frontend/.env.local` (không commit, chỉ dùng máy local):
+
+```env
+VITE_API_URL=http://127.0.0.1:8000/api
+```
+
+> Nếu không tạo file này, frontend vẫn tự fallback đúng về `http://127.0.0.1:8000/api` — nhưng nên tạo tường minh để tránh nhầm lẫn nếu sau này bạn đổi sang trỏ backend production khi test riêng.
+
+Chạy frontend:
+
+```bash
+npm run dev
+```
+
+Mặc định chạy tại **http://localhost:5173**.
+
+> ⚠️ Nếu cổng 5173 đã bị chiếm (do có tiến trình `npm run dev` khác chưa tắt), Vite sẽ tự chuyển sang cổng khác (5174, 5175...) — lúc đó đăng nhập sẽ báo lỗi **CORS** vì backend chỉ cho phép đúng origin `http://localhost:5173`. Cách xử lý: tắt hết các tiến trình `npm run dev` cũ rồi chạy lại `npm run dev` một lần duy nhất, hoặc thêm `FRONTEND_URL=http://localhost:<cổng-thực-tế>` vào `backend/.env`.
+
+### 3.1. (Tùy chọn) Crisp live chat
+
+Nếu muốn demo tính năng chat trực tiếp giữa khách hàng và nhân viên, thêm vào `frontend/.env.local`:
+
+```env
+VITE_CRISP_WEBSITE_ID=<Website ID lấy từ crisp.im>
+```
+
+Bỏ qua nếu không cần — hệ thống vẫn chạy bình thường, chỉ là nút chat không hiển thị.
+
+## 4. Truy cập demo
+
+| Khu vực | URL | Tài khoản demo |
+| --- | --- | --- |
+| Trang khách hàng | http://localhost:5173/ | Tự đăng ký tài khoản mới qua nút "Đăng ký" |
+| Đăng nhập nhân viên/admin | http://localhost:5173/staff/login | `admin` / `123456` (vai trò Admin) |
+
+Tài khoản nhân viên khác có sẵn trong dữ liệu mẫu (`TenDangNhap`): `thungan1`, `thungan2`, `thungan3`, `quanly1` — mật khẩu các tài khoản này không xác định được từ dữ liệu mẫu (đã băm bcrypt), chỉ có `admin/123456` là mật khẩu đã xác nhận dùng được. Nếu cần thêm tài khoản nhân viên, tạo mới qua trang **Quản lý nhân viên** sau khi đăng nhập bằng `admin`.
+
+Tài khoản khách hàng: dữ liệu mẫu có sẵn một số khách hàng (`KH001`, `KH002`...) nhưng không rõ mật khẩu — hãy **đăng ký tài khoản khách hàng mới** qua giao diện để test đầy đủ luồng thành viên (tích điểm, voucher, đặt bàn...).
+
+## 5. (Tùy chọn) Tự động hủy đặt bàn quá hạn
+
+Tính năng "Đặt bàn trước" có một lệnh chạy nền để tự hủy các lượt giữ chỗ quá hạn thanh toán cọc hoặc khách không đến. Không bắt buộc để demo các chức năng khác, chỉ cần nếu muốn test riêng phần này:
+
+```bash
+cd backend
+php artisan schedule:work
+```
+
+## 6. Lỗi thường gặp
+
+**`npm install`/`npm ci` báo lỗi `EPERM`, `unlink`...**
+Do có tiến trình `npm run dev` cũ đang chạy và khóa file trong `node_modules`. Tắt hết các tiến trình Node đang chạy rồi cài lại.
+
+**Đăng nhập báo lỗi CORS trong Console trình duyệt**
+Frontend không chạy đúng cổng 5173 (xem mục 3), hoặc backend không chạy đúng cổng 8000 (kiểm tra `VITE_API_URL` trong `frontend/.env.local` có khớp cổng backend thực tế không).
+
+**`php artisan migrate` báo `Base table or view already exists`**
+Chưa chạy bước backfill bảng `migrations` ở mục 2.3 trước khi migrate lần đầu.
+
+**Trang admin không hiện logo/ảnh banner**
+Ảnh được phục vụ trực tiếp từ `backend/public/logo/` và `backend/public/ticket/` (không dùng `storage:link`) — cần backend đang chạy và ảnh thực sự tồn tại trong các thư mục đó; dữ liệu mẫu có thể tham chiếu tên file ảnh chưa có sẵn trên máy bạn, đây không phải lỗi hệ thống.
