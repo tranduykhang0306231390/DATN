@@ -11,6 +11,7 @@ import {
 import { createPortal } from 'react-dom';
 import Swal from 'sweetalert2';
 
+import banAnApi from '../../api/banAnApi';
 import hoaDonApi from '../../api/hoaDonApi';
 
 import {
@@ -41,8 +42,6 @@ import {
 } from './taoHoaDonStyles';
 
 import '../../assets/css/staff.css';
-
-const TONG_SO_BAN = 20;
 
 const getInvoiceDetails = (invoice) => {
     const details =
@@ -89,6 +88,9 @@ export default function TaoHoaDon() {
         useState([]);
 
     const [banTreo, setBanTreo] =
+        useState([]);
+
+    const [banAnList, setBanAnList] =
         useState([]);
 
     const [loading, setLoading] =
@@ -200,6 +202,24 @@ export default function TaoHoaDon() {
         }
     }, []);
 
+    const loadBanAn = useCallback(async () => {
+        try {
+            const response =
+                await banAnApi.getActive();
+
+            const list =
+                response.data?.data ?? [];
+
+            setBanAnList(
+                Array.isArray(list)
+                    ? list
+                    : []
+            );
+        } catch {
+            setBanAnList([]);
+        }
+    }, []);
+
     const loadLoaiVe = useCallback(async () => {
         try {
             const response =
@@ -224,9 +244,11 @@ export default function TaoHoaDon() {
     useEffect(() => {
         void loadLoaiVe();
         void loadBanTreo();
+        void loadBanAn();
     }, [
         loadBanTreo,
         loadLoaiVe,
+        loadBanAn,
     ]);
 
     /*
@@ -495,14 +517,9 @@ export default function TaoHoaDon() {
             return;
         }
 
-        const emptyTables = Array.from(
-            {
-                length: TONG_SO_BAN,
-            },
-            (_, index) => index + 1
-        ).filter(
-            (number) =>
-                !banTreoMap[String(number)]
+        const emptyTables = banAnList.filter(
+            (banAn) =>
+                !banTreoMap[String(banAn.MaBan)]
         );
 
         if (emptyTables.length === 0) {
@@ -525,11 +542,11 @@ export default function TaoHoaDon() {
                     margin-top:4px;
                 "
             >
-                ${emptyTables.map((number) => `
+                ${emptyTables.map((banAn) => `
                     <button
                         type="button"
                         class="swal-pick-ban"
-                        data-ban="${number}"
+                        data-ban="${banAn.MaBan}"
                         style="
                             padding:14px 4px;
                             border-radius:10px;
@@ -542,7 +559,7 @@ export default function TaoHoaDon() {
                             font-family:inherit;
                         "
                     >
-                        Bàn ${number}
+                        ${banAn.TenBan}
                     </button>
                 `).join('')}
             </div>
@@ -593,9 +610,7 @@ export default function TaoHoaDon() {
                                     'click',
                                     () => {
                                         pickedTable =
-                                            Number(
-                                                button.dataset.ban
-                                            );
+                                            button.dataset.ban;
 
                                         Swal.close();
                                     }
@@ -620,7 +635,7 @@ export default function TaoHoaDon() {
             const response =
                 await hoaDonApi.doiBan(
                     bill.MaHoaDon,
-                    Number(selectedTable)
+                    selectedTable
                 );
 
             await Swal.fire({
@@ -1090,6 +1105,24 @@ export default function TaoHoaDon() {
                     )
                     + (
                         Number(
+                            result.SoTienCocDaTru
+                            ?? 0
+                        ) > 0
+                            ? `<br>Hoàn cọc đặt bàn: -${
+                                fmt(
+                                    result.SoTienCocDaTru
+                                )
+                            }`
+                            + `<br>Số tiền thu tại quầy: <b>${
+                                fmt(
+                                    result.SoTienConLaiPhaiTra
+                                    ?? 0
+                                )
+                            }</b>`
+                            : ''
+                    )
+                    + (
+                        Number(
                             result.DiemTichLuy
                             ?? 0
                         ) > 0
@@ -1306,29 +1339,23 @@ export default function TaoHoaDon() {
                         gap: 10,
                     }}
                 >
-                    {Array.from(
-                        {
-                            length: TONG_SO_BAN,
-                        },
-                        (_, index) => index + 1
-                    ).map((number) => {
+                    {banAnList.map((banAn) => {
                         const invoice =
                             banTreoMap[
-                                String(number)
+                                String(banAn.MaBan)
                             ];
 
                         const active =
-                            soBan === number
-                            || Number(
-                                bill?.SoBan
-                            ) === number;
+                            soBan === banAn.MaBan
+                            || bill?.SoBan
+                                === banAn.MaBan;
 
                         return (
                             <button
-                                key={number}
+                                key={banAn.MaBan}
                                 type="button"
                                 onClick={() =>
-                                    chonBan(number)
+                                    chonBan(banAn.MaBan)
                                 }
                                 style={{
                                     padding:
@@ -1358,7 +1385,7 @@ export default function TaoHoaDon() {
                                     fontWeight: 700,
                                 }}
                             >
-                                Bàn {number}
+                                {banAn.TenBan}
 
                                 <div
                                     style={{

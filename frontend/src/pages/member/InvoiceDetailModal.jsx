@@ -170,7 +170,6 @@ function InvoiceDetailModal({ show, onClose, invoice }) {
                             </div>
                             <div><dt>Số bàn</dt><dd>{invoice.SoBan || "—"}</dd></div>
                             <div><dt>Điểm tích lũy</dt><dd>+{formatMemberNumber(Math.max(0, toInvoiceNumber(invoice.DiemTichLuy)), "0")}</dd></div>
-                            <div><dt>Điểm sử dụng</dt><dd>{formatMemberNumber(Math.max(0, toInvoiceNumber(invoice.DiemSuDung)), "0")}</dd></div>
                         </dl>
                     </section>
 

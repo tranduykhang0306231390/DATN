@@ -76,6 +76,10 @@ const MemberRank = lazy(
     () => import("./pages/member/MemberRank")
 );
 
+const KetQuaThanhToanDatBan = lazy(
+    () => import("./pages/member/KetQuaThanhToanDatBan")
+);
+
 /*
 |--------------------------------------------------------------------------
 | Staff
@@ -98,6 +102,10 @@ const QuanLyHoaDon = lazy(
     () => import("./pages/staff/QuanLyHoaDon")
 );
 
+const QuanLyDatBan = lazy(
+    () => import("./pages/staff/QuanLyDatBan")
+);
+
 /*
 |--------------------------------------------------------------------------
 | Admin
@@ -118,6 +126,14 @@ const QuanLyUuDai = lazy(
 
 const QuanLyLoaiVe = lazy(
     () => import("./pages/admin/QuanLyLoaiVe")
+);
+
+const QuanLyBanAn = lazy(
+    () => import("./pages/admin/QuanLyBanAn")
+);
+
+const CauHinhDatBan = lazy(
+    () => import("./pages/admin/CauHinhDatBan")
 );
 
 const QuanLyQuyTac = lazy(
@@ -325,6 +341,11 @@ function App() {
                         />
 
                         <Route
+                            path="dat-ban/ket-qua"
+                            element={<KetQuaThanhToanDatBan />}
+                        />
+
+                        <Route
                             path="ticket"
                             element={
                                 <MemberLegacyRedirect
@@ -390,6 +411,11 @@ function App() {
                             path="quan-ly-hoa-don"
                             element={<QuanLyHoaDon />}
                         />
+
+                        <Route
+                            path="quan-ly-dat-ban"
+                            element={<QuanLyDatBan />}
+                        />
                     </Route>
 
                     {/*
@@ -433,6 +459,16 @@ function App() {
                         <Route
                             path="loai-ve"
                             element={<QuanLyLoaiVe />}
+                        />
+
+                        <Route
+                            path="ban-an"
+                            element={<QuanLyBanAn />}
+                        />
+
+                        <Route
+                            path="cau-hinh-dat-ban"
+                            element={<CauHinhDatBan />}
                         />
 
                         <Route

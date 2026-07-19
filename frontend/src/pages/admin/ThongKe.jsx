@@ -25,6 +25,7 @@ const KHOANG_NHANH = [
 
 export default function ThongKe() {
     const [data, setData] = useState(null);
+    const [datBanData, setDatBanData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [tuNgay, setTuNgay] = useState(dateStr(29));
     const [denNgay, setDenNgay] = useState(dateStr(0));
@@ -32,12 +33,20 @@ export default function ThongKe() {
     const loadData = useCallback(async () => {
         await Promise.resolve();
         setLoading(true);
-        thongKeApi
-            .chiTiet({ tu_ngay: tuNgay, den_ngay: denNgay })
-            .then((res) => {
-                if (res.data?.success) setData(res.data.data);
+        const params = { tu_ngay: tuNgay, den_ngay: denNgay };
+
+        Promise.all([
+            thongKeApi.chiTiet(params),
+            thongKeApi.datBan(params),
+        ])
+            .then(([chiTietRes, datBanRes]) => {
+                if (chiTietRes.data?.success) setData(chiTietRes.data.data);
+                if (datBanRes.data?.success) setDatBanData(datBanRes.data.data);
             })
-            .catch(() => setData(null))
+            .catch(() => {
+                setData(null);
+                setDatBanData(null);
+            })
             .finally(() => setLoading(false));
     }, [tuNgay, denNgay]);
 
@@ -139,7 +148,63 @@ export default function ThongKe() {
                         </div>
                     </div>
 
+                    {/* Đặt bàn trước */}
+                    {datBanData && (
+                        <section className="admin-section">
+                            <header className="admin-section-head">
+                                <span className="admin-section-eyebrow">Vận hành</span>
+                                <h3 className="admin-section-title">Đặt bàn trước</h3>
+                            </header>
 
+                            <div className="admin-stats">
+                                <div className="admin-stat" style={{ '--stat-accent': '#c0472b' }}>
+                                    <div className="admin-stat-head">
+                                        <span className="admin-stat-label">Tổng lượt đặt</span>
+                                    </div>
+                                    <div className="admin-stat-value">
+                                        {fmtNum(datBanData.tong_hop.tong_luot_dat)}
+                                    </div>
+                                    <div className="admin-stat-hint">
+                                        {fmtNum(datBanData.tong_hop.so_hoan_tat)} hoàn tất
+                                    </div>
+                                </div>
+
+                                <div className="admin-stat" style={{ '--stat-accent': '#b8863a' }}>
+                                    <div className="admin-stat-head">
+                                        <span className="admin-stat-label">Doanh thu cọc đã thu</span>
+                                    </div>
+                                    <div className="admin-stat-value">
+                                        {fmtMoney(datBanData.tong_hop.doanh_thu_coc_da_thu)}
+                                    </div>
+                                    <div className="admin-stat-hint">Từ các lượt đã đóng cọc</div>
+                                </div>
+
+                                <div className="admin-stat" style={{ '--stat-accent': '#dc2626' }}>
+                                    <div className="admin-stat-head">
+                                        <span className="admin-stat-label">Tỉ lệ không đến</span>
+                                    </div>
+                                    <div className="admin-stat-value">
+                                        {datBanData.tong_hop.ti_le_no_show}%
+                                    </div>
+                                    <div className="admin-stat-hint">
+                                        {fmtNum(datBanData.tong_hop.so_khong_den)} lượt không đến
+                                    </div>
+                                </div>
+
+                                <div className="admin-stat" style={{ '--stat-accent': '#64748b' }}>
+                                    <div className="admin-stat-head">
+                                        <span className="admin-stat-label">Đã hủy / từ chối</span>
+                                    </div>
+                                    <div className="admin-stat-value">
+                                        {fmtNum(datBanData.tong_hop.so_da_huy + datBanData.tong_hop.so_tu_choi)}
+                                    </div>
+                                    <div className="admin-stat-hint">
+                                        {fmtNum(datBanData.tong_hop.so_tu_choi)} do hết bàn phù hợp
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    )}
 
                     {/* Top loại vé */}
                     <section className="admin-section">

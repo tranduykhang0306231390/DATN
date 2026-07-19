@@ -19,7 +19,7 @@
     color: #fff;
     background:
         radial-gradient(circle at 88% 0, rgba(255, 200, 87, 0.28), transparent 34%),
-        linear-gradient(135deg, var(--customer-green-dark), #087f5b 68%, #5a42d4);
+        linear-gradient(135deg, var(--customer-green-dark), var(--customer-green) 68%, var(--customer-purple));
     box-shadow: var(--customer-shadow-md);
 }
 
@@ -204,9 +204,9 @@
     align-items: flex-start;
     justify-content: space-between;
     padding: 13px;
-    border: 1px dashed rgba(117, 89, 255, 0.3);
+    border: 1px dashed rgba(184, 134, 58, 0.3);
     border-radius: var(--customer-radius-sm);
-    background: linear-gradient(135deg, rgba(235, 231, 255, 0.64), rgba(255, 242, 204, 0.54));
+    background: linear-gradient(135deg, rgba(243, 228, 196, 0.6), rgba(255, 242, 204, 0.54));
 }
 
 .customer-app .invoice-detail-vouchers li > div {
@@ -236,8 +236,8 @@
 }
 
 .customer-app .invoice-detail-payment {
-    border-color: rgba(0, 117, 74, 0.18);
-    background: linear-gradient(135deg, rgba(214, 240, 229, 0.5), #fff 62%);
+    border-color: rgba(192, 71, 43, 0.18);
+    background: linear-gradient(135deg, rgba(246, 222, 213, 0.5), #fff 62%);
 }
 
 .customer-app .invoice-detail-payment dl {
@@ -266,12 +266,12 @@
 }
 
 .customer-app .invoice-detail-payment .is-discount dd {
-    color: var(--customer-coral);
+    color: var(--customer-danger);
 }
 
 .customer-app .invoice-detail-payment .is-total {
     padding-top: 11px;
-    border-top: 1px solid rgba(0, 117, 74, 0.15);
+    border-top: 1px solid rgba(192, 71, 43, 0.15);
 }
 
 .customer-app .invoice-detail-payment .is-total dt,
@@ -344,7 +344,7 @@
     padding: 12px;
     border-radius: var(--customer-radius-sm);
     color: #a33b43;
-    background: var(--customer-coral-light);
+    background: var(--customer-green-light);
 }
 
 .customer-app .invoice-detail-feedback-success {
@@ -421,7 +421,7 @@
     margin: 0;
     border: 1px solid var(--customer-border);
     border-radius: var(--customer-radius-md);
-    background: linear-gradient(135deg, var(--customer-yellow-light), rgba(235, 231, 255, 0.56));
+    background: linear-gradient(135deg, var(--customer-yellow-light), rgba(243, 228, 196, 0.5));
 }
 
 .customer-app .feedback-dialog__rating legend {

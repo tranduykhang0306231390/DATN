@@ -17,6 +17,7 @@ const RankOverviewPanel = lazy(() => import("../../components/member/RankOvervie
 const TicketPricingPanel = lazy(() => import("../../components/member/TicketPricingPanel"));
 const VoucherPanel = lazy(() => import("../../components/member/VoucherPanel"));
 const TransactionHistoryPanel = lazy(() => import("../../components/member/TransactionHistoryPanel"));
+const DatBanPanel = lazy(() => import("../../components/member/DatBanPanel"));
 
 const TAB_HEADINGS = {
     rank: {
@@ -43,6 +44,11 @@ const TAB_HEADINGS = {
         eyebrow: "Hoạt động tài khoản",
         title: "Lịch sử giao dịch",
         description: "Tra cứu hóa đơn và biến động điểm trong cùng một nơi.",
+    },
+    "dat-ban": {
+        eyebrow: "Đặt bàn trước",
+        title: "Đặt bàn",
+        description: "Giữ chỗ trước và theo dõi các lượt đặt bàn của bạn.",
     },
 };
 
@@ -116,6 +122,8 @@ function MemberRank() {
         panel = <VoucherPanel key="voucher-mine" view="mine" onViewChange={changeVoucherView} />;
     } else if (activeTab === "transactions") {
         panel = <TransactionHistoryPanel />;
+    } else if (activeTab === "dat-ban") {
+        panel = <DatBanPanel />;
     }
 
     return (

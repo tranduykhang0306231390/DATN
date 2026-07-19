@@ -41,13 +41,13 @@
 .customer-app .transaction-page::before {
     top: 120px;
     right: -180px;
-    background: radial-gradient(circle, rgba(117, 89, 255, 0.13), transparent 68%);
+    background: radial-gradient(circle, rgba(184, 134, 58, 0.13), transparent 68%);
 }
 
 .customer-app .transaction-page::after {
     bottom: 120px;
     left: -210px;
-    background: radial-gradient(circle, rgba(0, 170, 135, 0.12), transparent 70%);
+    background: radial-gradient(circle, rgba(192, 71, 43, 0.12), transparent 70%);
 }
 
 .customer-app .transaction-layout {
@@ -98,8 +98,8 @@
 
 .customer-app .transaction-tabs button.is-active {
     color: #fff;
-    background: linear-gradient(135deg, var(--customer-green), #00a983);
-    box-shadow: 0 10px 24px rgba(0, 117, 74, 0.22);
+    background: linear-gradient(135deg, var(--customer-green), #d37e6b);
+    box-shadow: 0 10px 24px rgba(192, 71, 43, 0.22);
 }
 
 .customer-app .transaction-results-anchor {
@@ -176,7 +176,7 @@
 }
 
 .customer-app .transaction-summary__card--purple .transaction-summary__icon {
-    color: #5a42d4;
+    color: #6e5023;
     background: var(--customer-purple-light);
 }
 
@@ -214,9 +214,9 @@
 .customer-app .transaction-filter-form .customer-filter-bar {
     position: relative;
     overflow: hidden;
-    border-color: rgba(0, 117, 74, 0.13);
+    border-color: rgba(192, 71, 43, 0.13);
     background:
-        linear-gradient(135deg, rgba(232, 249, 241, 0.76), rgba(246, 243, 255, 0.74)),
+        linear-gradient(135deg, rgba(246, 222, 213, 0.7), rgba(243, 228, 196, 0.6)),
         var(--customer-surface-solid);
 }
 
@@ -263,7 +263,7 @@
     border: 1px solid rgba(217, 79, 90, 0.2);
     border-radius: var(--customer-radius-sm);
     color: #a33b43;
-    background: var(--customer-coral-light);
+    background: var(--customer-green-light);
     font-size: 13px;
     font-weight: 750;
 }
@@ -311,9 +311,9 @@
 }
 
 .customer-app .transaction-refresh-error {
-    border: 1px solid rgba(239, 106, 112, 0.22);
+    border: 1px solid rgba(192, 71, 43, 0.22);
     color: #a33b43;
-    background: rgba(239, 106, 112, 0.08);
+    background: rgba(192, 71, 43, 0.08);
 }
 
 .customer-app .transaction-refresh-error button {
@@ -348,7 +348,7 @@
 }
 
 .customer-app .transaction-table thead {
-    background: linear-gradient(120deg, #ecf8f2, #f4f1ff);
+    background: linear-gradient(120deg, var(--customer-green-light), var(--customer-purple-light));
 }
 
 .customer-app .transaction-table th {
@@ -364,7 +364,7 @@
 
 .customer-app .transaction-table td {
     padding: 16px 15px;
-    border-top: 1px solid rgba(12, 52, 42, 0.08);
+    border-top: 1px solid rgba(43, 33, 24, 0.08);
     vertical-align: middle;
 }
 
@@ -373,7 +373,7 @@
 }
 
 .customer-app .transaction-table tbody tr:hover {
-    background: rgba(232, 249, 241, 0.46);
+    background: rgba(246, 222, 213, 0.4);
 }
 
 .customer-app .transaction-table td:first-child strong {
@@ -403,7 +403,7 @@
 }
 
 .customer-app .transaction-points--is-negative {
-    color: var(--customer-coral);
+    color: var(--customer-danger);
 }
 
 .customer-app .transaction-points--is-neutral {
@@ -696,10 +696,10 @@
 /* Account Center filter: scoped separately from generic admin/staff filter styles. */
 .customer-app .transaction-filter-bar {
     padding: 16px;
-    border: 1px solid rgba(0, 117, 74, 0.13);
+    border: 1px solid rgba(192, 71, 43, 0.13);
     border-radius: var(--customer-radius-md);
     background:
-        linear-gradient(135deg, rgba(232, 249, 241, 0.76), rgba(246, 243, 255, 0.74)),
+        linear-gradient(135deg, rgba(246, 222, 213, 0.7), rgba(243, 228, 196, 0.6)),
         var(--customer-surface-solid);
 }
 

@@ -10,7 +10,7 @@
     right: max(20px, 5vw);
     width: min(320px, 28vw);
     height: min(320px, 28vw);
-    border: 1px solid rgba(117, 89, 255, 0.08);
+    border: 1px solid rgba(184, 134, 58, 0.08);
     border-radius: 50%;
     content: "";
     pointer-events: none;
@@ -88,7 +88,7 @@
 .customer-app .member-rank-notice--error {
     border-color: rgba(217, 79, 90, 0.22);
     color: #913940;
-    background: var(--customer-coral-light);
+    background: var(--customer-green-light);
 }
 
 .customer-app .member-rank-notice--warning {
@@ -154,15 +154,15 @@
     border: 1px solid rgba(255, 255, 255, 0.28);
     border-radius: 30px;
     color: #fff;
-    background: linear-gradient(135deg, #004f35 0%, #00754a 55%, #25a96f 100%);
-    box-shadow: 0 28px 60px rgba(0, 79, 53, 0.24);
+    background: linear-gradient(135deg, #8f3320 0%, #c0472b 55%, #d37e6b 100%);
+    box-shadow: 0 28px 60px rgba(192, 71, 43, 0.24);
     transition: transform 220ms ease, box-shadow 220ms ease;
 }
 
 .customer-app .member-loyalty-card--cyan {
-    --member-card-accent: #c9fbff;
-    background: linear-gradient(135deg, #07566a 0%, #158ba0 54%, #25bfd3 100%);
-    box-shadow: 0 28px 60px rgba(21, 139, 160, 0.22);
+    --member-card-accent: #e5ead3;
+    background: linear-gradient(135deg, #4d5928 0%, #6e7f39 54%, #9aa574 100%);
+    box-shadow: 0 28px 60px rgba(110, 127, 57, 0.22);
 }
 
 .customer-app .member-loyalty-card--gold {
@@ -173,14 +173,14 @@
 }
 
 .customer-app .member-loyalty-card--purple {
-    --member-card-accent: #f5eaff;
-    background: linear-gradient(135deg, #4330a8 0%, #7559ff 54%, #ae75ff 100%);
-    box-shadow: 0 28px 60px rgba(91, 68, 210, 0.24);
+    --member-card-accent: #fbefd9;
+    background: linear-gradient(135deg, #6e5023 0%, #b8863a 54%, #d1b07f 100%);
+    box-shadow: 0 28px 60px rgba(184, 134, 58, 0.24);
 }
 
 .customer-app .member-loyalty-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 34px 72px rgba(31, 76, 58, 0.25);
+    box-shadow: 0 34px 72px rgba(24, 14, 8, 0.25);
 }
 
 .customer-app .member-loyalty-card__shape {
@@ -224,9 +224,10 @@
 }
 
 .customer-app .member-loyalty-card__brand span {
-    font-size: 15px;
-    font-weight: 950;
-    letter-spacing: 0.12em;
+    font-family: var(--customer-font-heading);
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
 }
 
 .customer-app .member-loyalty-card__brand small {
@@ -381,8 +382,9 @@
     border-radius: var(--customer-radius-pill);
     color: var(--customer-green-dark);
     background: var(--customer-green-light);
+    font-family: var(--customer-font-heading);
     font-size: 12px;
-    font-weight: 900;
+    font-weight: 700;
     line-height: 1.2;
 }
 
@@ -419,10 +421,10 @@
 
 .customer-app .member-progress-card {
     padding: clamp(22px, 3vw, 32px);
-    border: 1px solid rgba(117, 89, 255, 0.18);
+    border: 1px solid rgba(184, 134, 58, 0.18);
     border-radius: var(--customer-radius-lg);
     background:
-        radial-gradient(circle at 90% 10%, rgba(117, 89, 255, 0.11), transparent 32%),
+        radial-gradient(circle at 90% 10%, rgba(184, 134, 58, 0.11), transparent 32%),
         var(--customer-surface-solid);
     box-shadow: var(--customer-shadow-md);
 }
@@ -457,7 +459,7 @@
     padding: 16px;
     border: 1px solid var(--customer-border);
     border-radius: var(--customer-radius-md);
-    background: rgba(232, 241, 237, 0.62);
+    background: rgba(243, 231, 216, 0.6);
 }
 
 .customer-app .member-progress-card__tiers > div {
@@ -492,10 +494,10 @@
     height: 20px;
     margin-top: 24px;
     overflow: hidden;
-    border: 2px solid rgba(117, 89, 255, 0.26);
+    border: 2px solid rgba(184, 134, 58, 0.26);
     border-radius: var(--customer-radius-pill);
     background: var(--customer-purple-light);
-    box-shadow: inset 0 2px 5px rgba(55, 40, 132, 0.08);
+    box-shadow: inset 0 2px 5px rgba(58, 42, 10, 0.08);
 }
 
 .customer-app .member-progress-track::before,
@@ -526,15 +528,15 @@
     right: auto;
     width: calc(100% - 4px);
     border-radius: var(--customer-radius-pill);
-    background: linear-gradient(90deg, var(--customer-purple), #a477ff, var(--customer-yellow));
-    box-shadow: 0 0 18px rgba(117, 89, 255, 0.34);
+    background: linear-gradient(90deg, var(--customer-purple), #d1b07f, var(--customer-yellow));
+    box-shadow: 0 0 18px rgba(184, 134, 58, 0.34);
     transform: scaleX(0);
     transform-origin: left;
     animation: member-rank-progress-grow 760ms cubic-bezier(0.2, 0.75, 0.25, 1) 120ms forwards;
 }
 
 .customer-app .member-progress-track.is-complete {
-    border-color: rgba(0, 117, 74, 0.28);
+    border-color: rgba(192, 71, 43, 0.28);
     background: var(--customer-green-light);
 }
 
@@ -696,7 +698,7 @@
 }
 
 .customer-app .member-point-metric--coral::before {
-    background: var(--customer-coral);
+    background: var(--customer-green);
 }
 
 .customer-app .member-point-metric--cyan::before {
@@ -724,7 +726,7 @@
 
 .customer-app .member-point-metric--coral > svg {
     color: var(--customer-danger);
-    background: var(--customer-coral-light);
+    background: var(--customer-green-light);
 }
 
 .customer-app .member-point-metric--cyan > svg {
@@ -795,14 +797,14 @@
 }
 
 .customer-app .member-tier-step--current {
-    border-color: rgba(117, 89, 255, 0.32);
+    border-color: rgba(184, 134, 58, 0.32);
     background: linear-gradient(145deg, #fff, var(--customer-purple-light));
-    box-shadow: 0 18px 42px rgba(91, 68, 210, 0.14);
+    box-shadow: 0 18px 42px rgba(184, 134, 58, 0.2);
     transform: translateY(-3px);
 }
 
 .customer-app .member-tier-step--achieved {
-    background: linear-gradient(145deg, #fff, rgba(214, 240, 229, 0.52));
+    background: linear-gradient(145deg, #fff, rgba(246, 222, 213, 0.55));
 }
 
 .customer-app .member-tier-step--upcoming {
@@ -875,12 +877,12 @@
 
 .customer-app .member-tier-benefit.is-current {
     border-color: color-mix(in srgb, var(--tier-benefit-accent) 45%, transparent);
-    box-shadow: 0 20px 48px rgba(31, 76, 58, 0.13);
+    box-shadow: 0 20px 48px rgba(24, 14, 8, 0.13);
 }
 
 @supports not (color: color-mix(in srgb, white, black)) {
     .customer-app .member-tier-benefit.is-current {
-        border-color: rgba(117, 89, 255, 0.34);
+        border-color: rgba(184, 134, 58, 0.34);
     }
 }
 
@@ -1012,7 +1014,7 @@
 
 .customer-app .member-point-activity__icon.is-negative {
     color: var(--customer-danger);
-    background: var(--customer-coral-light);
+    background: var(--customer-green-light);
 }
 
 .customer-app .member-point-activity__icon.is-neutral {
@@ -1093,7 +1095,7 @@
     padding: 10px 12px;
     border-radius: var(--customer-radius-sm);
     color: #913940;
-    background: var(--customer-coral-light);
+    background: var(--customer-green-light);
     font-size: 12px;
 }
 
@@ -1217,7 +1219,7 @@
     place-items: center;
     padding: 24px;
     overflow-y: auto;
-    background: radial-gradient(circle at 50% 12%, rgba(117, 89, 255, 0.24), rgba(6, 22, 17, 0.78));
+    background: radial-gradient(circle at 50% 12%, rgba(192, 71, 43, 0.22), rgba(24, 14, 8, 0.78));
     backdrop-filter: blur(7px);
     -webkit-backdrop-filter: blur(7px);
     animation: member-rank-modal-fade 180ms ease both;
@@ -1233,7 +1235,7 @@
     border: 1px solid rgba(255, 255, 255, 0.62);
     border-radius: var(--customer-radius-lg);
     background: var(--customer-bg);
-    box-shadow: 0 34px 90px rgba(2, 19, 13, 0.34);
+    box-shadow: 0 34px 90px rgba(20, 10, 4, 0.34);
     animation: member-rank-modal-rise 260ms ease both;
 }
 
@@ -1289,7 +1291,7 @@
     align-items: center;
     margin-bottom: 24px;
     padding: 17px;
-    border: 1px solid rgba(117, 89, 255, 0.18);
+    border: 1px solid rgba(184, 134, 58, 0.18);
     border-radius: var(--customer-radius-md);
     background: linear-gradient(135deg, #fff, var(--customer-purple-light));
 }
@@ -1322,7 +1324,7 @@
     background: linear-gradient(
         90deg,
         var(--customer-bg-deep) 20%,
-        #f8fbf9 42%,
+        #fdf9f2 42%,
         var(--customer-bg-deep) 64%
     );
     background-size: 220% 100%;

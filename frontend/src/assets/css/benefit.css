@@ -1,7 +1,7 @@
 .customer-app .customer-public-home .benefit-section {
     padding: clamp(58px, 8vw, 96px) 0;
     background:
-        radial-gradient(circle at 12% 20%, rgba(37, 191, 211, 0.12), transparent 26%),
+        radial-gradient(circle at 12% 20%, rgba(110, 127, 57, 0.12), transparent 26%),
         var(--customer-bg-deep);
 }
 

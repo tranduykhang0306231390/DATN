@@ -15,7 +15,6 @@ class HoaDon extends Model
         'MaHoaDon',
         'NgayLap',
         'TongTien',
-        'DiemSuDung',
         'DiemTichLuy',
         'TrangThai',
         'MaNhanVien',
@@ -27,6 +26,7 @@ class HoaDon extends Model
         'LyDoHuy',
         'ThoiGianHuy',
         'MaNhanVienHuy',
+        'MaDatBan',
     ];
 
     public function chiTietHoaDon()
@@ -57,5 +57,9 @@ class HoaDon extends Model
             'MaVoucherKhachHang'
         );
     }
-    
+    public function datBan()
+    {
+        return $this->belongsTo(DatBan::class, 'MaDatBan', 'MaDatBan');
+    }
+
 }

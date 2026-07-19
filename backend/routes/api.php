@@ -3,7 +3,9 @@
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\BanAnController;
 use App\Http\Controllers\Api\BannerController;
+use App\Http\Controllers\Api\DatBanController;
 use App\Http\Controllers\Api\HoaDonController;
 use App\Http\Controllers\Api\HoaDonKhachHangController;
 use App\Http\Controllers\Api\LoaiVeController;
@@ -13,11 +15,14 @@ use App\Http\Controllers\Api\MemberRankController;
 use App\Http\Controllers\Api\MemberRankHistoryController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\PhanHoiKhachHangController;
+use App\Http\Controllers\Api\StaffDatBanController;
 use App\Http\Controllers\Api\TicketController;
 use App\Http\Controllers\Api\TraCuuKhachHangController;
+use App\Http\Controllers\Api\VnPayController;
 use App\Http\Controllers\Api\VoucherController;
 
 use App\Http\Controllers\Api\Admin\BannerController as AdminBannerController;
+use App\Http\Controllers\Api\Admin\CauHinhDatBanController;
 use App\Http\Controllers\Api\Admin\HangThanhVienController;
 use App\Http\Controllers\Api\Admin\KhachHangController;
 use App\Http\Controllers\Api\Admin\NhanVienController;
@@ -63,6 +68,17 @@ Route::get('/tickets', [TicketController::class, 'index']);
 Route::get('/tickets/hot', [TicketController::class, 'hot']);
 
 Route::get('/web-setting', [WebSettingController::class, 'show']);
+
+/*
+|--------------------------------------------------------------------------
+| Webhook cổng thanh toán (không qua JWT, xác thực bằng chữ ký riêng)
+|--------------------------------------------------------------------------
+*/
+
+Route::get('/thanh-toan/dat-ban/callback', [
+    VnPayController::class,
+    'callback',
+]);
 
 /*
 |--------------------------------------------------------------------------
@@ -189,6 +205,37 @@ Route::middleware('member')
             NotificationController::class,
             'readAll',
         ]);
+
+        /*
+        |--------------------------------------------------------------------------
+        | Đặt bàn trước
+        |--------------------------------------------------------------------------
+        */
+
+        Route::get('/dat-ban/khung-gio-trong', [
+            DatBanController::class,
+            'khungGioTrong',
+        ]);
+
+        Route::post('/dat-ban', [
+            DatBanController::class,
+            'store',
+        ]);
+
+        Route::get('/dat-ban', [
+            DatBanController::class,
+            'index',
+        ]);
+
+        Route::get('/dat-ban/{ma}', [
+            DatBanController::class,
+            'show',
+        ]);
+
+        Route::patch('/dat-ban/{ma}/huy', [
+            DatBanController::class,
+            'huy',
+        ]);
     });
 
 /*
@@ -222,6 +269,17 @@ Route::middleware('staff')->group(function () {
 
     Route::get('/loai-ve', [
         LoaiVeController::class,
+        'index',
+    ]);
+
+    /*
+    |--------------------------------------------------------------------------
+    | Bàn ăn
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get('/ban-an', [
+        BanAnController::class,
         'index',
     ]);
 
@@ -307,6 +365,42 @@ Route::middleware('staff')->group(function () {
 
     /*
     |--------------------------------------------------------------------------
+    | Đặt bàn trước — nhân viên
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get('/dat-ban', [
+        StaffDatBanController::class,
+        'index',
+    ]);
+
+    Route::get('/dat-ban/can-hoan-coc', [
+        StaffDatBanController::class,
+        'canHoanCoc',
+    ]);
+
+    Route::patch('/dat-ban/{ma}/danh-dau-hoan-tien', [
+        StaffDatBanController::class,
+        'danhDauHoanTien',
+    ]);
+
+    Route::patch('/dat-ban/{ma}/xac-nhan', [
+        StaffDatBanController::class,
+        'xacNhan',
+    ]);
+
+    Route::patch('/dat-ban/{ma}/tu-choi', [
+        StaffDatBanController::class,
+        'tuChoi',
+    ]);
+
+    Route::post('/dat-ban/{ma}/checkin', [
+        StaffDatBanController::class,
+        'checkin',
+    ]);
+
+    /*
+    |--------------------------------------------------------------------------
     | Admin API
     |--------------------------------------------------------------------------
     */
@@ -374,6 +468,48 @@ Route::middleware('staff')->group(function () {
             Route::patch('/loai-ve/{ma}/trang-thai', [
                 LoaiVeController::class,
                 'toggleTrangThai',
+            ]);
+
+            /*
+            |--------------------------------------------------------------------------
+            | Quản lý bàn ăn
+            |--------------------------------------------------------------------------
+            */
+
+            Route::get('/ban-an', [
+                BanAnController::class,
+                'adminIndex',
+            ]);
+
+            Route::post('/ban-an', [
+                BanAnController::class,
+                'store',
+            ]);
+
+            Route::put('/ban-an/{ma}', [
+                BanAnController::class,
+                'update',
+            ]);
+
+            Route::patch('/ban-an/{ma}/trang-thai', [
+                BanAnController::class,
+                'capNhatTrangThai',
+            ]);
+
+            /*
+            |--------------------------------------------------------------------------
+            | Cấu hình đặt bàn
+            |--------------------------------------------------------------------------
+            */
+
+            Route::get('/cau-hinh-dat-ban', [
+                CauHinhDatBanController::class,
+                'show',
+            ]);
+
+            Route::put('/cau-hinh-dat-ban', [
+                CauHinhDatBanController::class,
+                'update',
             ]);
 
             /*
@@ -576,6 +712,11 @@ Route::middleware('staff')->group(function () {
             Route::get('/thong-ke/chi-tiet', [
                 ThongKeController::class,
                 'chiTiet',
+            ]);
+
+            Route::get('/thong-ke/dat-ban', [
+                ThongKeController::class,
+                'datBan',
             ]);
 
             /*

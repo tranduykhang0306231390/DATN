@@ -21,6 +21,130 @@
 }
 
 /* =========================================================
+   HERO BANNER
+   ========================================================= */
+
+.customer-app .hero-banner {
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    min-height: min(560px, 82vh);
+}
+
+.customer-app .hero-banner__image {
+    display: block;
+    width: 100%;
+    height: min(560px, 82vh);
+    object-fit: cover;
+}
+
+.customer-app .hero-banner__overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        180deg,
+        rgba(24, 14, 8, 0.72) 0%,
+        rgba(24, 14, 8, 0.5) 45%,
+        rgba(24, 14, 8, 0.82) 100%
+    );
+}
+
+.customer-app .hero-banner__content {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    width: min(calc(100% - 40px), var(--customer-container));
+    margin-inline: auto;
+    padding: 0 20px;
+}
+
+.customer-app .hero-banner__eyebrow {
+    display: inline-block;
+    margin-bottom: 16px;
+    padding: 6px 14px;
+    border: 1px solid rgba(255, 255, 255, 0.32);
+    border-radius: var(--customer-radius-pill);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.customer-app .hero-banner__title {
+    max-width: 720px;
+    margin: 0;
+    color: #fff;
+    font-family: var(--customer-font-heading);
+    font-size: clamp(32px, 5vw, 56px);
+    font-weight: 700;
+    line-height: 1.1;
+}
+
+.customer-app .hero-banner__description {
+    max-width: 560px;
+    margin: 18px 0 0;
+    color: rgba(255, 255, 255, 0.86);
+    font-size: 16px;
+    line-height: 1.6;
+}
+
+.customer-app .hero-banner__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-top: 30px;
+}
+
+.customer-app .hero-banner__actions .customer-button {
+    min-height: 50px;
+    padding: 13px 26px;
+    font-size: 14px;
+}
+
+.customer-app .hero-banner__actions .customer-button--secondary {
+    border-color: rgba(255, 255, 255, 0.5);
+    color: #fff;
+    background: rgba(255, 255, 255, 0.14);
+}
+
+.customer-app .hero-banner__actions .customer-button--secondary:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.26);
+}
+
+@media (max-width: 768px) {
+    .customer-app .hero-banner__image {
+        height: min(440px, 78vh);
+    }
+
+    .customer-app .hero-banner__actions .customer-button {
+        min-height: 46px;
+        padding: 11px 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .customer-app .hero-banner__image {
+        height: min(400px, 74vh);
+    }
+
+    .customer-app .hero-banner__actions {
+        width: 100%;
+        flex-direction: column;
+    }
+
+    .customer-app .hero-banner__actions .customer-button {
+        width: 100%;
+    }
+}
+
+/* =========================================================
    FORM ĐĂNG NHẬP TRÊN TRANG INDEX
    ========================================================= */
 
@@ -38,16 +162,6 @@
     min-height: 590px;
 }
 
-.customer-app .customer-public-auth .customer-auth__story h1 {
-    max-width: 470px;
-    margin: 0;
-    color: #ffffff;
-    font-size: clamp(31px, 4vw, 48px);
-    font-weight: 950;
-    line-height: 1.08;
-    letter-spacing: -0.035em;
-}
-
 .customer-app .customer-public-auth .customer-auth__panel {
     min-height: 590px;
 }
@@ -61,7 +175,7 @@
     background:
         radial-gradient(
             circle at 85% 18%,
-            rgba(117, 89, 255, 0.12),
+            rgba(184, 134, 58, 0.12),
             transparent 24%
         ),
         radial-gradient(
@@ -118,7 +232,7 @@
 }
 
 .customer-app .public-rewards-story__item:hover {
-    border-color: rgba(0, 117, 74, 0.2);
+    border-color: rgba(192, 71, 43, 0.2);
     transform: translateY(-3px);
     box-shadow: var(--customer-shadow-md);
 }
@@ -141,7 +255,7 @@
     font-weight: 950;
     box-shadow:
         0 10px 24px
-        rgba(0, 117, 74, 0.16);
+        rgba(192, 71, 43, 0.16);
 }
 
 .customer-app

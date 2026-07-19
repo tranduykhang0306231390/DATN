@@ -4,6 +4,7 @@ export const ACCOUNT_TABS = Object.freeze([
     "vouchers",
     "my-vouchers",
     "transactions",
+    "dat-ban",
 ]);
 
 export const ACCOUNT_MODALS = Object.freeze(["profile", "password"]);

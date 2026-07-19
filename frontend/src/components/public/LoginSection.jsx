@@ -53,9 +53,9 @@ function LoginSection() {
                             Buffet VIP Rewards
                         </span>
 
-                        <h1 id="public-login-story-title">
+                        <h2 id="public-login-story-title">
                             Mỗi lần dùng bữa, một bước gần hơn đến ưu đãi
-                        </h1>
+                        </h2>
 
                         <p>
                             Một tài khoản để theo dõi điểm, hạng thành viên,

@@ -11,9 +11,21 @@ export const ADMIN_MENU = [
                 color: '#3b82f6',
             },
             {
-                
+
                 label: 'Loại vé',
                 path: '/admin/loai-ve',
+                color: '#0ea5e9',
+            },
+            {
+
+                label: 'Bàn ăn',
+                path: '/admin/ban-an',
+                color: '#22c55e',
+            },
+            {
+
+                label: 'Cấu hình đặt bàn',
+                path: '/admin/cau-hinh-dat-ban',
                 color: '#0ea5e9',
             },
         ],

@@ -2,14 +2,18 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Exceptions\MoBanKhongThanhCongException;
 use App\Http\Controllers\Controller;
+use App\Models\BanAn;
 use App\Models\ChiTietHoaDon;
+use App\Models\DatBan;
 use App\Models\HoaDon;
 use App\Models\KhachHang;
 use App\Models\LoaiVe;
 use App\Models\UuDai;
 use App\Models\VoucherKhachHang;
 use App\Services\DiemTichLuyService;
+use App\Services\MoBanService;
 use App\Services\SequentialCodeService;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
@@ -23,7 +27,8 @@ class HoaDonController extends Controller
 {
     public function __construct(
         private DiemTichLuyService $diemService,
-        private SequentialCodeService $codes
+        private SequentialCodeService $codes,
+        private MoBanService $moBanService
     ) {
     }
 
@@ -42,9 +47,9 @@ class HoaDonController extends Controller
         $data = $request->validate([
             'so_ban' => [
                 'required',
-                'integer',
-                'min:1',
+                'string',
                 'max:20',
+                'exists:banan,MaBan',
             ],
 
             'chi_tiet' => [
@@ -72,6 +77,9 @@ class HoaDonController extends Controller
             'so_ban.required' =>
                 'Vui lòng chọn bàn.',
 
+            'so_ban.exists' =>
+                'Bàn được chọn không tồn tại.',
+
             'chi_tiet.required' =>
                 'Vui lòng chọn ít nhất một loại vé.',
 
@@ -82,143 +90,24 @@ class HoaDonController extends Controller
                 'Mỗi loại vé chỉ được gửi một lần.',
         ]);
 
+        $nhanVien = auth('nhanvien')->user();
+
+        if (!$nhanVien) {
+            return response()->json([
+                'success' => false,
+                'message' =>
+                    'Không xác định được tài khoản nhân viên.',
+            ], 401);
+        }
+
         DB::beginTransaction();
 
         try {
-            /*
-             * Khóa danh sách vé theo cùng một thứ tự.
-             *
-             * Các luồng mở bàn và đổi bàn đều dùng khóa này để hạn chế
-             * hai request đồng thời cùng chiếm một bàn.
-             */
-            $ticketTypes = LoaiVe::query()
-                ->orderBy('MaLoaiVe')
-                ->lockForUpdate()
-                ->get()
-                ->keyBy('MaLoaiVe');
-
-            $banDaDuocMo = HoaDon::query()
-                ->where('SoBan', $data['so_ban'])
-                ->where('TrangThai', 'ChuaThanhToan')
-                ->lockForUpdate()
-                ->exists();
-
-            if ($banDaDuocMo) {
-                DB::rollBack();
-
-                return response()->json([
-                    'success' => false,
-                    'message' =>
-                        "Bàn {$data['so_ban']} đang có hóa đơn chưa thanh toán.",
-                ], 422);
-            }
-
-            $nhanVien = auth('nhanvien')->user();
-
-            if (!$nhanVien) {
-                DB::rollBack();
-
-                return response()->json([
-                    'success' => false,
-                    'message' =>
-                        'Không xác định được tài khoản nhân viên.',
-                ], 401);
-            }
-
-            $tongTien = 0;
-            $chiTietData = [];
-
-            foreach ($data['chi_tiet'] as $item) {
-                $loaiVe = $ticketTypes->get(
-                    $item['MaLoaiVe']
-                );
-
-                if (
-                    !$loaiVe
-                    || $loaiVe->TrangThai !== 'HoatDong'
-                ) {
-                    DB::rollBack();
-
-                    return response()->json([
-                        'success' => false,
-                        'message' =>
-                            "Loại vé {$item['MaLoaiVe']} không khả dụng.",
-                    ], 422);
-                }
-
-                if (!$this->veHopLeThoiDiemNay($loaiVe)) {
-                    DB::rollBack();
-
-                    return response()->json([
-                        'success' => false,
-                        'message' =>
-                            "Vé \"{$loaiVe->TenLoaiVe}\" không áp dụng cho thời điểm hiện tại.",
-                    ], 422);
-                }
-
-                $soLuong = (int) $item['SoLuong'];
-                $donGia = (float) $loaiVe->GiaVe;
-
-                $tongTien += $donGia * $soLuong;
-
-                $chiTietData[] = [
-                    'loaiVe' => $loaiVe,
-                    'SoLuong' => $soLuong,
-                    'DonGia' => $donGia,
-                ];
-            }
-
-            $maHoaDon = $this->codes->next(
-                'hoadon',
-                'MaHoaDon',
-                'HD'
+            $result = $this->moBanService->moBan(
+                $data['so_ban'],
+                $data['chi_tiet'],
+                $nhanVien
             );
-
-            HoaDon::create([
-                'MaHoaDon' => $maHoaDon,
-                'NgayLap' => now(),
-                'TongTien' => $tongTien,
-                'DiemSuDung' => 0,
-                'DiemTichLuy' => 0,
-                'TrangThai' => 'ChuaThanhToan',
-                'MaNhanVien' => $nhanVien->MaNhanVien,
-
-                /*
-                 * Khách hàng và voucher chỉ được chọn khi thanh toán.
-                 */
-                'MaKhachHang' => null,
-                'MaQuyTacHienTai' => null,
-                'MaHangThanhVien' => null,
-                'MaVoucher' => null,
-
-                'SoBan' => $data['so_ban'],
-            ]);
-
-            $detailCodes = $this->codes->nextBatch(
-                'chitiethoadon',
-                'MaChiTietHD',
-                'CTHD',
-                count($chiTietData)
-            );
-
-            foreach ($chiTietData as $index => $item) {
-                ChiTietHoaDon::create([
-                    'MaChiTietHD' =>
-                        $detailCodes[$index],
-
-                    'SoLuong' =>
-                        $item['SoLuong'],
-
-                    'DonGia' =>
-                        $item['DonGia'],
-
-                    'MaHoaDon' =>
-                        $maHoaDon,
-
-                    'MaLoaiVe' =>
-                        $item['loaiVe']->MaLoaiVe,
-                ]);
-            }
 
             DB::commit();
 
@@ -227,12 +116,15 @@ class HoaDonController extends Controller
                 'message' =>
                     "Đã mở bàn {$data['so_ban']}.",
 
-                'data' => [
-                    'MaHoaDon' => $maHoaDon,
-                    'SoBan' => $data['so_ban'],
-                    'TongTien' => $tongTien,
-                ],
+                'data' => $result,
             ], 201);
+        } catch (MoBanKhongThanhCongException $exception) {
+            DB::rollBack();
+
+            return response()->json([
+                'success' => false,
+                'message' => $exception->getMessage(),
+            ], $exception->status);
         } catch (\Throwable $exception) {
             DB::rollBack();
 
@@ -477,23 +369,38 @@ class HoaDonController extends Controller
         $data = $request->validate([
             'so_ban_moi' => [
                 'required',
-                'integer',
-                'min:1',
+                'string',
                 'max:20',
+                'exists:banan,MaBan',
             ],
+        ], [
+            'so_ban_moi.exists' =>
+                'Bàn được chọn không tồn tại.',
         ]);
 
         DB::beginTransaction();
 
         try {
             /*
-             * Cùng mutex với store để tránh mở bàn và đổi bàn
-             * đồng thời vào cùng một số bàn.
+             * Khóa đúng bàn đích để tránh mở bàn và đổi bàn đồng thời
+             * cùng chiếm một bàn (thay cho việc khóa toàn bảng LoaiVe
+             * làm mutex chung trước đây — khóa theo từng bàn cụ thể
+             * chính xác hơn và không còn serialize các bàn khác nhau).
              */
-            LoaiVe::query()
-                ->orderBy('MaLoaiVe')
+            $banMoi = BanAn::query()
+                ->where('MaBan', $data['so_ban_moi'])
                 ->lockForUpdate()
-                ->get();
+                ->first();
+
+            if (!$banMoi || $banMoi->TrangThai !== 'HoatDong') {
+                DB::rollBack();
+
+                return response()->json([
+                    'success' => false,
+                    'message' =>
+                        "Bàn {$data['so_ban_moi']} không khả dụng.",
+                ], 422);
+            }
 
             $hoaDon = HoaDon::query()
                 ->where('MaHoaDon', $maHD)
@@ -520,8 +427,8 @@ class HoaDonController extends Controller
                 ], 422);
             }
 
-            $soBanMoi = (int) $data['so_ban_moi'];
-            $soBanCu = (int) $hoaDon->SoBan;
+            $soBanMoi = $data['so_ban_moi'];
+            $soBanCu = $hoaDon->SoBan;
 
             if ($soBanMoi === $soBanCu) {
                 DB::rollBack();
@@ -744,9 +651,9 @@ class HoaDonController extends Controller
 
         $tongTienGoc = $hoaDon->chiTietHoaDon
             ->sum(
-                fn ($chiTiet) =>
-                    (float) $chiTiet->DonGia
-                    * (int) $chiTiet->SoLuong
+                fn($chiTiet) =>
+                (float) $chiTiet->DonGia
+                * (int) $chiTiet->SoLuong
             );
 
         $vouchers = collect();
@@ -935,9 +842,9 @@ class HoaDonController extends Controller
 
             $tongTienGoc = $hoaDon->chiTietHoaDon
                 ->sum(
-                    fn ($chiTiet) =>
-                        (float) $chiTiet->DonGia
-                        * (int) $chiTiet->SoLuong
+                    fn($chiTiet) =>
+                    (float) $chiTiet->DonGia
+                    * (int) $chiTiet->SoLuong
                 );
 
             $vouchers = collect();
@@ -991,11 +898,33 @@ class HoaDonController extends Controller
             $maHangTaiThoiDiemThanhToan =
                 $khachHang?->MaHangThanhVien;
 
+            /*
+             * Nếu hóa đơn phát sinh từ một lượt đặt bàn trước đã đóng cọc,
+             * trừ số cọc vào số tiền còn phải thu tại quầy. Điểm tích lũy
+             * ở trên vẫn tính trên tổng thanh toán gốc, không trừ cọc.
+             */
+            $datBan = $hoaDon->MaDatBan
+                ? DatBan::query()
+                    ->where('MaDatBan', $hoaDon->MaDatBan)
+                    ->lockForUpdate()
+                    ->first()
+                : null;
+
+            /*
+             * Chỉ trừ cọc nếu chưa từng trừ — chống trừ 2 lần nếu hàm này
+             * bị gọi lại (ví dụ do lỗi mạng khiến client gọi lại request).
+             */
+            $soTienCocTru = ($datBan && $datBan->TrangThaiHoanTien !== 'DaTruVaoHoaDon')
+                ? (float) $datBan->SoTienCoc
+                : 0.0;
+
+            $soTienConLaiPhaiTra = max(0, $voucherResult['tongThanhToan'] - $soTienCocTru);
+
             $hoaDon->TongTien =
-                $voucherResult['tongThanhToan'];
+                $soTienConLaiPhaiTra;
 
             $hoaDon->DiemTichLuy =
-                $pointResult['diemTichLuy'];
+                max(0, (int) ($pointResult['diemTichLuy'] ?? 0));
 
             $hoaDon->TrangThai =
                 'DaThanhToan';
@@ -1013,17 +942,27 @@ class HoaDonController extends Controller
                 $maHangTaiThoiDiemThanhToan;
 
             $hoaDon->MaQuyTacHienTai =
-                $pointResult['maQuyTac'];
+                $pointResult['maQuyTac'] ?? null;
 
             $hoaDon->MaVoucher =
-                $voucherResult['maVoucherApDung'] !== []
-                    ? implode(
-                        ',',
-                        $voucherResult['maVoucherApDung']
-                    )
-                    : null;
+                !empty($voucherResult['maVoucherApDung'])
+                ? implode(
+                    ',',
+                    $voucherResult['maVoucherApDung']
+                )
+                : null;
 
             $hoaDon->save();
+
+            if ($datBan) {
+                $datBan->TrangThai = 'HoanTat';
+
+                if ($soTienCocTru > 0) {
+                    $datBan->TrangThaiHoanTien = 'DaTruVaoHoaDon';
+                }
+
+                $datBan->save();
+            }
 
             if ($voucherResult['maVoucherApDung'] !== []) {
                 VoucherKhachHang::query()
@@ -1067,6 +1006,12 @@ class HoaDonController extends Controller
 
                     'TongThanhToan' =>
                         $voucherResult['tongThanhToan'],
+
+                    'SoTienCocDaTru' =>
+                        $soTienCocTru,
+
+                    'SoTienConLaiPhaiTra' =>
+                        $soTienConLaiPhaiTra,
 
                     'DiemTichLuy' =>
                         $pointResult['diemTichLuy'],
@@ -1149,8 +1094,8 @@ class HoaDonController extends Controller
 
             $voucherIds = $this->normalizeVoucherIds(
                 !empty($hoaDon->MaVoucher)
-                    ? explode(',', $hoaDon->MaVoucher)
-                    : []
+                ? explode(',', $hoaDon->MaVoucher)
+                : []
             );
 
             $soVoucherHoan = 0;
@@ -1283,9 +1228,7 @@ class HoaDonController extends Controller
             ])
             ->where('TrangThai', 'ChuaThanhToan')
             ->orderBy('NgayLap')
-            ->orderByRaw(
-                'CAST(SoBan AS UNSIGNED) ASC'
-            )
+            ->orderBy('SoBan')
             ->get();
 
         return response()->json([
@@ -1433,21 +1376,21 @@ class HoaDonController extends Controller
             ->where('TrangThai', 'DaThanhToan')
             ->when(
                 !empty($filters['tu_ngay']),
-                fn ($query) =>
-                    $query->whereDate(
-                        'NgayLap',
-                        '>=',
-                        $filters['tu_ngay']
-                    )
+                fn($query) =>
+                $query->whereDate(
+                    'NgayLap',
+                    '>=',
+                    $filters['tu_ngay']
+                )
             )
             ->when(
                 !empty($filters['den_ngay']),
-                fn ($query) =>
-                    $query->whereDate(
-                        'NgayLap',
-                        '<=',
-                        $filters['den_ngay']
-                    )
+                fn($query) =>
+                $query->whereDate(
+                    'NgayLap',
+                    '<=',
+                    $filters['den_ngay']
+                )
             )
             ->sum('TongTien');
 
@@ -1521,8 +1464,8 @@ class HoaDonController extends Controller
     ): Collection {
         return collect($voucherIds)
             ->map(
-                fn ($id) =>
-                    trim((string) $id)
+                fn($id) =>
+                trim((string) $id)
             )
             ->filter()
             ->unique()
@@ -1576,13 +1519,7 @@ class HoaDonController extends Controller
 
         $validVouchers = $voucherRows
             ->filter(
-                function (
-                    VoucherKhachHang $voucher
-                ) use (
-                    $customerId,
-                    $offers,
-                    $today
-                ) {
+                function (VoucherKhachHang $voucher) use ($customerId, $offers, $today) {
                     $offer = $offers->get(
                         $voucher->MaUuDai
                     );
@@ -1620,10 +1557,7 @@ class HoaDonController extends Controller
                 }
             )
             ->sort(
-                function (
-                    VoucherKhachHang $left,
-                    VoucherKhachHang $right
-                ) {
+                function (VoucherKhachHang $left, VoucherKhachHang $right) {
                     $order =
                         (int) ($left->uuDai->ThuTuApDung ?? 1)
                         <=>
@@ -1898,7 +1832,7 @@ class HoaDonController extends Controller
 
         return [
             'diemTichLuy' =>
-                $diemTichLuy,
+                (int) ($diemTichLuy['diem'] ?? 0),
 
             'maQuyTac' =>
                 $quyTac->MaQuyTac,
@@ -1950,9 +1884,9 @@ class HoaDonController extends Controller
             ->where('MaHoaDon', $maHD)
             ->get()
             ->sum(
-                fn ($chiTiet) =>
-                    (float) $chiTiet->DonGia
-                    * (int) $chiTiet->SoLuong
+                fn($chiTiet) =>
+                (float) $chiTiet->DonGia
+                * (int) $chiTiet->SoLuong
             );
     }
 
@@ -1972,13 +1906,13 @@ class HoaDonController extends Controller
 
         $loaiNgayHienTai =
             $laCuoiTuan
-                ? 'CuoiTuan'
-                : 'NgayThuong';
+            ? 'CuoiTuan'
+            : 'NgayThuong';
 
         $buoiHienTai =
             $now->hour < 16
-                ? 'Trua'
-                : 'Toi';
+            ? 'Trua'
+            : 'Toi';
 
         return
             $ve->LoaiNgay === $loaiNgayHienTai

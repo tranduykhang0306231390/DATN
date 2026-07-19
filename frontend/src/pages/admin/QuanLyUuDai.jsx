@@ -578,8 +578,5 @@ export default function QuanLyUuDai() {
             </Modal>
         </div>
     );
-<<<<<<< HEAD
 }
-=======
-} 
->>>>>>> origin/KhoiNguyen_QuanLyBanner
+

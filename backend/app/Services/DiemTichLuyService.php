@@ -8,14 +8,14 @@ use App\Models\KhachHang;
 use App\Models\HangThanhVien;
 use App\Models\LichSuGiaoDichDiem;
 use App\Models\LichSuHangThanhVien;
-use App\Models\ThongBao;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class DiemTichLuyService
 {
     public function __construct(
-        private SequentialCodeService $codes
+        private SequentialCodeService $codes,
+        private ThongBaoService $thongBao
     ) {}
 
     /**
@@ -105,7 +105,7 @@ class DiemTichLuyService
         );
 
         // Thông báo tích điểm
-        $this->taoThongBao(
+        $this->thongBao->gui(
             maKH:    $khachHang->MaKhachHang,
             tieuDe:  'Tích điểm thành công',
             noiDung: "Bạn đã được cộng {$soDiem} điểm từ hóa đơn {$maThamChieu}."
@@ -136,7 +136,7 @@ class DiemTichLuyService
             maThamChieu: $maThamChieu
         );
 
-        $this->taoThongBao(
+        $this->thongBao->gui(
             maKH:    $khachHang->MaKhachHang,
             tieuDe:  'Điều chỉnh điểm do hủy hóa đơn',
             noiDung: "Hóa đơn {$maThamChieu} đã bị hủy. {$soDiem} điểm tích lũy đã được thu hồi."
@@ -197,7 +197,7 @@ class DiemTichLuyService
             'TongChiTieuTaiThoiDiem' => $tongChiTieu,
         ]);
 
-        $this->taoThongBao(
+        $this->thongBao->gui(
             maKH:    $khachHang->MaKhachHang,
             tieuDe:  'Chúc mừng! Bạn đã lên hạng ' . $hangMoi->TenHang,
             noiDung: "Tài khoản của bạn đã được nâng lên hạng {$hangMoi->TenHang}. Chúc mừng!"
@@ -242,7 +242,7 @@ class DiemTichLuyService
             'TongChiTieuTaiThoiDiem' => $tongChiTieu,
         ]);
 
-        $this->taoThongBao(
+        $this->thongBao->gui(
             maKH:    $khachHang->MaKhachHang,
             tieuDe:  'Điều chỉnh hạng thành viên',
             noiDung: "Do hóa đơn {$maThamChieu} đã bị hủy và hoàn điểm, hạng của bạn được điều chỉnh về {$hangXungDang->TenHang}."
@@ -273,21 +273,6 @@ class DiemTichLuyService
             'MaKhachHang'      => $maKH,
             'MaThamChieu'      => $maThamChieu,
             'ThoiGianGiaoDich' => now(),
-        ]);
-    }
-
-    /**
-     * Tạo thông báo cho khách hàng
-     */
-    private function taoThongBao(string $maKH, string $tieuDe, string $noiDung): void
-    {
-        ThongBao::create([
-            'MaThongBao'  => $this->codes->next('thongbao', 'MaThongBao', 'TB'),
-            'TieuDe'      => $tieuDe,
-            'NoiDung'     => $noiDung,
-            'ThoiGian'    => now(),
-            'TrangThai'   => 'ChuaDoc',
-            'MaKhachHang' => $maKH,
         ]);
     }
 }

@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import {
+    FaCalendarCheck,
     FaCrown,
     FaGift,
     FaHistory,
@@ -12,6 +13,7 @@ const ACCOUNT_LINKS = [
     { key: "rank", to: "/member/rank?tab=rank", label: "Hạng và điểm", icon: FaCrown },
     { key: "tickets", to: "/member/rank?tab=tickets", label: "Giá vé", icon: FaTicketAlt },
     { key: "vouchers", to: "/member/rank?tab=vouchers", label: "Voucher", icon: FaGift },
+    { key: "dat-ban", to: "/member/rank?tab=dat-ban", label: "Đặt bàn", icon: FaCalendarCheck },
     { key: "transactions", to: "/member/rank?tab=transactions", label: "Lịch sử giao dịch", icon: FaHistory },
 ];
 

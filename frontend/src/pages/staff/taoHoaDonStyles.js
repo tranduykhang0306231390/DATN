@@ -15,7 +15,7 @@ export const ovl = {
     width: '100vw', height: '100vh',
     background: 'rgba(0,0,0,.45)',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
-    zIndex: 9999, padding: 20, boxSizing: 'border-box',
+    zIndex: 1000, padding: 20, boxSizing: 'border-box',
 };
 
 export const box = {

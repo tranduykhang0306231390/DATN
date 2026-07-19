@@ -497,6 +497,16 @@
     background: #f1f5f9;
     color: #64748b;
 }
+.admin-page .admin-badge--warn {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.admin-page .admin-select--sm {
+    height: 34px;
+    padding: 0 8px;
+    font-size: 12.5px;
+}
 
 /* ---------- PHÂN TRANG ---------- */
 .admin-page .admin-pagination {

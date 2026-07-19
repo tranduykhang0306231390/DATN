@@ -1,4 +1,5 @@
 import Benefit from "../components/public/Benefit";
+import HeroBanner from "../components/public/HeroBanner";
 import LoginSection from "../components/public/LoginSection";
 
 const REWARDS_STEPS = [
@@ -25,6 +26,8 @@ const REWARDS_STEPS = [
 function Home() {
     return (
         <div className="customer-public-home">
+            <HeroBanner />
+
             <LoginSection />
 
             <section

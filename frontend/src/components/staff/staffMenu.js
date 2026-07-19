@@ -12,11 +12,18 @@ export const STAFF_MENU = [
                 color: '#3b82f6',
             },
             {
-               
+
                 label: 'Quản lý hóa đơn',
                 desc: 'Xem và tra cứu lịch sử hóa đơn',
                 path: '/staff/quan-ly-hoa-don',
                 color: '#8b5cf6',
+            },
+            {
+
+                label: 'Quản lý đặt bàn',
+                desc: 'Xác nhận, từ chối và check-in đặt bàn trước',
+                path: '/staff/quan-ly-dat-ban',
+                color: '#f59e0b',
             },
         ],
     },
