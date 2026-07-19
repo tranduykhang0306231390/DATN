@@ -155,6 +155,15 @@ export default function StaffLayout() {
                     </div>
 
                     <button
+                        style={styles.btnCrispChat}
+                        onClick={() =>
+                            window.open("https://app.crisp.chat", "_blank", "noopener,noreferrer")
+                        }
+                    >
+                        💬 Trả lời khách hàng
+                    </button>
+
+                    <button
                         style={styles.btnLogout}
                         onClick={handleLogout}
                         disabled={loggingOut}
@@ -327,6 +336,17 @@ const styles = {
         fontWeight: 600,
         fontSize: 15,
         color: "#111827",
+    },
+    btnCrispChat: {
+        padding: "6px 14px",
+        background: "linear-gradient(135deg, #2563eb, #16a34a)",
+        color: "#fff",
+        border: "none",
+        borderRadius: 8,
+        cursor: "pointer",
+        fontSize: 13,
+        fontWeight: 600,
+        flexShrink: 0,
     },
     btnLogout: {
         padding: "6px 14px",

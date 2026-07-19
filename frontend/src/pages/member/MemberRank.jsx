@@ -4,12 +4,14 @@ import { useSearchParams } from "react-router-dom";
 import AccountNavigation from "../../components/member/AccountNavigation";
 import LoadingSkeleton from "../../components/customer/ui/LoadingSkeleton";
 import SectionHeading from "../../components/customer/ui/SectionHeading";
+import useCrispChat from "../../hooks/useCrispChat";
 import {
     getAccountNavigationKey,
     getAccountSearch,
     normalizeAccountModal,
     normalizeAccountTab,
 } from "../../utils/accountCenter";
+import { getStoredAuthRole, getStoredAuthToken } from "../../utils/customerSession";
 import "../../assets/css/customer/member-rank.css";
 import "../../assets/css/customer/account-center.css";
 
@@ -70,6 +72,9 @@ function MemberRank() {
     const activeModal = normalizeAccountModal(searchParams.get("modal"), activeTab);
     const heading = TAB_HEADINGS[activeTab];
     const activeNavigationKey = getAccountNavigationKey(activeTab, activeModal);
+
+    const isLoggedIn = Boolean(getStoredAuthToken()) && getStoredAuthRole() === "member";
+    useCrispChat(isLoggedIn);
 
     useEffect(() => {
         const hasInvalidTab = requestedTab !== null && requestedTab !== activeTab;
