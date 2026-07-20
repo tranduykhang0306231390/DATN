@@ -42,4 +42,8 @@ COPY --from=vendor /app/vendor/ vendor/
 
 EXPOSE 10000
 
-CMD sh -c "php artisan migrate --force && php artisan config:cache && php artisan serve --host 0.0.0.0 --port ${PORT:-10000}"
+# Chạy kèm scheduler (datban:xu-ly-qua-han mỗi phút — dọn lượt đặt bàn hết
+# hạn giữ chỗ, đánh dấu không đến...) ở nền cùng process web, vì Render
+# free tier không có cron job riêng và không có gì khác gọi
+# `php artisan schedule:run` định kỳ trên server.
+CMD sh -c "php artisan migrate --force && php artisan config:cache && (php artisan schedule:work &) && php artisan serve --host 0.0.0.0 --port ${PORT:-10000}"

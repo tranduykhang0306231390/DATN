@@ -6,7 +6,8 @@ import cauHinhDatBanApi from '../../api/cauHinhDatBanApi';
 
 const EMPTY = {
     ThoiGianGiuChoPhut: 10,
-    SoGioDatToiThieu: 2,
+    SoPhutDatToiThieu: 120,
+    ThoiLuongPhucVuPhut: 120,
     SoKhachToiThieu: 2,
     SoKhachToiDa: 20,
     PhutGiuBanSauGioHen: 15,
@@ -25,15 +26,31 @@ export default function CauHinhDatBan() {
     const [saving, setSaving] = useState(false);
     const [formError, setFormError] = useState('');
 
+    // Đơn vị hiển thị/nhập cho "Đặt trước tối thiểu" — chỉ phục vụ UI, giá
+    // trị lưu thật (form.SoPhutDatToiThieu) luôn quy về phút.
+    const [leadUnit, setLeadUnit] = useState('gio');
+    const [leadValue, setLeadValue] = useState(2);
+
     useEffect(() => {
         cauHinhDatBanApi
             .get()
             .then((res) => {
                 if (res.data?.success) {
                     const d = res.data.data;
+                    const soPhutDatToiThieu = Number(d.SoPhutDatToiThieu) || 0;
+
+                    if (soPhutDatToiThieu > 0 && soPhutDatToiThieu % 60 === 0) {
+                        setLeadUnit('gio');
+                        setLeadValue(soPhutDatToiThieu / 60);
+                    } else {
+                        setLeadUnit('phut');
+                        setLeadValue(soPhutDatToiThieu);
+                    }
+
                     setForm({
                         ThoiGianGiuChoPhut: Number(d.ThoiGianGiuChoPhut) || 0,
-                        SoGioDatToiThieu: Number(d.SoGioDatToiThieu) || 0,
+                        SoPhutDatToiThieu: soPhutDatToiThieu,
+                        ThoiLuongPhucVuPhut: Number(d.ThoiLuongPhucVuPhut) || 0,
                         SoKhachToiThieu: Number(d.SoKhachToiThieu) || 0,
                         SoKhachToiDa: Number(d.SoKhachToiDa) || 0,
                         PhutGiuBanSauGioHen: Number(d.PhutGiuBanSauGioHen) || 0,
@@ -50,9 +67,34 @@ export default function CauHinhDatBan() {
 
     const setField = (key, value) => setForm((f) => ({ ...f, [key]: value }));
 
+    const handleLeadValueChange = (raw) => {
+        setLeadValue(raw);
+        const so = Number(raw) || 0;
+        const phut = leadUnit === 'gio' ? Math.round(so * 60) : Math.round(so);
+        setField('SoPhutDatToiThieu', phut);
+    };
+
+    const handleLeadUnitChange = (unit) => {
+        if (unit === leadUnit) return;
+        const soHienTai = Number(leadValue) || 0;
+        const phutHienTai = leadUnit === 'gio' ? soHienTai * 60 : soHienTai;
+        setLeadUnit(unit);
+        setLeadValue(unit === 'gio' ? phutHienTai / 60 : Math.round(phutHienTai));
+        setField('SoPhutDatToiThieu', Math.round(phutHienTai));
+    };
+
     const handleSubmit = async () => {
-        setSaving(true);
         setFormError('');
+
+        if (Number(form.SoPhutDatToiThieu) < Number(form.ThoiGianGiuChoPhut)) {
+            setFormError(
+                'Đặt trước tối thiểu phải lớn hơn hoặc bằng thời gian giữ chỗ chờ cọc, '
+                + 'nếu không hạn thanh toán cọc sẽ rơi vào sau giờ hẹn.',
+            );
+            return;
+        }
+
+        setSaving(true);
         const payload = Object.fromEntries(
             Object.entries(form).map(([k, v]) => [k, Number(v)]),
         );
@@ -131,14 +173,63 @@ export default function CauHinhDatBan() {
                         </div>
 
                         <div className="admin-field">
-                            <label>Đặt trước tối thiểu (giờ)</label>
+                            <label>Đặt trước tối thiểu</label>
+                            <div style={{ display: 'flex', gap: 8 }}>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    step={leadUnit === 'gio' ? '0.25' : '1'}
+                                    className="admin-input"
+                                    style={{ flex: 1 }}
+                                    value={leadValue}
+                                    onChange={(e) => handleLeadValueChange(e.target.value)}
+                                />
+                                <select
+                                    className="admin-input"
+                                    style={{ flex: '0 0 100px' }}
+                                    value={leadUnit}
+                                    onChange={(e) => handleLeadUnitChange(e.target.value)}
+                                >
+                                    <option value="phut">Phút</option>
+                                    <option value="gio">Giờ</option>
+                                </select>
+                            </div>
+                            <small style={{ color: '#94a3b8' }}>
+                                Khách phải đặt trước ít nhất khoảng thời gian này so với giờ hẹn. Chọn đơn vị Phút
+                                để rút ngắn khi vắng khách (VD: 15–30 phút), hoặc Giờ khi cần chuẩn bị kỹ hơn lúc
+                                đông khách.
+                            </small>
+                            {Number(form.SoPhutDatToiThieu) < Number(form.ThoiGianGiuChoPhut) && (
+                                <small style={{ color: '#dc2626', display: 'block', marginTop: 6, fontWeight: 700 }}>
+                                    ⛔ Mức này thấp hơn "Thời gian giữ chỗ chờ cọc" ({form.ThoiGianGiuChoPhut} phút) —
+                                    khách có thể được cấp hạn thanh toán cọc muộn hơn cả giờ hẹn. Hãy tăng mức này lên
+                                    ít nhất {form.ThoiGianGiuChoPhut} phút trước khi lưu.
+                                </small>
+                            )}
+                            {Number(form.SoPhutDatToiThieu) < Number(form.SoGioHuyMotPhan) * 60 && (
+                                <small style={{ color: '#b45309', display: 'block', marginTop: 6 }}>
+                                    ⚠️ Với mức này, lượt đặt sát mốc tối thiểu sẽ đặt trước ít giờ hơn mốc "Hủy
+                                    hoàn một phần trước" ({form.SoGioHuyMotPhan} giờ) — hệ thống sẽ tự đánh dấu
+                                    những lượt đó <strong>không được hoàn cọc khi hủy</strong> (khách sẽ thấy cảnh
+                                    báo này ngay lúc đặt).
+                                </small>
+                            )}
+                        </div>
+
+                        <div className="admin-field">
+                            <label>Thời lượng phục vụ mỗi lượt (phút)</label>
                             <input
                                 type="number"
-                                min="0"
+                                min="30"
+                                max="480"
                                 className="admin-input"
-                                value={form.SoGioDatToiThieu}
-                                onChange={(e) => setField('SoGioDatToiThieu', e.target.value)}
+                                value={form.ThoiLuongPhucVuPhut}
+                                onChange={(e) => setField('ThoiLuongPhucVuPhut', e.target.value)}
                             />
+                            <small style={{ color: '#94a3b8' }}>
+                                Mỗi lượt đặt bàn coi như chiếm 1 bàn trong khoảng thời gian này kể từ giờ hẹn —
+                                dùng để tính số bàn còn trống tại một thời điểm cụ thể.
+                            </small>
                         </div>
 
                         <div className="admin-field">

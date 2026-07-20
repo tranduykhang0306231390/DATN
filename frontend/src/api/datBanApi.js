@@ -16,6 +16,10 @@ const datBanApi = {
     // khi lượt đặt bàn còn được hoàn cọc lúc hủy.
     huy: (ma, payload = {}) => axiosClient.patch(`/member/dat-ban/${ma}/huy`, payload),
 
+    // Sinh lại URL thanh toán VNPay cho lượt đang "Chờ thanh toán cọc" mà
+    // khách trót thoát ra giữa chừng — không cần hủy rồi đặt lại từ đầu.
+    tiepTucThanhToan: (ma) => axiosClient.post(`/member/dat-ban/${ma}/tiep-tuc-thanh-toan`),
+
     // Dự phòng khi webhook IPN của VNPay không gọi tới được server dev cục
     // bộ — trang kết quả thanh toán gọi lại đúng endpoint xác thực chữ ký
     // này bằng chính query string VNPay trả về trình duyệt (cùng một gói

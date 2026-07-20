@@ -26,6 +26,19 @@ const TRANG_THAI_CONFIG = {
 
 const CO_THE_HUY = ["ChoThanhToanCoc", "ChoXacNhan", "DaXacNhan"];
 
+const NGAN_HANG_VN = [
+    "Vietcombank",
+    "VietinBank",
+    "BIDV",
+    "Agribank",
+    "Techcombank",
+    "MB Bank",
+    "ACB",
+    "VPBank",
+    "Sacombank",
+    "TPBank",
+];
+
 const fmtMoney = (value) => (
     new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(Number(value) || 0)
 );
@@ -37,6 +50,7 @@ function DatBanPanel() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [createOpen, setCreateOpen] = useState(false);
+    const [resumingMa, setResumingMa] = useState(null);
 
     const loadList = useCallback(() => {
         setLoading(true);
@@ -56,6 +70,28 @@ function DatBanPanel() {
     useEffect(() => {
         loadList();
     }, [loadList]);
+
+    const handleTiepTucThanhToan = async (datBan) => {
+        setResumingMa(datBan.MaDatBan);
+
+        try {
+            const res = await datBanApi.tiepTucThanhToan(datBan.MaDatBan);
+
+            if (res.data?.payment_url) {
+                window.location.href = res.data.payment_url;
+                return;
+            }
+        } catch (err) {
+            Swal.fire(
+                "Không thể tiếp tục thanh toán",
+                err.response?.data?.message || "Vui lòng thử lại hoặc hủy lượt đặt này để đặt lại.",
+                "error",
+            );
+            loadList();
+        } finally {
+            setResumingMa(null);
+        }
+    };
 
     const handleHuy = async (datBan) => {
         let preview = null;
@@ -79,7 +115,10 @@ function DatBanPanel() {
                     <p style="margin:0 0 12px;text-align:left;color:#374151;font-size:14px;">
                         Bạn sẽ được hoàn <b>${fmtMoney(preview.SoTienHoan)}</b> trong vòng 24 giờ qua tài khoản bên dưới.
                     </p>
-                    <input id="swal-ngan-hang" class="swal2-input" placeholder="Ngân hàng">
+                    <select id="swal-ngan-hang" class="swal2-input">
+                        <option value="">— Chọn ngân hàng —</option>
+                        ${NGAN_HANG_VN.map((tenNganHang) => `<option value="${tenNganHang}">${tenNganHang}</option>`).join("")}
+                    </select>
                     <input id="swal-so-tk" class="swal2-input" placeholder="Số tài khoản">
                     <input id="swal-ten-ctk" class="swal2-input" placeholder="Tên chủ tài khoản">
                 `,
@@ -202,7 +241,17 @@ function DatBanPanel() {
                                             <td data-label="Bàn">{item.ban_an?.TenBan ?? "—"}</td>
                                             <td data-label="Cọc" className="transaction-money">{fmtMoney(item.SoTienCoc)}</td>
                                             <td data-label="Trạng thái"><StatusBadge tone={cfg.tone}>{cfg.label}</StatusBadge></td>
-                                            <td className="transaction-table__action">
+                                            <td className="transaction-table__action" style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+                                                {item.TrangThai === "ChoThanhToanCoc" && (
+                                                    <button
+                                                        type="button"
+                                                        className="customer-button customer-button--primary transaction-detail-button"
+                                                        onClick={() => handleTiepTucThanhToan(item)}
+                                                        disabled={resumingMa === item.MaDatBan}
+                                                    >
+                                                        {resumingMa === item.MaDatBan ? "Đang chuyển…" : "Tiếp tục thanh toán"}
+                                                    </button>
+                                                )}
                                                 {CO_THE_HUY.includes(item.TrangThai) && (
                                                     <button
                                                         type="button"
@@ -239,15 +288,27 @@ function DatBanPanel() {
                                         <div><dt>Bàn</dt><dd>{item.ban_an?.TenBan ?? "—"}</dd></div>
                                         <div><dt>Cọc</dt><dd>{fmtMoney(item.SoTienCoc)}</dd></div>
                                     </dl>
-                                    {CO_THE_HUY.includes(item.TrangThai) && (
-                                        <button
-                                            type="button"
-                                            className="customer-button customer-button--secondary transaction-detail-button"
-                                            onClick={() => handleHuy(item)}
-                                        >
-                                            Hủy lượt đặt
-                                        </button>
-                                    )}
+                                    <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+                                        {item.TrangThai === "ChoThanhToanCoc" && (
+                                            <button
+                                                type="button"
+                                                className="customer-button customer-button--primary transaction-detail-button"
+                                                onClick={() => handleTiepTucThanhToan(item)}
+                                                disabled={resumingMa === item.MaDatBan}
+                                            >
+                                                {resumingMa === item.MaDatBan ? "Đang chuyển…" : "Tiếp tục thanh toán"}
+                                            </button>
+                                        )}
+                                        {CO_THE_HUY.includes(item.TrangThai) && (
+                                            <button
+                                                type="button"
+                                                className="customer-button customer-button--secondary transaction-detail-button"
+                                                onClick={() => handleHuy(item)}
+                                            >
+                                                Hủy lượt đặt
+                                            </button>
+                                        )}
+                                    </div>
                                 </li>
                             );
                         })}

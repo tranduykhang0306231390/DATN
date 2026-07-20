@@ -45,7 +45,8 @@ class StaffDatBanController extends Controller
             $query->whereDate('ThoiGianDat', $filters['ngay']);
         }
 
-        $query->orderBy('ThoiGianDat');
+        // Mã đặt bàn giảm dần — lượt vừa tạo hiện lên đầu danh sách.
+        $query->orderByDesc('MaDatBan');
 
         $paginator = $query->paginate($filters['per_page'] ?? 20);
 

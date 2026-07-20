@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use Illuminate\Support\Facades\Log;
+
 /**
  * Tích hợp cổng thanh toán VNPay (sandbox) cho cọc giữ chỗ đặt bàn.
  *
@@ -35,9 +37,22 @@ class VnPayService
 
         [$hashData, $query] = $this->buildHashDataAndQuery($params);
 
-        $secureHash = hash_hmac('sha512', $hashData, (string) config('vnpay.hash_secret'));
+        $hashSecret = (string) config('vnpay.hash_secret');
+        $secureHash = hash_hmac('sha512', $hashData, $hashSecret);
+        $finalUrl = rtrim((string) config('vnpay.pay_url'), '?') . '?' . $query . 'vnp_SecureHash=' . $secureHash;
 
-        return rtrim((string) config('vnpay.pay_url'), '?') . '?' . $query . 'vnp_SecureHash=' . $secureHash;
+        Log::channel('single')->info('[VNPAY DEBUG] buildPaymentUrl', [
+            'MaDatBan' => $maDatBan,
+            'tmn_code' => config('vnpay.tmn_code'),
+            'hash_secret_len' => strlen($hashSecret),
+            'hash_secret_hex' => bin2hex($hashSecret),
+            'params' => $params,
+            'hashData' => $hashData,
+            'secureHash' => $secureHash,
+            'finalUrl' => $finalUrl,
+        ]);
+
+        return $finalUrl;
     }
 
     /**

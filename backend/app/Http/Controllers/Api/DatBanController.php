@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\BanAn;
 use App\Models\CauHinhDatBan;
 use App\Models\DatBan;
+use App\Models\HoaDon;
 use App\Services\SequentialCodeService;
 use App\Services\ThongBaoService;
 use App\Services\VnPayService;
@@ -17,9 +18,10 @@ use Illuminate\Support\Facades\Validator;
 /**
  * Đặt bàn trước — phía khách hàng (guard member).
  *
- * Giữ chỗ theo tổng sức chứa của khung giờ (ngày + buổi), KHÔNG khóa một
- * bàn cụ thể lúc đặt — nhân viên gán bàn cụ thể ở bước xác nhận
- * (StaffDatBanController::xacNhan).
+ * Giữ chỗ theo SỐ BÀN thực tế còn trống tại đúng thời điểm khách chọn
+ * (xem soBanDangBanTaiThoiDiem), KHÔNG còn gán cứng khung giờ Trưa/Tối
+ * và KHÔNG khóa một bàn cụ thể lúc đặt — nhân viên gán bàn cụ thể ở bước
+ * xác nhận (StaffDatBanController::xacNhan).
  */
 class DatBanController extends Controller
 {
@@ -44,52 +46,118 @@ class DatBanController extends Controller
     public function khungGioTrong(Request $request)
     {
         $data = $request->validate([
-            'ngay' => ['required', 'date', 'after_or_equal:today'],
+            'ngay' => ['required', 'date', $this->ruleNgayHopLe()],
             'gio' => ['required', 'date_format:H:i'],
             'so_khach' => ['required', 'integer', 'min:1', 'max:200'],
         ]);
 
         $cauHinh = $this->layCauHinh();
+        $cauHinhOut = [
+            'SoKhachToiThieu' => (int) $cauHinh->SoKhachToiThieu,
+            'SoKhachToiDa' => (int) $cauHinh->SoKhachToiDa,
+            'SoPhutDatToiThieu' => (int) $cauHinh->SoPhutDatToiThieu,
+            'SoPhutDatToiThieuLabel' => $this->dinhDangPhut((int) $cauHinh->SoPhutDatToiThieu),
+            'MucCocMoiKhach' => (float) $cauHinh->MucCocMoiKhach,
+            'SoGioHuyMotPhan' => (int) $cauHinh->SoGioHuyMotPhan,
+            'SoGioHuyMotPhanLabel' => $this->dinhDangPhut((int) $cauHinh->SoGioHuyMotPhan * 60),
+        ];
+
         $buoi = $this->xacDinhBuoi($data['gio']);
 
         if (!$buoi) {
             return response()->json([
                 'success' => false,
-                'message' => 'Giờ đặt phải nằm trong khung phục vụ (10:00–15:59 buổi trưa hoặc 16:00–21:59 buổi tối).',
+                'message' => 'Giờ đặt phải nằm trong giờ phục vụ của nhà hàng (10:00–21:59).',
+                'cau_hinh' => $cauHinhOut,
             ], 422);
         }
 
         $loi = $this->kiemTraDieuKienDat($data['ngay'], $data['gio'], (int) $data['so_khach'], $cauHinh);
 
         if ($loi) {
-            return response()->json(['success' => false, 'message' => $loi], 422);
+            return response()->json([
+                'success' => false,
+                'message' => $loi,
+                'cau_hinh' => $cauHinhOut,
+            ], 422);
         }
 
-        $tongSucChua = (int) BanAn::query()->where('TrangThai', 'HoatDong')->sum('SucChua');
-        $daGiu = $this->soKhachDangGiu($data['ngay'], $buoi, $cauHinh);
-        $sucChuaConLai = max(0, $tongSucChua - $daGiu);
+        $thoiGianDat = Carbon::parse("{$data['ngay']} {$data['gio']}");
+        $tongSoBan = (int) BanAn::query()->where('TrangThai', 'HoatDong')->count();
+        $soBanDangBan = $this->soBanDangBanTaiThoiDiem($thoiGianDat, $cauHinh);
+        $soBanConTrong = max(0, $tongSoBan - $soBanDangBan);
+        $conTrong = $soBanConTrong >= 1;
 
         return response()->json([
             'success' => true,
             'data' => [
                 'BuoiAn' => $buoi,
-                'SucChuaConLai' => $sucChuaConLai,
-                'ConTrong' => $sucChuaConLai >= (int) $data['so_khach'],
+                'TongSoBan' => $tongSoBan,
+                'SoBanConTrong' => $soBanConTrong,
+                'ConTrong' => $conTrong,
                 'TienCocDuKien' => (int) $data['so_khach'] * (float) $cauHinh->MucCocMoiKhach,
-                'CauHinh' => [
-                    'SoKhachToiThieu' => (int) $cauHinh->SoKhachToiThieu,
-                    'SoKhachToiDa' => (int) $cauHinh->SoKhachToiDa,
-                    'SoGioDatToiThieu' => (int) $cauHinh->SoGioDatToiThieu,
-                    'MucCocMoiKhach' => (float) $cauHinh->MucCocMoiKhach,
-                ],
+                'KhongHoanCocNeuDat' => $this->laDatSatGio(now(), $thoiGianDat, $cauHinh),
+                'GoiYGioTrong' => $conTrong ? null : $this->timGioTrongGanNhat($thoiGianDat, $cauHinh, $tongSoBan),
+                'CauHinh' => $cauHinhOut,
             ],
         ]);
+    }
+
+    /**
+     * Khi khung giờ khách chọn đã hết bàn, quét tới (bước 15 phút) trong
+     * đúng ngày đó tới giờ đóng cửa để tìm mốc giờ gần nhất còn ít nhất 1
+     * bàn trống — trả kèm số phút/giờ nữa tính từ hiện tại để khách biết
+     * "còn bao lâu nữa mới có bàn" thay vì phải tự dò từng giờ.
+     */
+    private function timGioTrongGanNhat(Carbon $tuThoiDiem, CauHinhDatBan $cauHinh, int $tongSoBan): ?array
+    {
+        if ($tongSoBan < 1) {
+            return null;
+        }
+
+        $gioDongCua = $tuThoiDiem->copy()->setTime(22, 0);
+
+        // Làm tròn lên mốc 15 phút kế tiếp, luôn SAU $tuThoiDiem (không lặp
+        // lại đúng mốc vừa kiểm tra hết chỗ).
+        $ung = $tuThoiDiem->copy()->addMinutes(15 - ($tuThoiDiem->minute % 15))->second(0);
+
+        while ($ung->lt($gioDongCua)) {
+            $soBanDangBan = $this->soBanDangBanTaiThoiDiem($ung, $cauHinh);
+
+            if ($tongSoBan - $soBanDangBan >= 1) {
+                $soPhutNua = max(0, (int) round(now()->diffInMinutes($ung, false)));
+
+                return [
+                    'Ngay' => $ung->toDateString(),
+                    'Gio' => $ung->format('H:i'),
+                    'SoPhutNua' => $soPhutNua,
+                    'SoPhutNuaLabel' => $this->dinhDangPhut($soPhutNua),
+                ];
+            }
+
+            $ung->addMinutes(15);
+        }
+
+        return null;
+    }
+
+    /**
+     * Đặt bàn quá sát giờ hẹn (thời gian đặt trước ngắn hơn mốc "Hủy hoàn
+     * một phần trước") thì không còn đủ khoảng thời gian để đạt bất kỳ bậc
+     * hoàn cọc nào — chốt "không hoàn cọc" ngay từ lúc tạo lượt đặt, tránh
+     * phụ thuộc cấu hình có thể đổi sau này.
+     */
+    private function laDatSatGio(Carbon $thoiGianTao, Carbon $thoiGianDat, CauHinhDatBan $cauHinh): bool
+    {
+        $phutDatTruoc = $thoiGianTao->diffInMinutes($thoiGianDat, false);
+
+        return $phutDatTruoc < ((int) $cauHinh->SoGioHuyMotPhan * 60);
     }
 
     public function store(Request $request)
     {
         $data = $request->validate([
-            'ngay' => ['required', 'date', 'after_or_equal:today'],
+            'ngay' => ['required', 'date', $this->ruleNgayHopLe()],
             'gio' => ['required', 'date_format:H:i'],
             'so_khach' => ['required', 'integer', 'min:1', 'max:200'],
             'ghi_chu' => ['nullable', 'string', 'max:500'],
@@ -110,7 +178,7 @@ class DatBanController extends Controller
         if (!$buoi) {
             return response()->json([
                 'success' => false,
-                'message' => 'Giờ đặt phải nằm trong khung phục vụ (10:00–15:59 buổi trưa hoặc 16:00–21:59 buổi tối).',
+                'message' => 'Giờ đặt phải nằm trong giờ phục vụ của nhà hàng (10:00–21:59).',
             ], 422);
         }
 
@@ -119,6 +187,25 @@ class DatBanController extends Controller
         if ($loi) {
             return response()->json(['success' => false, 'message' => $loi], 422);
         }
+
+        /*
+         * Tự dọn các lượt "Chờ thanh toán cọc" đã quá hạn giữ chỗ của
+         * CHÍNH khách hàng này trước khi kiểm tra — tránh việc một lượt bị
+         * bỏ dở (không thanh toán VNPay, đóng tab...) khóa vĩnh viễn tài
+         * khoản nếu lệnh cron dọn dẹp định kỳ (datban:xu-ly-qua-han) không
+         * chạy (ví dụ môi trường chưa cấu hình scheduler). Đây là nguyên
+         * nhân khiến khách "bị kẹt", không đặt lại được nếu không tự hủy
+         * thủ công lượt cũ.
+         */
+        DatBan::query()
+            ->where('MaKhachHang', $khachHang->MaKhachHang)
+            ->where('TrangThai', 'ChoThanhToanCoc')
+            ->where('ThoiGianTao', '<=', now()->subMinutes((int) $cauHinh->ThoiGianGiuChoPhut))
+            ->update([
+                'TrangThai' => 'DaHuy',
+                'ThoiGianHuy' => now(),
+                'LyDoTuChoiHuy' => 'Hết hạn thanh toán cọc.',
+            ]);
 
         $coLuotDangHoatDong = DatBan::query()
             ->where('MaKhachHang', $khachHang->MaKhachHang)
@@ -135,28 +222,30 @@ class DatBanController extends Controller
         DB::beginTransaction();
 
         try {
+            $thoiGianDat = Carbon::parse("{$data['ngay']} {$data['gio']}");
+
             /*
-             * Khóa toàn bộ banan đang hoạt động + các datban đang giữ chỗ
-             * cùng ngày/buổi để đọc sức chứa nhất quán trong transaction.
+             * Khóa toàn bộ banan đang hoạt động + các datban/hoadon liên
+             * quan để đếm số bàn còn trống nhất quán trong transaction.
              */
-            $tongSucChua = (int) BanAn::query()
+            $tongSoBan = (int) BanAn::query()
                 ->where('TrangThai', 'HoatDong')
                 ->lockForUpdate()
-                ->sum('SucChua');
+                ->count();
 
-            $daGiu = $this->soKhachDangGiu($data['ngay'], $buoi, $cauHinh, true);
+            $soBanDangBan = $this->soBanDangBanTaiThoiDiem($thoiGianDat, $cauHinh, true);
 
-            if ($tongSucChua - $daGiu < (int) $data['so_khach']) {
+            if ($tongSoBan - $soBanDangBan < 1) {
                 DB::rollBack();
 
                 return response()->json([
                     'success' => false,
-                    'message' => 'Khung giờ này không còn đủ chỗ trống. Vui lòng chọn khung giờ khác.',
+                    'message' => 'Thời điểm này không còn bàn trống. Vui lòng chọn thời gian khác.',
                 ], 422);
             }
 
             $maDatBan = $this->codes->next('datban', 'MaDatBan', 'DB');
-            $thoiGianDat = Carbon::parse("{$data['ngay']} {$data['gio']}");
+            $thoiGianTao = now();
 
             $datBan = DatBan::create([
                 'MaDatBan' => $maDatBan,
@@ -166,9 +255,10 @@ class DatBanController extends Controller
                 'SoLuongKhach' => $data['so_khach'],
                 'TrangThai' => 'ChoThanhToanCoc',
                 'TrangThaiCoc' => 'ChuaThanhToan',
+                'KhongHoanCocDoDatSatGio' => $this->laDatSatGio($thoiGianTao, $thoiGianDat, $cauHinh),
                 'SoTienCoc' => (int) $data['so_khach'] * (float) $cauHinh->MucCocMoiKhach,
                 'GhiChu' => $data['ghi_chu'] ?? null,
-                'ThoiGianTao' => now(),
+                'ThoiGianTao' => $thoiGianTao,
             ]);
 
             DB::commit();
@@ -202,6 +292,70 @@ class DatBanController extends Controller
                 'message' => 'Không thể tạo lượt đặt bàn lúc này. Vui lòng thử lại.',
             ], 500);
         }
+    }
+
+    /**
+     * Sinh lại URL thanh toán VNPay cho một lượt đặt đang "Chờ thanh toán
+     * cọc" mà khách trót thoát ra giữa chừng — thay vì bắt khách phải hủy
+     * rồi đặt lại từ đầu (mất chỗ, phải nhập lại thông tin).
+     *
+     * Không gia hạn thêm thời gian giữ chỗ: hạn thanh toán VNPay mới vẫn bị
+     * chặn trong đúng phần thời gian giữ chỗ CÒN LẠI tính từ lúc tạo lượt
+     * đặt ban đầu (ThoiGianTao), để nhất quán với cơ chế tự dọn ở store().
+     */
+    public function tiepTucThanhToan(Request $request, string $ma)
+    {
+        $khachHang = auth('khachhang')->user();
+
+        $datBan = DatBan::query()
+            ->where('MaDatBan', $ma)
+            ->where('MaKhachHang', $khachHang->MaKhachHang)
+            ->first();
+
+        if (!$datBan) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Không tìm thấy lượt đặt bàn.',
+            ], 404);
+        }
+
+        if ($datBan->TrangThai !== 'ChoThanhToanCoc' || $datBan->TrangThaiCoc !== 'ChuaThanhToan') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lượt đặt bàn này không còn ở trạng thái chờ thanh toán cọc.',
+            ], 422);
+        }
+
+        $cauHinh = $this->layCauHinh();
+        $hanGiuCho = $datBan->ThoiGianTao->copy()->addMinutes((int) $cauHinh->ThoiGianGiuChoPhut);
+        $soPhutConLai = (int) floor(now()->diffInSeconds($hanGiuCho, false) / 60);
+
+        if ($soPhutConLai < 1) {
+            $datBan->update([
+                'TrangThai' => 'DaHuy',
+                'ThoiGianHuy' => now(),
+                'LyDoTuChoiHuy' => 'Hết hạn thanh toán cọc.',
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Lượt đặt bàn này đã hết hạn giữ chỗ. Vui lòng đặt bàn mới.',
+            ], 422);
+        }
+
+        $paymentUrl = $this->vnPay->buildPaymentUrl(
+            $datBan->MaDatBan,
+            (int) round($datBan->SoTienCoc),
+            $request->ip(),
+            "Coc dat ban {$datBan->MaDatBan}",
+            now()->addMinutes($soPhutConLai)
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => "Bạn còn {$soPhutConLai} phút để hoàn tất thanh toán cọc.",
+            'payment_url' => $paymentUrl,
+        ]);
     }
 
     public function index(Request $request)
@@ -403,44 +557,110 @@ class DatBanController extends Controller
 
         $thoiGianDat = Carbon::parse("{$ngay} {$gio}");
 
-        if ($thoiGianDat->lt(now()->addHours((int) $cauHinh->SoGioDatToiThieu))) {
-            return "Vui lòng đặt trước ít nhất {$cauHinh->SoGioDatToiThieu} giờ so với giờ dự kiến đến.";
+        if ($thoiGianDat->lt(now()->addMinutes((int) $cauHinh->SoPhutDatToiThieu))) {
+            $nhan = $this->dinhDangPhut((int) $cauHinh->SoPhutDatToiThieu);
+
+            return "Vui lòng đặt trước ít nhất {$nhan} so với giờ dự kiến đến.";
         }
 
         return null;
     }
 
     /**
-     * Tổng số khách đang giữ chỗ trong cùng ngày + buổi.
-     *
-     * ChoThanhToanCoc chỉ tính nếu còn trong hạn giữ chỗ (chưa hết
-     * ThoiGianGiuChoPhut phút kể từ ThoiGianTao) — quá hạn coi như chưa
-     * từng giữ chỗ, cron sẽ dọn các bản ghi này sau.
+     * Định dạng số phút thành nhãn tiếng Việt ngắn gọn: "45 phút",
+     * "2 giờ", hoặc "1 giờ 30 phút" khi không tròn giờ.
      */
-    private function soKhachDangGiu(string $ngay, string $buoi, CauHinhDatBan $cauHinh, bool $lock = false): int
+    private function dinhDangPhut(int $phut): string
     {
-        $query = DatBan::query()
-            ->whereDate('ThoiGianDat', $ngay)
-            ->where('BuoiAn', $buoi)
+        if ($phut < 60) {
+            return "{$phut} phút";
+        }
+
+        $gio = intdiv($phut, 60);
+        $phutLe = $phut % 60;
+
+        if ($phutLe === 0) {
+            return "{$gio} giờ";
+        }
+
+        return "{$gio} giờ {$phutLe} phút";
+    }
+
+    /**
+     * Số bàn đang bị chiếm tại thời điểm $thoiGianDat, ước lượng bằng cách
+     * coi mỗi lượt giữ chỗ/hóa đơn đang mở chiếm đúng 1 bàn trong khoảng
+     * [thời điểm bắt đầu, thời điểm bắt đầu + ThoiLuongPhucVuPhut]. Không
+     * còn gán cứng khung giờ Trưa/Tối — chỉ so khoảng thời gian giao nhau
+     * với đúng thời điểm khách yêu cầu.
+     *
+     * Gồm hai nguồn chiếm bàn:
+     *  - Các lượt đặt bàn đang giữ chỗ (ChoXacNhan/DaXacNhan/DaNhanBan,
+     *    hoặc ChoThanhToanCoc còn trong hạn giữ chỗ).
+     *  - Khách vãng lai đang được phục vụ (hóa đơn Chưa thanh toán, không
+     *    gắn với lượt đặt bàn nào) — tính từ lúc mở hóa đơn.
+     */
+    private function soBanDangBanTaiThoiDiem(Carbon $thoiGianDat, CauHinhDatBan $cauHinh, bool $lock = false): int
+    {
+        $thoiLuongPhut = (int) $cauHinh->ThoiLuongPhucVuPhut;
+        $ketThucYeuCau = $thoiGianDat->copy()->addMinutes($thoiLuongPhut);
+        $thoiGianDatStr = $thoiGianDat->toDateTimeString();
+        $ketThucYeuCauStr = $ketThucYeuCau->toDateTimeString();
+
+        $queryDatBan = DatBan::query()
             ->where(function ($q) use ($cauHinh) {
                 $q->whereIn('TrangThai', self::TRANG_THAI_DANG_GIU_CHO)
                     ->orWhere(function ($q2) use ($cauHinh) {
                         $q2->where('TrangThai', 'ChoThanhToanCoc')
                             ->where('ThoiGianTao', '>', now()->subMinutes((int) $cauHinh->ThoiGianGiuChoPhut));
                     });
-            });
+            })
+            ->where('ThoiGianDat', '<', $ketThucYeuCauStr)
+            ->whereRaw('DATE_ADD(ThoiGianDat, INTERVAL ? MINUTE) > ?', [$thoiLuongPhut, $thoiGianDatStr]);
 
         if ($lock) {
-            $query->lockForUpdate();
+            $queryDatBan->lockForUpdate();
         }
 
-        return (int) $query->sum('SoLuongKhach');
+        $soLuotDatBan = $queryDatBan->count();
+
+        $queryKhachVangLai = HoaDon::query()
+            ->where('TrangThai', 'ChuaThanhToan')
+            ->whereNull('MaDatBan')
+            ->where('NgayLap', '<', $ketThucYeuCauStr)
+            ->whereRaw('DATE_ADD(NgayLap, INTERVAL ? MINUTE) > ?', [$thoiLuongPhut, $thoiGianDatStr]);
+
+        if ($lock) {
+            $queryKhachVangLai->lockForUpdate();
+        }
+
+        $soBanKhachVangLai = $queryKhachVangLai->count();
+
+        return $soLuotDatBan + $soBanKhachVangLai;
+    }
+
+    /**
+     * Chỉ cho phép đặt bàn cho hôm nay hoặc ngày mai — chặn ở backend để
+     * tránh gian lận dù giao diện đã disable các ngày khác.
+     */
+    private function ruleNgayHopLe(): \Closure
+    {
+        return function (string $attribute, mixed $value, \Closure $fail) {
+            $ngayHopLe = [now()->toDateString(), now()->addDay()->toDateString()];
+
+            if (!in_array($value, $ngayHopLe, true)) {
+                $fail('Chỉ có thể đặt bàn cho hôm nay hoặc ngày mai.');
+            }
+        };
     }
 
     private function tinhTrangThaiCocKhiHuy(DatBan $datBan, CauHinhDatBan $cauHinh): string
     {
         if ($datBan->TrangThaiCoc !== 'DaThanhToan') {
             return $datBan->TrangThaiCoc;
+        }
+
+        if ($datBan->KhongHoanCocDoDatSatGio) {
+            return 'DaMat';
         }
 
         $soGioConLai = now()->diffInHours($datBan->ThoiGianDat, false);
@@ -469,6 +689,10 @@ class DatBanController extends Controller
             return ['SoTienHoan' => 0.0, 'TrangThaiHoanTien' => 'KhongApDung'];
         }
 
+        if ($datBan->KhongHoanCocDoDatSatGio) {
+            return ['SoTienHoan' => 0.0, 'TrangThaiHoanTien' => 'KhongApDung'];
+        }
+
         $soGioConLai = now()->diffInHours($datBan->ThoiGianDat, false);
 
         if ($soGioConLai >= (int) $cauHinh->SoGioHuyMienPhi) {
@@ -488,7 +712,8 @@ class DatBanController extends Controller
     {
         return CauHinhDatBan::query()->first() ?? new CauHinhDatBan([
             'ThoiGianGiuChoPhut' => 10,
-            'SoGioDatToiThieu' => 2,
+            'SoPhutDatToiThieu' => 120,
+            'ThoiLuongPhucVuPhut' => 120,
             'SoKhachToiThieu' => 2,
             'SoKhachToiDa' => 20,
             'PhutGiuBanSauGioHen' => 15,

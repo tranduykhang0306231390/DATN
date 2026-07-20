@@ -236,6 +236,11 @@ Route::middleware('member')
             DatBanController::class,
             'huy',
         ]);
+
+        Route::post('/dat-ban/{ma}/tiep-tuc-thanh-toan', [
+            DatBanController::class,
+            'tiepTucThanhToan',
+        ]);
     });
 
 /*
