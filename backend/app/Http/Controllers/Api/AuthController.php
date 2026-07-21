@@ -42,10 +42,20 @@ class AuthController extends Controller
         'MatKhauMoi.regex' => 'Mật khẩu mới phải có chữ hoa, chữ thường, số và ký tự đặc biệt.',
     ];
 
+    /**
+     * CHỦ Ý: FirebasePhoneAuthService KHÔNG nằm ở đây. Nếu đưa vào
+     * constructor, Laravel resolve nó (và toàn bộ Firebase Admin SDK phía
+     * sau) NGAY LÚC TẠO controller — nghĩa là nếu Firebase Admin SDK gặp
+     * sự cố cấu hình (sai Secret File, sai project...), MỌI action của
+     * controller này sẽ lỗi 500, kể cả memberLogin (mật khẩu thường)
+     * hoàn toàn không dùng Firebase. Dùng method injection (tham số trên
+     * từng action cần) để Firebase chỉ ảnh hưởng đúng các action thật sự
+     * gọi tới nó (register, loginFirebase, forgotPassword,
+     * changePasswordRequestVerification).
+     */
     public function __construct(
         private CustomerActionTokenService $actionTokens,
         private SequentialCodeService $codes,
-        private FirebasePhoneAuthService $firebasePhoneAuth,
         private PhoneNumberService $phoneNumbers,
     ) {}
 
@@ -87,7 +97,7 @@ class AuthController extends Controller
      * Hoàn tất đăng ký: chỉ tạo tài khoản khách hàng SAU KHI Firebase ID
      * Token đã được xác minh khớp đúng số điện thoại vừa nhập.
      */
-    public function register(Request $request): JsonResponse
+    public function register(Request $request, FirebasePhoneAuthService $firebasePhoneAuth): JsonResponse
     {
         $request->validate(
             [
@@ -128,7 +138,7 @@ class AuthController extends Controller
         }
 
         try {
-            $verifiedPhone = $this->firebasePhoneAuth->verifyMatches(
+            $verifiedPhone = $firebasePhoneAuth->verifyMatches(
                 $request->string('FirebaseIdToken'),
                 $normalizedPhone,
             );
@@ -256,7 +266,7 @@ class AuthController extends Controller
      * thoại được LẤY TỪ Firebase ID Token đã xác minh, không phải từ
      * trường nào khác trong request.
      */
-    public function loginFirebase(Request $request): JsonResponse
+    public function loginFirebase(Request $request, FirebasePhoneAuthService $firebasePhoneAuth): JsonResponse
     {
         $request->validate(
             ['FirebaseIdToken' => ['required', 'string']],
@@ -264,7 +274,7 @@ class AuthController extends Controller
         );
 
         try {
-            $verifiedPhone = $this->firebasePhoneAuth->verify($request->string('FirebaseIdToken'));
+            $verifiedPhone = $firebasePhoneAuth->verify($request->string('FirebaseIdToken'));
         } catch (PhoneVerificationException $e) {
             return $this->phoneVerificationErrorResponse($e);
         }
@@ -366,7 +376,7 @@ class AuthController extends Controller
      * Bước 1: khách hàng đã xác minh sở hữu số điện thoại qua Firebase.
      * Cấp reset token ngắn hạn, dùng một lần.
      */
-    public function forgotPassword(Request $request): JsonResponse
+    public function forgotPassword(Request $request, FirebasePhoneAuthService $firebasePhoneAuth): JsonResponse
     {
         $request->validate(
             [
@@ -388,7 +398,7 @@ class AuthController extends Controller
         }
 
         try {
-            $this->firebasePhoneAuth->verifyMatches($request->string('FirebaseIdToken'), $normalizedPhone);
+            $firebasePhoneAuth->verifyMatches($request->string('FirebaseIdToken'), $normalizedPhone);
         } catch (PhoneVerificationException $e) {
             return $this->phoneVerificationErrorResponse($e);
         }
@@ -500,7 +510,7 @@ class AuthController extends Controller
      * bất kỳ số điện thoại nào frontend gửi lên — luôn dùng số điện thoại
      * của $khachHang lấy từ token đăng nhập hiện tại.
      */
-    public function changePasswordRequestVerification(Request $request): JsonResponse
+    public function changePasswordRequestVerification(Request $request, FirebasePhoneAuthService $firebasePhoneAuth): JsonResponse
     {
         $khachHang = auth('khachhang')->user();
 
@@ -510,7 +520,7 @@ class AuthController extends Controller
         );
 
         try {
-            $this->firebasePhoneAuth->verifyMatches($request->string('FirebaseIdToken'), $khachHang->SoDienThoai);
+            $firebasePhoneAuth->verifyMatches($request->string('FirebaseIdToken'), $khachHang->SoDienThoai);
         } catch (PhoneVerificationException $e) {
             return $this->phoneVerificationErrorResponse($e);
         }

@@ -25,9 +25,11 @@ use Illuminate\Support\Facades\Log;
  */
 class StaffKhachHangController extends Controller
 {
+    // FirebasePhoneAuthService không đặt ở đây — xem giải thích chi tiết ở
+    // AuthController::__construct(). checkPhone() không cần Firebase nên
+    // không nên bị ảnh hưởng nếu Firebase Admin SDK gặp sự cố cấu hình.
     public function __construct(
         private SequentialCodeService $codes,
-        private FirebasePhoneAuthService $firebasePhoneAuth,
         private PhoneNumberService $phoneNumbers,
     ) {}
 
@@ -52,7 +54,7 @@ class StaffKhachHangController extends Controller
         ]);
     }
 
-    public function register(Request $request): JsonResponse
+    public function register(Request $request, FirebasePhoneAuthService $firebasePhoneAuth): JsonResponse
     {
         $nhanVien = auth('nhanvien')->user();
 
@@ -98,7 +100,7 @@ class StaffKhachHangController extends Controller
         // viên không thể gõ một số điện thoại khác với số đã thực sự nhận
         // và xác minh OTP.
         try {
-            $verifiedPhone = $this->firebasePhoneAuth->verifyMatches($request->string('FirebaseIdToken'), $normalizedPhone);
+            $verifiedPhone = $firebasePhoneAuth->verifyMatches($request->string('FirebaseIdToken'), $normalizedPhone);
         } catch (PhoneVerificationException $e) {
             return response()->json([
                 'success' => false,
