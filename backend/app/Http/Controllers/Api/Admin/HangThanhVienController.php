@@ -24,6 +24,12 @@ class HangThanhVienController extends Controller
      * Mỗi quy tắc chỉ được gắn với một hạng. Khi chỉnh sửa một hạng,
      * quy tắc đang được chính hạng đó sử dụng vẫn được trả về.
      *
+     * Chỉ trả về các quy tắc đang thực sự áp dụng được (TrangThai =
+     * HoatDong và nằm trong khoảng NgayApDung–NgayHetHan) — quy tắc đã
+     * ngừng áp dụng hoặc đã hết hạn sẽ không hiển thị ở đây, tránh việc
+     * Admin vô tình gán một quy tắc không còn hiệu lực cho một hạng thành
+     * viên (khiến khách thuộc hạng đó âm thầm không nhận được điểm).
+     *
      * Route này phải được khai báo trước:
      * /hang-thanh-vien/{ma}
      */
@@ -52,6 +58,8 @@ class HangThanhVienController extends Controller
             ->values()
             ->all();
 
+        $homNay = now()->toDateString();
+
         $quyTac = DB::table('quytactichdiem')
             ->select([
                 'MaQuyTac',
@@ -59,6 +67,12 @@ class HangThanhVienController extends Controller
                 'SoDiemNhan',
                 'TrangThai',
             ])
+            ->where('TrangThai', 'HoatDong')
+            ->where('NgayApDung', '<=', $homNay)
+            ->where(function ($query) use ($homNay) {
+                $query->whereNull('NgayHetHan')
+                    ->orWhere('NgayHetHan', '>=', $homNay);
+            })
             ->when(
                 count($quyTacDaSuDung) > 0,
                 fn ($query) => $query->whereNotIn(
