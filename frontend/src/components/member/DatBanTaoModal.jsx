@@ -8,7 +8,19 @@ const fmtMoney = (value) => (
     new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(Number(value) || 0)
 );
 
-const todayIso = () => new Date().toISOString().slice(0, 10);
+const toIso = (date) => {
+    const d = new Date(date);
+    const offset = d.getTimezoneOffset();
+    return new Date(d.getTime() - offset * 60000).toISOString().slice(0, 10);
+};
+
+const todayIso = () => toIso(new Date());
+
+const tomorrowIso = () => {
+    const d = new Date();
+    d.setDate(d.getDate() + 1);
+    return toIso(d);
+};
 
 function DatBanTaoModal({ open, onClose, onCreated }) {
     const [ngay, setNgay] = useState(todayIso());
@@ -19,6 +31,9 @@ function DatBanTaoModal({ open, onClose, onCreated }) {
     const [preview, setPreview] = useState(null);
     const [previewLoading, setPreviewLoading] = useState(false);
     const [previewError, setPreviewError] = useState("");
+    // Giữ lại CauHinh (ví dụ nhãn "đặt trước tối thiểu") giữa các lần gọi
+    // lại API khi khách đổi ngày/giờ, để không bị chớp tắt lúc đang tải.
+    const [cauHinh, setCauHinh] = useState(null);
 
     const [submitting, setSubmitting] = useState(false);
     const [submitError, setSubmitError] = useState("");
@@ -39,11 +54,15 @@ function DatBanTaoModal({ open, onClose, onCreated }) {
                 .khungGioTrong({ ngay, gio, so_khach: soKhach })
                 .then((res) => {
                     if (!active) return;
-                    if (res.data?.success) setPreview(res.data.data);
+                    if (res.data?.success) {
+                        setPreview(res.data.data);
+                        if (res.data.data.CauHinh) setCauHinh(res.data.data.CauHinh);
+                    }
                 })
                 .catch((err) => {
                     if (!active) return;
                     setPreviewError(err.response?.data?.message || "Không kiểm tra được khung giờ này.");
+                    if (err.response?.data?.cau_hinh) setCauHinh(err.response.data.cau_hinh);
                 })
                 .finally(() => {
                     if (active) setPreviewLoading(false);
@@ -124,9 +143,13 @@ function DatBanTaoModal({ open, onClose, onCreated }) {
                     type="date"
                     className="customer-input"
                     min={todayIso()}
+                    max={tomorrowIso()}
                     value={ngay}
                     onChange={(e) => setNgay(e.target.value)}
                 />
+                <span className="customer-form-field__help">
+                    Chỉ nhận đặt bàn cho hôm nay hoặc ngày mai.
+                </span>
             </div>
 
             <div className="customer-form-field" style={{ marginTop: 14 }}>
@@ -139,7 +162,10 @@ function DatBanTaoModal({ open, onClose, onCreated }) {
                     onChange={(e) => setGio(e.target.value)}
                 />
                 <span className="customer-form-field__help">
-                    Khung phục vụ: 10:00–15:59 (buổi trưa) hoặc 16:00–21:59 (buổi tối).
+                    Nhà hàng phục vụ từ 10:00 đến 21:59. Hệ thống sẽ kiểm tra bàn trống ngay tại giờ bạn chọn.
+                    {cauHinh?.SoPhutDatToiThieuLabel && (
+                        <> Vui lòng đặt trước ít nhất <strong>{cauHinh.SoPhutDatToiThieuLabel}</strong> so với giờ đến.</>
+                    )}
                 </span>
             </div>
 
@@ -188,11 +214,45 @@ function DatBanTaoModal({ open, onClose, onCreated }) {
                             {preview.ConTrong ? "Còn chỗ trống" : "Hết chỗ khung giờ này"}
                         </div>
                         <span className="customer-form-field__help">
-                            Sức chứa còn lại: {formatMemberNumber(preview.SucChuaConLai)} khách
+                            Số bàn còn trống: {formatMemberNumber(preview.SoBanConTrong)}/{formatMemberNumber(preview.TongSoBan)}
                         </span>
+
+                        {!preview.ConTrong && (
+                            preview.GoiYGioTrong ? (
+                                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
+                                    <span className="customer-form-field__help">
+                                        Bàn trống sớm nhất: <strong>{preview.GoiYGioTrong.Gio}</strong>
+                                        {" "}(còn khoảng <strong>{preview.GoiYGioTrong.SoPhutNuaLabel}</strong> nữa)
+                                    </span>
+                                    <button
+                                        type="button"
+                                        className="customer-button customer-button--secondary"
+                                        onClick={() => {
+                                            setNgay(preview.GoiYGioTrong.Ngay);
+                                            setGio(preview.GoiYGioTrong.Gio);
+                                        }}
+                                    >
+                                        Dùng giờ này
+                                    </button>
+                                </div>
+                            ) : (
+                                <span className="customer-form-field__help">
+                                    Hôm nay không còn khung giờ trống nào khác. Vui lòng thử ngày khác.
+                                </span>
+                            )
+                        )}
+
                         <span className="customer-form-field__help">
                             Cọc giữ chỗ dự kiến: <strong>{fmtMoney(preview.TienCocDuKien)}</strong>
                         </span>
+                        {preview.KhongHoanCocNeuDat && (
+                            <p className="customer-form-field__error" style={{ margin: 0 }}>
+                                <FaExclamationTriangle aria-hidden="true" /> Vì đặt trước chưa đủ
+                                {cauHinh?.SoGioHuyMotPhanLabel ? <> ({cauHinh.SoGioHuyMotPhanLabel})</> : null}, lượt đặt
+                                này <strong>không thuộc diện hoàn cọc</strong>. Nếu hủy — dù ngay bây giờ — khoản cọc sẽ{" "}
+                                <strong>không được hoàn lại</strong>.
+                            </p>
+                        )}
                     </div>
                 )}
 

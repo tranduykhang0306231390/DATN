@@ -9,7 +9,6 @@ import AdminDateInput from '../../components/admin/AdminDateInput';
 const EMPTY_FORM = {
     HoTen: '',
     SoDienThoai: '',
-    Email: '',
     NgaySinh: '',
     GioiTinh: '',
 };
@@ -73,7 +72,6 @@ export default function QuanLyKhachHang() {
         setForm({
             HoTen: kh.HoTen ?? '',
             SoDienThoai: kh.SoDienThoai ?? '',
-            Email: kh.Email ?? '',
             NgaySinh: (kh.NgaySinh || '').slice(0, 10),
             GioiTinh: kh.GioiTinh ?? '',
         });
@@ -89,7 +87,6 @@ export default function QuanLyKhachHang() {
         const payload = {
             HoTen: form.HoTen,
             SoDienThoai: form.SoDienThoai,
-            Email: form.Email || null,
             NgaySinh: form.NgaySinh || null,
             GioiTinh: form.GioiTinh || null,
         };
@@ -153,7 +150,7 @@ export default function QuanLyKhachHang() {
             <div className="admin-toolbar">
                 <input
                     className="admin-input"
-                    placeholder="Tìm theo tên, SĐT, email hoặc mã…"
+                    placeholder="Tìm theo tên, SĐT hoặc mã…"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && applyFilter()}
@@ -188,7 +185,6 @@ export default function QuanLyKhachHang() {
                             <th>Mã</th>
                             <th>Họ tên</th>
                             <th>SĐT</th>
-                            <th>Email</th>
                             <th>Hạng</th>
                             <th>Điểm</th>
                             <th>Trạng thái</th>
@@ -198,11 +194,11 @@ export default function QuanLyKhachHang() {
                     <tbody>
                         {loading ? (
                             <tr>
-                                <td colSpan={8} className="admin-state">Đang tải…</td>
+                                <td colSpan={7} className="admin-state">Đang tải…</td>
                             </tr>
                         ) : list.length === 0 ? (
                             <tr>
-                                <td colSpan={8} className="admin-state">Chưa có khách hàng nào.</td>
+                                <td colSpan={7} className="admin-state">Chưa có khách hàng nào.</td>
                             </tr>
                         ) : (
                             list.map((kh) => (
@@ -210,7 +206,6 @@ export default function QuanLyKhachHang() {
                                     <td className="admin-mono">{kh.MaKhachHang}</td>
                                     <td>{kh.HoTen}</td>
                                     <td className="admin-nowrap">{kh.SoDienThoai}</td>
-                                    <td>{kh.Email || '—'}</td>
                                     <td>{kh.hangThanhVien?.TenHang || kh.MaHangThanhVien}</td>
                                     <td>{Number(kh.TongDiem).toLocaleString('vi-VN')}</td>
                                     <td>
@@ -346,16 +341,6 @@ export default function QuanLyKhachHang() {
                             className="admin-input"
                             value={form.SoDienThoai}
                             onChange={(e) => setField('SoDienThoai', e.target.value)}
-                        />
-                    </div>
-
-                    <div className="admin-field">
-                        <label>Email</label>
-                        <input
-                            type="email"
-                            className="admin-input"
-                            value={form.Email}
-                            onChange={(e) => setField('Email', e.target.value)}
                         />
                     </div>
 

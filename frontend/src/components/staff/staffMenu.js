@@ -25,6 +25,13 @@ export const STAFF_MENU = [
                 path: '/staff/quan-ly-dat-ban',
                 color: '#f59e0b',
             },
+            {
+
+                label: 'Đăng ký khách hàng',
+                desc: 'Tạo tài khoản hộ khách hàng, có xác minh OTP',
+                path: '/staff/dang-ky-khach-hang',
+                color: '#10b981',
+            },
         ],
     },
 ];

@@ -150,12 +150,34 @@ class DiemTichLuyService
     }
 
     /**
-     * Hạng "xứng đáng" nhất với số điểm hiện có, không quan tâm hạng hiện
-     * tại đang là gì (dùng chung cho cả kiểm tra lên hạng lẫn hạ hạng).
+     * Tổng chi tiêu thực tế (tổng TongTien các hóa đơn đã thanh toán) của
+     * khách hàng — dùng làm điều kiện thứ hai khi xét hạng, cùng với điểm
+     * tích lũy. $boQuaMaHoaDon dùng khi hủy hóa đơn: tại thời điểm gọi,
+     * hóa đơn đang hủy vẫn còn TrangThai = DaThanhToan (chưa kịp chuyển
+     * sang DaHuy), nên phải loại trừ thủ công để không tính nhầm.
      */
-    private function hangXungDangTheoDiem(int $tongDiem): ?HangThanhVien
+    private function tinhTongChiTieu(KhachHang $khachHang, ?string $boQuaMaHoaDon = null): float
+    {
+        return (float) DB::table('hoadon')
+            ->where('MaKhachHang', $khachHang->MaKhachHang)
+            ->where('TrangThai', 'DaThanhToan')
+            ->when(
+                $boQuaMaHoaDon,
+                fn ($query) => $query->where('MaHoaDon', '!=', $boQuaMaHoaDon)
+            )
+            ->sum('TongTien');
+    }
+
+    /**
+     * Hạng "xứng đáng" nhất với điểm và tổng chi tiêu hiện có — phải đạt cả
+     * hai điều kiện (DiemToiThieu và TongChiTieuToiThieu), không quan tâm
+     * hạng hiện tại đang là gì (dùng chung cho cả kiểm tra lên hạng lẫn hạ
+     * hạng).
+     */
+    private function hangXungDangTheoDiem(int $tongDiem, float $tongChiTieu): ?HangThanhVien
     {
         return HangThanhVien::where('DiemToiThieu', '<=', $tongDiem)
+            ->where('TongChiTieuToiThieu', '<=', $tongChiTieu)
             ->orderBy('ThuTuHang', 'desc')
             ->first();
     }
@@ -167,19 +189,15 @@ class DiemTichLuyService
     {
         $khachHang->refresh();
 
+        $tongChiTieu = $this->tinhTongChiTieu($khachHang);
+
         $hangHienTai = HangThanhVien::find($khachHang->MaHangThanhVien);
-        $hangMoi     = $this->hangXungDangTheoDiem((int) $khachHang->TongDiem);
+        $hangMoi     = $this->hangXungDangTheoDiem((int) $khachHang->TongDiem, $tongChiTieu);
 
         if (!$hangMoi || $hangMoi->ThuTuHang <= ($hangHienTai->ThuTuHang ?? 0)) return;
 
         $maHangCu = $khachHang->MaHangThanhVien;
         $khachHang->update(['MaHangThanhVien' => $hangMoi->MaHangThanhVien]);
-
-        // Tổng chi tiêu thực của khách tại thời điểm lên hạng
-        $tongChiTieu = (float) DB::table('hoadon')
-            ->where('MaKhachHang', $khachHang->MaKhachHang)
-            ->where('TrangThai', 'DaThanhToan')
-            ->sum('TongTien');
 
         // Lịch sử thay đổi hạng
         LichSuHangThanhVien::create([
@@ -217,16 +235,19 @@ class DiemTichLuyService
         $hangHienTai = HangThanhVien::find($khachHang->MaHangThanhVien);
         if (!$hangHienTai) return;
 
-        $hangXungDang = $this->hangXungDangTheoDiem((int) $khachHang->TongDiem);
+        /*
+         * Loại trừ hóa đơn đang bị hủy khỏi tổng chi tiêu: tại thời điểm
+         * này hóa đơn đó vẫn còn TrangThai = DaThanhToan (huyHoaDonDaThanhToan
+         * chỉ chuyển sang DaHuy SAU khi gọi hoanDiem()), nếu không loại trừ
+         * sẽ tính nhầm cả khoản chi tiêu sắp bị hủy.
+         */
+        $tongChiTieu = $this->tinhTongChiTieu($khachHang, $maThamChieu);
+
+        $hangXungDang = $this->hangXungDangTheoDiem((int) $khachHang->TongDiem, $tongChiTieu);
         if (!$hangXungDang || $hangXungDang->ThuTuHang >= $hangHienTai->ThuTuHang) return;
 
         $maHangCu = $khachHang->MaHangThanhVien;
         $khachHang->update(['MaHangThanhVien' => $hangXungDang->MaHangThanhVien]);
-
-        $tongChiTieu = (float) DB::table('hoadon')
-            ->where('MaKhachHang', $khachHang->MaKhachHang)
-            ->where('TrangThai', 'DaThanhToan')
-            ->sum('TongTien');
 
         $lastLSH = LichSuHangThanhVien::orderBy('MaLichSuHang', 'desc')->first();
         $soLSH   = $lastLSH ? ((int) substr($lastLSH->MaLichSuHang, 3)) + 1 : 1;

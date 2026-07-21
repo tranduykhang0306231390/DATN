@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Exceptions\MoBanKhongThanhCongException;
 use App\Http\Controllers\Controller;
 use App\Models\BanAn;
+use App\Models\CauHinhDatBan;
 use App\Models\ChiTietHoaDon;
 use App\Models\DatBan;
 use App\Models\HoaDon;
@@ -109,6 +110,8 @@ class HoaDonController extends Controller
                 $nhanVien
             );
 
+            $canhBao = $this->canhBaoDatBanSapToi($data['so_ban']);
+
             DB::commit();
 
             return response()->json([
@@ -117,6 +120,7 @@ class HoaDonController extends Controller
                     "Đã mở bàn {$data['so_ban']}.",
 
                 'data' => $result,
+                'canh_bao_dat_ban' => $canhBao,
             ], 201);
         } catch (MoBanKhongThanhCongException $exception) {
             DB::rollBack();
@@ -460,6 +464,8 @@ class HoaDonController extends Controller
             $hoaDon->SoBan = $soBanMoi;
             $hoaDon->save();
 
+            $canhBao = $this->canhBaoDatBanSapToi($soBanMoi);
+
             DB::commit();
 
             return response()->json([
@@ -471,6 +477,7 @@ class HoaDonController extends Controller
                     'MaHoaDon' => $maHD,
                     'SoBan' => $soBanMoi,
                 ],
+                'canh_bao_dat_ban' => $canhBao,
             ]);
         } catch (\Throwable $exception) {
             DB::rollBack();
@@ -618,12 +625,19 @@ class HoaDonController extends Controller
             ], 422);
         }
 
+        /*
+         * Nếu request không gửi kèm khách hàng, mặc định dùng khách hàng đã
+         * gắn sẵn trên hóa đơn (ví dụ hóa đơn mở từ check-in một lượt đặt
+         * bàn trước) — tránh bắt nhân viên phải tra cứu lại thủ công.
+         */
+        $maKhachHang = $data['ma_khach_hang'] ?? $hoaDon->MaKhachHang;
+
         $khachHang = null;
 
-        if (!empty($data['ma_khach_hang'])) {
+        if (!empty($maKhachHang)) {
             $khachHang = KhachHang::query()
                 ->with('hangThanhVien.quyTac')
-                ->find($data['ma_khach_hang']);
+                ->find($maKhachHang);
 
             if (
                 !$khachHang
@@ -683,6 +697,21 @@ class HoaDonController extends Controller
             $voucherResult['tongThanhToan']
         );
 
+        /*
+         * Xem trước phần cọc sẽ bị trừ, để nhân viên không báo nhầm số tiền
+         * cho khách trước khi thực sự bấm Xác nhận thanh toán — cùng công
+         * thức với thanhToan(), chỉ khác là không ghi gì vào CSDL ở đây.
+         */
+        $datBan = $hoaDon->MaDatBan
+            ? DatBan::query()->where('MaDatBan', $hoaDon->MaDatBan)->first()
+            : null;
+
+        $soTienCocSeTru = ($datBan && $datBan->TrangThaiHoanTien !== 'DaTruVaoHoaDon')
+            ? (float) $datBan->SoTienCoc
+            : 0.0;
+
+        $soTienConLaiPhaiTra = max(0, $voucherResult['tongThanhToan'] - $soTienCocSeTru);
+
         return response()->json([
             'success' => true,
 
@@ -695,6 +724,12 @@ class HoaDonController extends Controller
 
                 'TongThanhToan' =>
                     $voucherResult['tongThanhToan'],
+
+                'SoTienCocDaTru' =>
+                    $soTienCocSeTru,
+
+                'SoTienConLaiPhaiTra' =>
+                    $soTienConLaiPhaiTra,
 
                 'DiemTichLuy' =>
                     $pointResult['diemTichLuy'],
@@ -800,14 +835,21 @@ class HoaDonController extends Controller
                 ], 422);
             }
 
+            /*
+             * Nếu request không gửi kèm khách hàng, mặc định dùng khách hàng
+             * đã gắn sẵn trên hóa đơn (ví dụ hóa đơn mở từ check-in một lượt
+             * đặt bàn trước) — tránh bắt nhân viên phải tra cứu lại thủ công.
+             */
+            $maKhachHang = $data['ma_khach_hang'] ?? $hoaDon->MaKhachHang;
+
             $khachHang = null;
 
-            if (!empty($data['ma_khach_hang'])) {
+            if (!empty($maKhachHang)) {
                 $khachHang = KhachHang::query()
                     ->with('hangThanhVien.quyTac')
                     ->where(
                         'MaKhachHang',
-                        $data['ma_khach_hang']
+                        $maKhachHang
                     )
                     ->lockForUpdate()
                     ->first();
@@ -1931,5 +1973,47 @@ class HoaDonController extends Controller
                 $exception->getMessage(),
                 'hoadon_soban_dangmo_unique'
             );
+    }
+
+    /**
+     * Cảnh báo cho nhân viên khi mở/đổi bàn cho khách vãng lai nếu đúng bàn
+     * đó đã được gán cho một lượt đặt bàn trước sắp tới (Đã xác nhận) —
+     * mở/đổi bàn KHÔNG bị chặn, chỉ cảnh báo để nhân viên chủ động trả bàn
+     * đúng giờ hoặc sắp xếp bàn khác cho khách đặt trước.
+     *
+     * Mốc "sắp tới" dùng chung ThoiLuongPhucVuPhut với công thức tính bàn
+     * còn trống phía đặt bàn, để nhất quán với cách hệ thống ước lượng thời
+     * gian một lượt khách vãng lai sẽ ngồi.
+     */
+    private function canhBaoDatBanSapToi(string $maBan): ?array
+    {
+        $thoiLuongPhut = (int) (
+            CauHinhDatBan::query()->value('ThoiLuongPhucVuPhut') ?? 120
+        );
+
+        $datBan = DatBan::query()
+            ->with('khachHang:MaKhachHang,HoTen')
+            ->where('MaBan', $maBan)
+            ->where('TrangThai', 'DaXacNhan')
+            ->where('ThoiGianDat', '>=', now())
+            ->where('ThoiGianDat', '<=', now()->addMinutes($thoiLuongPhut))
+            ->orderBy('ThoiGianDat')
+            ->first();
+
+        if (!$datBan) {
+            return null;
+        }
+
+        return [
+            'MaDatBan' => $datBan->MaDatBan,
+            'ThoiGianDat' => $datBan->ThoiGianDat,
+            'TenKhachHang' => $datBan->khachHang->HoTen ?? null,
+            'SoLuongKhach' => $datBan->SoLuongKhach,
+            'ThongDiep' => sprintf(
+                'Bàn này đã được đặt trước lúc %s%s. Vui lòng trả bàn trước giờ đó hoặc sắp xếp bàn khác cho khách đặt trước.',
+                $datBan->ThoiGianDat->format('H:i'),
+                $datBan->khachHang?->HoTen ? " (khách: {$datBan->khachHang->HoTen})" : ''
+            ),
+        ];
     }
 }

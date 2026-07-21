@@ -12,6 +12,13 @@ const hoaDonApi = {
             so_dien_thoai: soDienThoai,
         }),
 
+    // Tra cứu khách hàng bằng mã khách hàng — dùng khi hóa đơn đã gắn sẵn
+    // khách hàng từ check-in một lượt đặt bàn trước.
+    lookupKhachHangByMa: (maKhachHang) =>
+        axiosClient.post("/khach-hang/lookup", {
+            ma_khach_hang: maKhachHang,
+        }),
+
     // Danh sách bàn đang phục vụ
     banDangTreo: () =>
         axiosClient.get(

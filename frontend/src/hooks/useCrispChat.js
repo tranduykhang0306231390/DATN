@@ -78,8 +78,8 @@ export default function useCrispChat(enabled) {
                 window.$crisp.push(["set", "user:nickname", [user.HoTen]]);
             }
 
-            if (user.Email) {
-                window.$crisp.push(["set", "user:email", [user.Email]]);
+            if (user.SoDienThoai) {
+                window.$crisp.push(["set", "user:phone", [user.SoDienThoai]]);
             }
 
             getMemberRanks()

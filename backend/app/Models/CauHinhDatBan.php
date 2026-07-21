@@ -12,7 +12,8 @@ class CauHinhDatBan extends Model
 
     protected $fillable = [
         'ThoiGianGiuChoPhut',
-        'SoGioDatToiThieu',
+        'SoPhutDatToiThieu',
+        'ThoiLuongPhucVuPhut',
         'SoKhachToiThieu',
         'SoKhachToiDa',
         'PhutGiuBanSauGioHen',

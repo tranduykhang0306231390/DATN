@@ -17,9 +17,7 @@ import {
 } from "../../utils/auth";
 
 const isResetStateValid = (state) => (
-    typeof state?.Email === "string"
-    && typeof state?.SoDienThoai === "string"
-    && typeof state?.NgaySinh === "string"
+    typeof state?.SoDienThoai === "string"
     && typeof state?.ResetToken === "string"
     && state.ResetToken.length > 0
 );
@@ -74,9 +72,7 @@ function ResetPassword() {
 
         try {
             await resetPassword({
-                Email: resetState.Email,
                 SoDienThoai: resetState.SoDienThoai,
-                NgaySinh: resetState.NgaySinh,
                 ResetToken: resetState.ResetToken,
                 MatKhau: form.MatKhau,
                 MatKhau_confirmation: form.MatKhau_confirmation,

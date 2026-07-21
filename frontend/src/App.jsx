@@ -106,6 +106,10 @@ const QuanLyDatBan = lazy(
     () => import("./pages/staff/QuanLyDatBan")
 );
 
+const DangKyKhachHang = lazy(
+    () => import("./pages/staff/DangKyKhachHang")
+);
+
 /*
 |--------------------------------------------------------------------------
 | Admin
@@ -415,6 +419,11 @@ function App() {
                         <Route
                             path="quan-ly-dat-ban"
                             element={<QuanLyDatBan />}
+                        />
+
+                        <Route
+                            path="dang-ky-khach-hang"
+                            element={<DangKyKhachHang />}
                         />
                     </Route>
 

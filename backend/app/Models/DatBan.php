@@ -23,6 +23,7 @@ class DatBan extends Model
         'SoLuongKhach',
         'TrangThai',
         'TrangThaiCoc',
+        'KhongHoanCocDoDatSatGio',
         'SoTienCoc',
         'MaGiaoDichCoc',
         'NganHangHoanTien',
@@ -41,6 +42,7 @@ class DatBan extends Model
     ];
 
     protected $casts = [
+        'KhongHoanCocDoDatSatGio' => 'boolean',
         'ThoiGianDat' => 'datetime',
         'ThoiGianTao' => 'datetime',
         'ThoiGianXacNhan' => 'datetime',

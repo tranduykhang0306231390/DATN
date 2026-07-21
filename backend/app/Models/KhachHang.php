@@ -21,6 +21,16 @@ class KhachHang extends Authenticatable implements JWTSubject
 protected $hidden = [
     'MatKhau'
 ];
+
+    protected $casts = [
+        'phone_verified_at' => 'datetime',
+    ];
+
+    public function hasVerifiedPhone(): bool
+    {
+        return $this->phone_verified_at !== null;
+    }
+
     // ===== JWT =====
 
     public function getJWTIdentifier()
@@ -84,6 +94,18 @@ protected $hidden = [
             PhanHoiKhachHang::class,
             'MaKhachHang',
             'MaKhachHang'
+        );
+    }
+
+    /**
+     * Nhân viên đã đăng ký hộ tài khoản này (null nếu khách tự đăng ký).
+     */
+    public function createdByEmployee()
+    {
+        return $this->belongsTo(
+            NhanVien::class,
+            'created_by_employee_id',
+            'MaNhanVien'
         );
     }
 }

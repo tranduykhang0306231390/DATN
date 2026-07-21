@@ -7,13 +7,14 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "test": "node --test tests/memberRank.test.js tests/voucher.test.js tests/invoice.test.js tests/customerDate.test.js tests/auth.test.js tests/accountCenter.test.js tests/memberProfileEmail.test.js",
+    "test": "node --test tests/memberRank.test.js tests/voucher.test.js tests/invoice.test.js tests/customerDate.test.js tests/auth.test.js tests/accountCenter.test.js tests/phone.test.js",
     "preview": "vite preview"
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^7.3.0",
     "axios": "^1.18.1",
     "bootstrap": "^5.3.8",
+    "firebase": "^12.16.0",
     "react": "^19.2.7",
     "react-datepicker": "^9.1.0",
     "react-dom": "^19.2.7",

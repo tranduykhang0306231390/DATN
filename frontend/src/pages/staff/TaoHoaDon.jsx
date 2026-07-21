@@ -257,6 +257,45 @@ export default function TaoHoaDon() {
     |--------------------------------------------------------------------------
     */
 
+    /*
+     * Nếu hóa đơn đã được gắn sẵn khách hàng (ví dụ mở từ check-in một lượt
+     * đặt bàn trước — xem MoBanService::moBan()), tự động tra cứu để hiển thị
+     * điểm/hạng/voucher ngay, thay vì bắt nhân viên gõ lại số điện thoại.
+     */
+    const tuDongTraCuuKhachHang = async (maKhachHang) => {
+        setSdtError('');
+        setSdtLoading(true);
+
+        try {
+            const response =
+                await hoaDonApi.lookupKhachHangByMa(maKhachHang);
+
+            if (response.data?.success) {
+                setKhachHang(
+                    response.data?.khachHang
+                    ?? response.data?.data?.khachHang
+                    ?? null
+                );
+
+                const voucherList =
+                    response.data?.vouchers
+                    ?? response.data?.data?.vouchers
+                    ?? [];
+
+                setVouchers(
+                    Array.isArray(voucherList)
+                        ? voucherList
+                        : []
+                );
+            }
+        } catch {
+            // Khách hàng có thể đã bị khóa sau khi đặt bàn — không chặn
+            // luồng thanh toán, nhân viên vẫn có thể tự tra cứu lại thủ công.
+        } finally {
+            setSdtLoading(false);
+        }
+    };
+
     const chonBan = (number) => {
         const hoaDon =
             banTreoMap[String(number)];
@@ -264,11 +303,19 @@ export default function TaoHoaDon() {
         setCart({});
         setDangGoiThem(false);
         setError('');
+        setSdt('');
+        setKhachHang(null);
+        setVouchers([]);
+        setSelected([]);
 
         if (hoaDon) {
             setBill(hoaDon);
             setSoBan(null);
             setMode('xemBan');
+
+            if (hoaDon.MaKhachHang) {
+                void tuDongTraCuuKhachHang(hoaDon.MaKhachHang);
+            }
 
             return;
         }
@@ -411,14 +458,25 @@ export default function TaoHoaDon() {
                     ...createDetailPayload(),
                 });
 
-            await Swal.fire({
-                icon: 'success',
-                title:
-                    response.data?.message
-                    ?? `Đã mở bàn ${soBan}`,
-                timer: 1400,
-                showConfirmButton: false,
-            });
+            const canhBao = response.data?.canh_bao_dat_ban;
+
+            if (canhBao) {
+                await Swal.fire({
+                    icon: 'warning',
+                    title: 'Bàn này đã có khách đặt trước!',
+                    text: canhBao.ThongDiep,
+                    confirmButtonText: 'Đã hiểu',
+                });
+            } else {
+                await Swal.fire({
+                    icon: 'success',
+                    title:
+                        response.data?.message
+                        ?? `Đã mở bàn ${soBan}`,
+                    timer: 1400,
+                    showConfirmButton: false,
+                });
+            }
 
             await loadBanTreo();
             dong();
@@ -638,14 +696,25 @@ export default function TaoHoaDon() {
                     selectedTable
                 );
 
-            await Swal.fire({
-                icon: 'success',
-                title:
-                    response.data?.message
-                    ?? 'Đã đổi bàn',
-                timer: 1600,
-                showConfirmButton: false,
-            });
+            const canhBao = response.data?.canh_bao_dat_ban;
+
+            if (canhBao) {
+                await Swal.fire({
+                    icon: 'warning',
+                    title: 'Bàn này đã có khách đặt trước!',
+                    text: canhBao.ThongDiep,
+                    confirmButtonText: 'Đã hiểu',
+                });
+            } else {
+                await Swal.fire({
+                    icon: 'success',
+                    title:
+                        response.data?.message
+                        ?? 'Đã đổi bàn',
+                    timer: 1600,
+                    showConfirmButton: false,
+                });
+            }
 
             const list =
                 await loadBanTreo();
@@ -746,12 +815,22 @@ export default function TaoHoaDon() {
 
     const moThanhToan = () => {
         setSdt('');
-        setKhachHang(null);
-        setVouchers([]);
         setSelected([]);
         setSdtError('');
         setUoc(null);
         setPayOpen(true);
+
+        /*
+         * Hóa đơn có thể đã gắn sẵn khách hàng (mở từ check-in một lượt đặt
+         * bàn trước) — tự tra cứu lại thay vì xóa trắng, để không bắt nhân
+         * viên gõ lại số điện thoại cho khách đã biết rõ danh tính.
+         */
+        if (bill?.MaKhachHang) {
+            void tuDongTraCuuKhachHang(bill.MaKhachHang);
+        } else {
+            setKhachHang(null);
+            setVouchers([]);
+        }
     };
 
     const closePayment = () => {
@@ -932,7 +1011,8 @@ export default function TaoHoaDon() {
 
     const tongThanhToanUocTinh =
         Number(
-            uoc?.TongThanhToan
+            uoc?.SoTienConLaiPhaiTra
+            ?? uoc?.TongThanhToan
             ?? tongBill
         );
 
@@ -2353,6 +2433,30 @@ export default function TaoHoaDon() {
                                                 −
                                                 {fmt(
                                                     uoc.TongGiam
+                                                )}
+                                            </span>
+                                        </div>
+                                    )}
+
+                                    {uoc
+                                        && Number(
+                                            uoc.SoTienCocDaTru
+                                        ) > 0 && (
+                                        <div
+                                            style={{
+                                                ...sumRow,
+                                                color:
+                                                    '#16a34a',
+                                            }}
+                                        >
+                                            <span>
+                                                Đã trừ cọc đặt bàn
+                                            </span>
+
+                                            <span>
+                                                −
+                                                {fmt(
+                                                    uoc.SoTienCocDaTru
                                                 )}
                                             </span>
                                         </div>

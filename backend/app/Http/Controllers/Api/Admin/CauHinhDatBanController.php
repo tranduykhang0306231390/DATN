@@ -22,7 +22,8 @@ class CauHinhDatBanController extends Controller
         if (!$cauHinh) {
             $cauHinh = new CauHinhDatBan([
                 'ThoiGianGiuChoPhut' => 10,
-                'SoGioDatToiThieu' => 2,
+                'SoPhutDatToiThieu' => 120,
+                'ThoiLuongPhucVuPhut' => 120,
                 'SoKhachToiThieu' => 2,
                 'SoKhachToiDa' => 20,
                 'PhutGiuBanSauGioHen' => 15,
@@ -44,7 +45,8 @@ class CauHinhDatBanController extends Controller
         $data = $request->validate(
             [
                 'ThoiGianGiuChoPhut' => ['required', 'integer', 'min:1', 'max:120'],
-                'SoGioDatToiThieu' => ['required', 'integer', 'min:0', 'max:168'],
+                'SoPhutDatToiThieu' => ['required', 'integer', 'min:0', 'max:10080'],
+                'ThoiLuongPhucVuPhut' => ['required', 'integer', 'min:30', 'max:480'],
                 'SoKhachToiThieu' => ['required', 'integer', 'min:1', 'max:100'],
                 'SoKhachToiDa' => ['required', 'integer', 'min:1', 'max:200'],
                 'PhutGiuBanSauGioHen' => ['required', 'integer', 'min:1', 'max:180'],
@@ -69,6 +71,14 @@ class CauHinhDatBanController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Mốc hủy hoàn một phần phải nhỏ hơn hoặc bằng mốc hủy miễn phí.',
+            ], 422);
+        }
+
+        if ($data['SoPhutDatToiThieu'] < $data['ThoiGianGiuChoPhut']) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Đặt trước tối thiểu phải lớn hơn hoặc bằng thời gian giữ chỗ chờ cọc, '
+                    . 'nếu không hạn thanh toán cọc sẽ rơi vào sau giờ hẹn.',
             ], 422);
         }
 
