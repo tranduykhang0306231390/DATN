@@ -65,6 +65,32 @@ Route::post('/logout', [AuthController::class, 'logout']);
 
 /*
 |--------------------------------------------------------------------------
+| CHẨN ĐOÁN TẠM THỜI — xóa ngay sau khi xác định xong sự cố Firebase Admin
+| SDK trên Render. Không trả secret/private_key, chỉ trả tên exception và
+| message kỹ thuật để chẩn đoán, giới hạn tốc độ gọi để tránh lạm dụng.
+|--------------------------------------------------------------------------
+*/
+Route::get('/_debug/firebase-check', function () {
+    try {
+        $auth = app(\Kreait\Firebase\Contract\Auth::class);
+        $auth->getUser('debug-check-nonexistent-uid-000');
+
+        return response()->json(['firebase_ok' => true]);
+    } catch (\Kreait\Firebase\Exception\Auth\UserNotFound) {
+        // Đây là exception MONG ĐỢI cho 1 UID không tồn tại — nghĩa là
+        // credentials/project hợp lệ và kết nối Firebase thành công.
+        return response()->json(['firebase_ok' => true, 'note' => 'UserNotFound như mong đợi, kết nối Firebase ổn.']);
+    } catch (\Throwable $e) {
+        return response()->json([
+            'firebase_ok' => false,
+            'exception_class' => get_class($e),
+            'message' => $e->getMessage(),
+        ]);
+    }
+})->middleware('throttle:10,1');
+
+/*
+|--------------------------------------------------------------------------
 | Public website data
 |--------------------------------------------------------------------------
 */
