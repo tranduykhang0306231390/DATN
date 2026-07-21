@@ -1,4 +1,4 @@
-import { initializeApp } from "firebase/app";
+import { getApps, initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 
 /*
@@ -29,7 +29,12 @@ if (!isFirebaseConfigured && import.meta.env.DEV) {
     );
 }
 
-const firebaseApp = isFirebaseConfigured ? initializeApp(firebaseConfig) : null;
+// getApps() tránh gọi initializeApp() lần thứ hai khi Vite HMR reload module
+// này trong lúc dev (initializeApp() ném lỗi "app already exists" nếu gọi
+// lại với cùng tên app mặc định).
+const firebaseApp = isFirebaseConfigured
+    ? (getApps()[0] ?? initializeApp(firebaseConfig))
+    : null;
 export const firebaseAuth = firebaseApp ? getAuth(firebaseApp) : null;
 
 export { isFirebaseConfigured };
