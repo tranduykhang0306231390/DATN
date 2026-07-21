@@ -16,6 +16,14 @@ export const registerMember = (data) => {
     return axios.post(`${API_URL}/member/register`, data);
 };
 
+export const checkPhoneAvailable = (SoDienThoai) => {
+    return axios.post(`${API_URL}/member/register/check-phone`, { SoDienThoai });
+};
+
+export const memberLoginFirebase = (FirebaseIdToken) => {
+    return axios.post(`${API_URL}/member/login/firebase`, { FirebaseIdToken });
+};
+
 /* PROFILE */
 export const getMemberProfile = () => {
     return axiosClient.get("/member/profile");
@@ -83,9 +91,13 @@ export const updateMemberProfile = (data) => {
     return axiosClient.put("/member/profile", data);
 };
 
-/* CHANGE PASSWORD */
-export const changePassword = (data) => {
-    return axiosClient.put("/member/change-password", data);
+/* CHANGE PASSWORD (2 bước: xác minh OTP Firebase rồi mới xác nhận mật khẩu mới) */
+export const requestChangePasswordVerification = (FirebaseIdToken) => {
+    return axiosClient.post("/member/change-password/verify-phone", { FirebaseIdToken });
+};
+
+export const confirmChangePassword = (data) => {
+    return axiosClient.post("/member/change-password/confirm", data);
 };
 
 /* FEEDBACK */

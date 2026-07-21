@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\MemberRankHistoryController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\PhanHoiKhachHangController;
 use App\Http\Controllers\Api\StaffDatBanController;
+use App\Http\Controllers\Api\StaffKhachHangController;
 use App\Http\Controllers\Api\TicketController;
 use App\Http\Controllers\Api\TraCuuKhachHangController;
 use App\Http\Controllers\Api\VnPayController;
@@ -41,6 +42,12 @@ use App\Http\Controllers\Api\Admin\WebSettingController;
 
 Route::post('/member/login', [AuthController::class, 'memberLogin'])
     ->middleware('throttle:10,1');
+
+Route::post('/member/login/firebase', [AuthController::class, 'loginFirebase'])
+    ->middleware('throttle:10,1');
+
+Route::post('/member/register/check-phone', [AuthController::class, 'checkPhoneAvailable'])
+    ->middleware('throttle:20,1');
 
 Route::post('/member/register', [AuthController::class, 'register'])
     ->middleware('throttle:5,1');
@@ -98,9 +105,16 @@ Route::middleware('member')
         Route::get('/profile', [AuthController::class, 'memberProfile']);
         Route::put('/profile', [AuthController::class, 'updateMemberProfile']);
 
-        Route::put('/change-password', [
+        // Đổi mật khẩu: 2 bước, bắt buộc xác minh lại Firebase OTP trước khi
+        // được cấp change_token (thay cho việc chỉ cần biết mật khẩu cũ).
+        Route::post('/change-password/verify-phone', [
             AuthController::class,
-            'changePassword',
+            'changePasswordRequestVerification',
+        ]);
+
+        Route::post('/change-password/confirm', [
+            AuthController::class,
+            'changePasswordConfirm',
         ]);
 
         /*
@@ -297,6 +311,23 @@ Route::middleware('staff')->group(function () {
     Route::post('/khach-hang/lookup', [
         TraCuuKhachHangController::class,
         'lookup',
+    ]);
+
+    /*
+    |--------------------------------------------------------------------------
+    | Nhân viên đăng ký hộ khách hàng (bắt buộc khách hàng tự xác minh OTP
+    | qua Firebase — nhân viên không thể bỏ qua bước này)
+    |--------------------------------------------------------------------------
+    */
+
+    Route::post('/khach-hang/dang-ky/kiem-tra-so-dien-thoai', [
+        StaffKhachHangController::class,
+        'checkPhone',
+    ]);
+
+    Route::post('/khach-hang/dang-ky', [
+        StaffKhachHangController::class,
+        'register',
     ]);
 
     /*

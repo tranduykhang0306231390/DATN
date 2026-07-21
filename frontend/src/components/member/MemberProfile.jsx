@@ -2,7 +2,6 @@ import { useRef, useState } from "react";
 import {
     FaBirthdayCake,
     FaEdit,
-    FaEnvelope,
     FaKey,
     FaPhoneAlt,
     FaSave,
@@ -22,18 +21,11 @@ import {
     normalizeCalendarDateForApi,
 } from "../../utils/customerDate";
 import { syncStoredCustomerUser } from "../../utils/customerSession";
-import {
-    buildProfileEmail,
-    GMAIL_EMAIL_DOMAIN,
-    getEmailEditorState,
-    normalizeEmailEditorInput,
-} from "../../utils/memberProfileEmail";
 import ChangePasswordForm from "./ChangePasswordForm";
 import "../../assets/css/customer/account-profile.css";
 
 const getProfileFormData = (user) => ({
     HoTen: user?.HoTen || "",
-    Email: user?.Email || "",
     SoDienThoai: user?.SoDienThoai || "",
     NgaySinh: formatCalendarDateForInput(user?.NgaySinh),
     GioiTinh: user?.GioiTinh === "Nữ" ? "Nu" : (user?.GioiTinh || ""),
@@ -60,8 +52,6 @@ const getBackendFieldErrors = (error) => {
 const validateProfile = (formData) => {
     const errors = {};
     const normalizedName = formData.HoTen.trim();
-    const normalizedEmail = formData.Email.trim();
-    const normalizedPhone = formData.SoDienThoai.trim();
     const normalizedBirthDate = normalizeCalendarDateForApi(formData.NgaySinh);
 
     if (!normalizedName) {
@@ -70,16 +60,6 @@ const validateProfile = (formData) => {
         errors.HoTen = "Họ tên phải từ 3 đến 100 ký tự.";
     } else if (!/^[\p{L}\s]+$/u.test(normalizedName)) {
         errors.HoTen = "Họ tên chỉ được chứa chữ cái và khoảng trắng.";
-    }
-
-    if (!normalizedEmail || normalizedEmail.toLocaleLowerCase("vi-VN") === GMAIL_EMAIL_DOMAIN) {
-        errors.Email = "Vui lòng nhập email.";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
-        errors.Email = "Email không đúng định dạng.";
-    }
-
-    if (!/^(0)[0-9]{9}$/.test(normalizedPhone)) {
-        errors.SoDienThoai = "Số điện thoại phải gồm 10 chữ số và bắt đầu bằng 0.";
     }
 
     if (!normalizedBirthDate) {
@@ -96,8 +76,6 @@ const validateProfile = (formData) => {
         errors,
         payload: {
             HoTen: normalizedName,
-            Email: normalizedEmail,
-            SoDienThoai: normalizedPhone,
             NgaySinh: normalizedBirthDate,
             GioiTinh: formData.GioiTinh,
         },
@@ -120,7 +98,6 @@ function MemberProfileSummary({
     const [isPasswordSubmitting, setIsPasswordSubmitting] = useState(false);
     const [savedProfile, setSavedProfile] = useState(() => getProfileFormData(user));
     const [formData, setFormData] = useState(() => getProfileFormData(user));
-    const [emailEditor, setEmailEditor] = useState(() => getEmailEditorState(user?.Email));
     const [fieldErrors, setFieldErrors] = useState({});
     const [profileStatus, setProfileStatus] = useState(null);
     const [securityStatus, setSecurityStatus] = useState("");
@@ -135,15 +112,8 @@ function MemberProfileSummary({
         setProfileStatus(null);
     };
 
-    const handleEmailChange = (event) => {
-        setEmailEditor(normalizeEmailEditorInput(event.target.value));
-        setFieldErrors((current) => ({ ...current, Email: "" }));
-        setProfileStatus(null);
-    };
-
     const startEditing = () => {
         setFormData({ ...savedProfile });
-        setEmailEditor(getEmailEditorState(savedProfile.Email));
         setFieldErrors({});
         setProfileStatus(null);
         setSecurityStatus("");
@@ -152,7 +122,6 @@ function MemberProfileSummary({
 
     const handleCancel = () => {
         setFormData({ ...savedProfile });
-        setEmailEditor(getEmailEditorState(savedProfile.Email));
         setFieldErrors({});
         setProfileStatus(null);
         onCloseModal?.();
@@ -162,10 +131,7 @@ function MemberProfileSummary({
         event.preventDefault();
         if (savingRef.current) return;
 
-        const validation = validateProfile({
-            ...formData,
-            Email: buildProfileEmail(emailEditor),
-        });
+        const validation = validateProfile(formData);
         if (Object.keys(validation.errors).length > 0) {
             setFieldErrors(validation.errors);
             setProfileStatus({ tone: "error", message: "Vui lòng kiểm tra lại các trường được đánh dấu." });
@@ -188,7 +154,6 @@ function MemberProfileSummary({
             const updatedProfile = getProfileFormData(updatedUser);
             setSavedProfile(updatedProfile);
             setFormData(updatedProfile);
-            setEmailEditor(getEmailEditorState(updatedProfile.Email));
             syncStoredCustomerUser(updatedUser);
             onProfileUpdated?.(updatedUser);
 
@@ -272,10 +237,6 @@ function MemberProfileSummary({
                         <dd>{savedProfile.HoTen || "—"}</dd>
                     </div>
                     <div>
-                        <dt><FaEnvelope aria-hidden="true" /> Email</dt>
-                        <dd>{savedProfile.Email || "—"}</dd>
-                    </div>
-                    <div>
                         <dt><FaPhoneAlt aria-hidden="true" /> Số điện thoại</dt>
                         <dd>{savedProfile.SoDienThoai || "—"}</dd>
                     </div>
@@ -327,58 +288,18 @@ function MemberProfileSummary({
                         </div>
 
                         <div className="customer-form-field">
-                            <label className="customer-form-field__label" htmlFor="profile-email">Email</label>
-                            <div className={`member-profile__email-control ${fieldErrors.Email ? "is-invalid" : ""}`}>
-                                <input
-                                    id="profile-email"
-                                    className="customer-input"
-                                    type={emailEditor.mode === "gmail" ? "text" : "email"}
-                                    name="Email"
-                                    value={emailEditor.value}
-                                    maxLength={100}
-                                    required
-                                    autoComplete="email"
-                                    autoCapitalize="none"
-                                    spellCheck="false"
-                                    inputMode="email"
-                                    aria-invalid={Boolean(fieldErrors.Email)}
-                                    aria-describedby={fieldErrors.Email
-                                        ? "profile-email-help profile-email-error"
-                                        : "profile-email-help"}
-                                    onChange={handleEmailChange}
-                                />
-                                {emailEditor.mode === "gmail" && (
-                                    <span className="member-profile__email-domain" aria-hidden="true">
-                                        {GMAIL_EMAIL_DOMAIN}
-                                    </span>
-                                )}
-                            </div>
-                            <span id="profile-email-help" className="customer-form-field__help">
-                                {emailEditor.mode === "gmail"
-                                    ? "Chỉ nhập phần tên trước @gmail.com; bạn cũng có thể dán một email khác đầy đủ."
-                                    : "Nhập địa chỉ email đầy đủ."}
-                            </span>
-                            <FieldError id="profile-email-error" message={fieldErrors.Email} />
-                        </div>
-
-                        <div className="customer-form-field">
                             <label className="customer-form-field__label" htmlFor="profile-phone">Số điện thoại</label>
                             <input
                                 id="profile-phone"
                                 className="customer-input"
                                 type="tel"
-                                name="SoDienThoai"
                                 value={formData.SoDienThoai}
-                                maxLength={10}
-                                inputMode="numeric"
-                                required
-                                autoComplete="tel"
-                                aria-invalid={Boolean(fieldErrors.SoDienThoai)}
-                                aria-describedby={fieldErrors.SoDienThoai ? "profile-phone-error" : "profile-phone-help"}
-                                onChange={handleChange}
+                                disabled
+                                readOnly
                             />
-                            <span id="profile-phone-help" className="customer-form-field__help">10 chữ số, bắt đầu bằng 0.</span>
-                            <FieldError id="profile-phone-error" message={fieldErrors.SoDienThoai} />
+                            <span className="customer-form-field__help">
+                                Đây là tài khoản đăng nhập của bạn, không thể tự đổi tại đây.
+                            </span>
                         </div>
 
                         <div className="customer-form-field">
@@ -453,6 +374,7 @@ function MemberProfileSummary({
                         </div>
                     </div>
                     <ChangePasswordForm
+                        phone={savedProfile.SoDienThoai}
                         onCancel={onCloseModal}
                         onSuccess={handlePasswordSuccess}
                         onSubmittingChange={setIsPasswordSubmitting}

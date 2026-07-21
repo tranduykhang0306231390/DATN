@@ -65,11 +65,6 @@ class KhachHangController extends Controller
                         "%{$keyword}%"
                     )
                     ->orWhere(
-                        'Email',
-                        'like',
-                        "%{$keyword}%"
-                    )
-                    ->orWhere(
                         'MaKhachHang',
                         'like',
                         "%{$keyword}%"
@@ -196,19 +191,6 @@ class KhachHangController extends Controller
                     ]),
                 ],
 
-                'Email' => [
-                    'required',
-                    'email',
-                    'max:100',
-                    Rule::unique(
-                        'khachhang',
-                        'Email'
-                    )->ignore(
-                        $ma,
-                        'MaKhachHang'
-                    ),
-                ],
-
                 'SoDienThoai' => [
                     'required',
                     'regex:/^0[0-9]{9}$/',
@@ -241,15 +223,6 @@ class KhachHangController extends Controller
 
                 'GioiTinh.in' =>
                     'Giới tính không hợp lệ.',
-
-                'Email.required' =>
-                    'Vui lòng nhập email khách hàng.',
-
-                'Email.email' =>
-                    'Email không đúng định dạng.',
-
-                'Email.unique' =>
-                    'Email này đã được sử dụng.',
 
                 'SoDienThoai.required' =>
                     'Vui lòng nhập số điện thoại khách hàng.',
@@ -290,13 +263,15 @@ class KhachHangController extends Controller
                     $khachHang->GioiTinh =
                         $data['GioiTinh'] ?? null;
 
-                    $khachHang->Email = strtolower(
-                        trim($data['Email'])
-                    );
-
-                    $khachHang->SoDienThoai = trim(
-                        $data['SoDienThoai']
-                    );
+                    $soDienThoaiMoi = trim($data['SoDienThoai']);
+                    if ($soDienThoaiMoi !== $khachHang->SoDienThoai) {
+                        /*
+                         * Số điện thoại mới chưa được Firebase xác minh,
+                         * nên không còn được coi là "đã xác minh" nữa.
+                         */
+                        $khachHang->phone_verified_at = null;
+                    }
+                    $khachHang->SoDienThoai = $soDienThoaiMoi;
 
                     /*
                      * Không gán MaHangThanhVien tại đây.

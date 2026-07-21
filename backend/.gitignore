@@ -18,6 +18,8 @@
 /public/storage
 /storage/*.key
 /storage/pail
+# Firebase service account credentials — không bao giờ commit lên Git.
+/storage/app/firebase
 /vendor
 Homestead.json
 Homestead.yaml

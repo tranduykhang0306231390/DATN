@@ -1,35 +1,13 @@
 import { useRef, useState } from "react";
-import { FaEye, FaEyeSlash, FaKey, FaSave, FaTimes } from "react-icons/fa";
+import { FaKey, FaMobileAlt, FaSave, FaTimes } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
-import { changePassword } from "../../api/authApi";
+import { confirmChangePassword, requestChangePasswordVerification } from "../../api/authApi";
+import { OtpInput, PasswordField } from "../customer/auth";
+import useFirebasePhoneAuth from "../../hooks/useFirebasePhoneAuth";
 import { resetSessionVerificationCache } from "../../services/sessionService";
-import { PASSWORD_PATTERN } from "../../utils/auth";
+import { getAuthRequestMessage, PASSWORD_PATTERN } from "../../utils/auth";
 import { updateStoredAuthToken } from "../../utils/customerSession";
-
-const EMPTY_FORM = {
-    MatKhauHienTai: "",
-    MatKhauMoi: "",
-    MatKhauMoi_confirmation: "",
-};
-
-const FIELD_CONFIG = [
-    {
-        name: "MatKhauHienTai",
-        label: "Mật khẩu hiện tại",
-        autoComplete: "current-password",
-    },
-    {
-        name: "MatKhauMoi",
-        label: "Mật khẩu mới",
-        autoComplete: "new-password",
-    },
-    {
-        name: "MatKhauMoi_confirmation",
-        label: "Xác nhận mật khẩu mới",
-        autoComplete: "new-password",
-    },
-];
 
 const getBackendFieldErrors = (error) => {
     const errors = error?.response?.status === 422 ? error.response.data?.errors : null;
@@ -43,74 +21,127 @@ const getBackendFieldErrors = (error) => {
     );
 };
 
-const validatePasswordForm = (formData) => {
-    const errors = {};
-
-    if (!formData.MatKhauHienTai) {
-        errors.MatKhauHienTai = "Vui lòng nhập mật khẩu hiện tại.";
-    }
-
-    if (!PASSWORD_PATTERN.test(formData.MatKhauMoi)) {
-        errors.MatKhauMoi = "Mật khẩu phải từ 8–20 ký tự, có chữ hoa, chữ thường, số và ký tự đặc biệt (@$!%*#?&).";
-    } else if (formData.MatKhauMoi === formData.MatKhauHienTai) {
-        errors.MatKhauMoi = "Mật khẩu mới không được trùng mật khẩu hiện tại.";
-    }
-
-    if (!formData.MatKhauMoi_confirmation) {
-        errors.MatKhauMoi_confirmation = "Vui lòng xác nhận mật khẩu mới.";
-    } else if (formData.MatKhauMoi !== formData.MatKhauMoi_confirmation) {
-        errors.MatKhauMoi_confirmation = "Xác nhận mật khẩu mới không khớp.";
-    }
-
-    return errors;
-};
-
-function ChangePasswordForm({ onCancel, onSuccess, onSubmittingChange }) {
+/**
+ * Đổi mật khẩu: khách hàng PHẢI xác minh lại quyền sở hữu số điện thoại
+ * của chính tài khoản mình qua Firebase OTP trước khi được đổi mật khẩu
+ * — thay cho việc chỉ cần nhớ mật khẩu cũ (mật khẩu mặc định ban đầu vốn
+ * chỉ là số điện thoại, độ bảo mật thấp nên không đủ để tự xác thực).
+ */
+function ChangePasswordForm({ phone, onCancel, onSuccess, onSubmittingChange }) {
     const navigate = useNavigate();
-    const [formData, setFormData] = useState({ ...EMPTY_FORM });
-    const [visibleFields, setVisibleFields] = useState({});
+    const submittingRef = useRef(false);
+    const [step, setStep] = useState("start"); // 'start' | 'otp' | 'password'
+    const [otp, setOtp] = useState("");
+    const [changeToken, setChangeToken] = useState("");
+    const [passwordForm, setPasswordForm] = useState({ MatKhauMoi: "", MatKhauMoi_confirmation: "" });
     const [fieldErrors, setFieldErrors] = useState({});
     const [requestError, setRequestError] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const submittingRef = useRef(false);
 
-    const handleChange = (event) => {
+    const {
+        recaptchaContainerId,
+        sendOtp,
+        confirmOtp,
+        isSending,
+        isConfirming,
+        errorMessage: firebaseError,
+        resendAvailableIn,
+        canResend,
+    } = useFirebasePhoneAuth();
+
+    const setSubmitting = (value) => {
+        setIsSubmitting(value);
+        onSubmittingChange?.(value);
+    };
+
+    const handleSendOtp = async () => {
+        setRequestError("");
+        const sent = await sendOtp(phone);
+        if (sent) setStep("otp");
+    };
+
+    const handleResend = async () => {
+        if (!canResend || isSending) return;
+        await sendOtp(phone);
+        setOtp("");
+    };
+
+    const handleVerifyOtp = async (event) => {
+        event.preventDefault();
+        if (submittingRef.current || otp.length !== 6) return;
+
+        submittingRef.current = true;
+        setSubmitting(true);
+        setRequestError("");
+
+        try {
+            const idToken = await confirmOtp(otp);
+            if (!idToken) return;
+
+            const response = await requestChangePasswordVerification(idToken);
+            const token = response.data?.change_token;
+            if (typeof token !== "string" || !token) {
+                setRequestError("Máy chủ chưa trả về phiên xác minh hợp lệ. Vui lòng thử lại.");
+                return;
+            }
+
+            setChangeToken(token);
+            setStep("password");
+        } catch (error) {
+            setRequestError(getAuthRequestMessage(error, "Không thể xác minh OTP lúc này."));
+        } finally {
+            submittingRef.current = false;
+            setSubmitting(false);
+        }
+    };
+
+    const validatePasswordForm = () => {
+        const errors = {};
+
+        if (!PASSWORD_PATTERN.test(passwordForm.MatKhauMoi)) {
+            errors.MatKhauMoi = "Mật khẩu phải từ 8–20 ký tự, có chữ hoa, chữ thường, số và ký tự đặc biệt (@$!%*#?&).";
+        }
+
+        if (!passwordForm.MatKhauMoi_confirmation) {
+            errors.MatKhauMoi_confirmation = "Vui lòng xác nhận mật khẩu mới.";
+        } else if (passwordForm.MatKhauMoi !== passwordForm.MatKhauMoi_confirmation) {
+            errors.MatKhauMoi_confirmation = "Xác nhận mật khẩu mới không khớp.";
+        }
+
+        setFieldErrors(errors);
+        return Object.keys(errors).length === 0;
+    };
+
+    const handleChangePasswordField = (event) => {
         const { name, value } = event.target;
-        setFormData((current) => ({ ...current, [name]: value }));
+        setPasswordForm((current) => ({ ...current, [name]: value }));
         setFieldErrors((current) => ({ ...current, [name]: "" }));
         setRequestError("");
     };
 
-    const handleSubmit = async (event) => {
+    const handleConfirmPassword = async (event) => {
         event.preventDefault();
-        if (submittingRef.current) return;
-
-        const validationErrors = validatePasswordForm(formData);
-        if (Object.keys(validationErrors).length > 0) {
-            setFieldErrors(validationErrors);
-            setRequestError("Vui lòng kiểm tra lại các trường được đánh dấu.");
-            return;
-        }
+        if (submittingRef.current || !validatePasswordForm()) return;
 
         submittingRef.current = true;
-        setIsSubmitting(true);
-        onSubmittingChange?.(true);
+        setSubmitting(true);
         setFieldErrors({});
         setRequestError("");
 
         try {
-            const response = await changePassword(formData);
+            const response = await confirmChangePassword({
+                ChangeToken: changeToken,
+                MatKhauMoi: passwordForm.MatKhauMoi,
+                MatKhauMoi_confirmation: passwordForm.MatKhauMoi_confirmation,
+            });
 
             if (response.data?.token && !updateStoredAuthToken(response.data.token)) {
                 resetSessionVerificationCache();
-                setFormData({ ...EMPTY_FORM });
                 navigate("/login", { replace: true });
                 return;
             }
 
             resetSessionVerificationCache();
-            setFormData({ ...EMPTY_FORM });
-            setVisibleFields({});
             onSuccess?.(response.data?.message || "Đổi mật khẩu thành công.");
         } catch (error) {
             const backendErrors = getBackendFieldErrors(error);
@@ -118,94 +149,121 @@ function ChangePasswordForm({ onCancel, onSuccess, onSubmittingChange }) {
                 setFieldErrors(backendErrors);
                 setRequestError(error.response?.data?.message || "Thông tin đổi mật khẩu chưa hợp lệ.");
             } else {
-                setRequestError(
-                    error?.response
-                        ? "Không thể đổi mật khẩu lúc này. Các trường đã nhập vẫn được giữ lại."
-                        : "Không thể kết nối máy chủ. Vui lòng kiểm tra mạng và thử lại.",
-                );
+                setRequestError(getAuthRequestMessage(error, "Không thể đổi mật khẩu lúc này."));
             }
         } finally {
             submittingRef.current = false;
-            setIsSubmitting(false);
-            onSubmittingChange?.(false);
+            setSubmitting(false);
         }
     };
 
     return (
-        <form className="change-password-form" onSubmit={handleSubmit} noValidate>
-            {requestError && (
+        <div className="change-password-form">
+            <div id={recaptchaContainerId} />
+
+            {(requestError || firebaseError) && (
                 <div className="change-password-form__notice" role="alert" aria-live="assertive">
-                    {requestError}
+                    {requestError || firebaseError}
                 </div>
             )}
 
-            <div className="change-password-form__grid">
-                {FIELD_CONFIG.map((field) => {
-                    const inputId = `change-password-${field.name}`;
-                    const errorId = `${inputId}-error`;
-                    const isVisible = Boolean(visibleFields[field.name]);
-                    const hasError = Boolean(fieldErrors[field.name]);
-
-                    return (
-                        <div key={field.name} className="customer-form-field">
-                            <label className="customer-form-field__label" htmlFor={inputId}>{field.label}</label>
-                            <div className="change-password-form__input-wrap">
-                                <input
-                                    id={inputId}
-                                    className="customer-input"
-                                    type={isVisible ? "text" : "password"}
-                                    name={field.name}
-                                    value={formData[field.name]}
-                                    minLength={field.name === "MatKhauHienTai" ? undefined : 8}
-                                    maxLength={20}
-                                    required
-                                    autoComplete={field.autoComplete}
-                                    aria-invalid={hasError}
-                                    aria-describedby={hasError ? errorId : undefined}
-                                    onChange={handleChange}
-                                />
-                                <button
-                                    type="button"
-                                    className="change-password-form__visibility"
-                                    onClick={() => setVisibleFields((current) => ({
-                                        ...current,
-                                        [field.name]: !current[field.name],
-                                    }))}
-                                    aria-label={`${isVisible ? "Ẩn" : "Hiện"} ${field.label.toLocaleLowerCase("vi-VN")}`}
-                                    aria-pressed={isVisible}
-                                >
-                                    {isVisible ? <FaEyeSlash aria-hidden="true" /> : <FaEye aria-hidden="true" />}
-                                </button>
-                            </div>
-                            {hasError && (
-                                <span id={errorId} className="customer-form-field__error" role="alert">
-                                    {fieldErrors[field.name]}
-                                </span>
+            {step === "start" && (
+                <div className="change-password-form__grid">
+                    <p className="customer-form-field__help">
+                        Để bảo vệ tài khoản, bạn cần xác minh lại số điện thoại <strong>{phone}</strong> bằng mã OTP trước khi đổi mật khẩu.
+                    </p>
+                    <div className="change-password-form__actions">
+                        <button type="button" className="customer-button customer-button--ghost" onClick={onCancel} disabled={isSubmitting}>
+                            <FaTimes aria-hidden="true" /> Hủy
+                        </button>
+                        <button
+                            type="button"
+                            className="customer-button customer-button--primary"
+                            onClick={handleSendOtp}
+                            disabled={isSending}
+                        >
+                            {isSending ? (
+                                <><span className="customer-auth__submit-spinner" aria-hidden="true" /> Đang gửi mã…</>
+                            ) : (
+                                <><FaMobileAlt aria-hidden="true" /> Gửi mã OTP</>
                             )}
-                        </div>
-                    );
-                })}
-            </div>
+                        </button>
+                    </div>
+                </div>
+            )}
 
-            <p className="change-password-form__hint">
-                <FaKey aria-hidden="true" />
-                Mật khẩu mới gồm 8–20 ký tự, có chữ hoa, chữ thường, số và ký tự đặc biệt (@$!%*#?&).
-            </p>
+            {step === "otp" && (
+                <form onSubmit={handleVerifyOtp} noValidate>
+                    <p className="customer-form-field__help">Mã OTP đã được gửi tới số <strong>{phone}</strong>.</p>
 
-            <div className="change-password-form__actions">
-                <button
-                    type="button"
-                    className="customer-button customer-button--ghost"
-                    onClick={onCancel}
-                    disabled={isSubmitting}
-                >
-                    <FaTimes aria-hidden="true" /> Hủy
-                </button>
-                <button type="submit" className="customer-button customer-button--primary" disabled={isSubmitting}>
-                    <FaSave aria-hidden="true" /> {isSubmitting ? "Đang lưu…" : "Lưu mật khẩu"}
-                </button>
-            </div>
-        </form>
+                    <OtpInput value={otp} onChange={setOtp} disabled={isSubmitting || isConfirming} idPrefix="change-password-otp" />
+
+                    <div className="customer-auth__meta-row">
+                        <button type="button" className="customer-auth__link" onClick={handleResend} disabled={!canResend || isSending || isSubmitting}>
+                            {canResend ? "Gửi lại mã" : `Gửi lại sau ${resendAvailableIn}s`}
+                        </button>
+                    </div>
+
+                    <div className="change-password-form__actions">
+                        <button type="button" className="customer-button customer-button--ghost" onClick={onCancel} disabled={isSubmitting}>
+                            <FaTimes aria-hidden="true" /> Hủy
+                        </button>
+                        <button
+                            type="submit"
+                            className="customer-button customer-button--primary"
+                            disabled={isSubmitting || isConfirming || otp.length !== 6}
+                        >
+                            {isSubmitting || isConfirming ? (
+                                <><span className="customer-auth__submit-spinner" aria-hidden="true" /> Đang xác minh…</>
+                            ) : (
+                                <><FaKey aria-hidden="true" /> Xác minh</>
+                            )}
+                        </button>
+                    </div>
+                </form>
+            )}
+
+            {step === "password" && (
+                <form onSubmit={handleConfirmPassword} noValidate>
+                    <div className="change-password-form__grid">
+                        <PasswordField
+                            id="change-password-new"
+                            name="MatKhauMoi"
+                            label="Mật khẩu mới"
+                            value={passwordForm.MatKhauMoi}
+                            onChange={handleChangePasswordField}
+                            error={fieldErrors.MatKhauMoi}
+                            autoComplete="new-password"
+                            disabled={isSubmitting}
+                        />
+                        <PasswordField
+                            id="change-password-new-confirmation"
+                            name="MatKhauMoi_confirmation"
+                            label="Xác nhận mật khẩu mới"
+                            value={passwordForm.MatKhauMoi_confirmation}
+                            onChange={handleChangePasswordField}
+                            error={fieldErrors.MatKhauMoi_confirmation}
+                            autoComplete="new-password"
+                            disabled={isSubmitting}
+                        />
+                    </div>
+
+                    <p className="change-password-form__hint">
+                        <FaKey aria-hidden="true" />
+                        Mật khẩu mới gồm 8–20 ký tự, có chữ hoa, chữ thường, số và ký tự đặc biệt (@$!%*#?&).
+                    </p>
+
+                    <div className="change-password-form__actions">
+                        <button type="button" className="customer-button customer-button--ghost" onClick={onCancel} disabled={isSubmitting}>
+                            <FaTimes aria-hidden="true" /> Hủy
+                        </button>
+                        <button type="submit" className="customer-button customer-button--primary" disabled={isSubmitting}>
+                            <FaSave aria-hidden="true" /> {isSubmitting ? "Đang lưu…" : "Lưu mật khẩu"}
+                        </button>
+                    </div>
+                </form>
+            )}
+        </div>
     );
 }
 
