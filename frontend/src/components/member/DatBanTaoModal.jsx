@@ -247,10 +247,10 @@ function DatBanTaoModal({ open, onClose, onCreated }) {
                         </span>
                         {preview.KhongHoanCocNeuDat && (
                             <p className="customer-form-field__error" style={{ margin: 0 }}>
-                                <FaExclamationTriangle aria-hidden="true" /> Bạn đang đặt trước ít hơn mốc{" "}
-                                <strong>"Hủy hoàn một phần trước"</strong>
-                                {cauHinh?.SoGioHuyMotPhanLabel && <> ({cauHinh.SoGioHuyMotPhanLabel})</>}, nên lượt đặt
-                                này sẽ <strong>không được hoàn cọc</strong> nếu bạn hủy sau đó — dù hủy ngay bây giờ.
+                                <FaExclamationTriangle aria-hidden="true" /> Vì đặt trước chưa đủ
+                                {cauHinh?.SoGioHuyMotPhanLabel ? <> ({cauHinh.SoGioHuyMotPhanLabel})</> : null}, lượt đặt
+                                này <strong>không thuộc diện hoàn cọc</strong>. Nếu hủy — dù ngay bây giờ — khoản cọc sẽ{" "}
+                                <strong>không được hoàn lại</strong>.
                             </p>
                         )}
                     </div>

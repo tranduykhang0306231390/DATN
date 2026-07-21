@@ -11,19 +11,28 @@ use Illuminate\Http\Request;
 class TraCuuKhachHangController extends Controller
 {
     /**
-     * Tra cứu khách hàng theo SĐT
-     * Trả về thông tin KH + danh sách voucher còn hiệu lực
+     * Tra cứu khách hàng theo SĐT hoặc theo mã khách hàng (dùng khi mở một
+     * hóa đơn đã gắn sẵn khách hàng từ lượt đặt bàn trước — staff không cần
+     * gõ lại số điện thoại).
+     * Trả về thông tin KH + danh sách voucher còn hiệu lực.
      */
     public function lookup(Request $request)
     {
         $data = $request->validate([
-            'so_dien_thoai' => ['required', 'string', 'regex:/^0[0-9]{9}$/'],
+            'so_dien_thoai' => ['required_without:ma_khach_hang', 'nullable', 'string', 'regex:/^0[0-9]{9}$/'],
+            'ma_khach_hang' => ['required_without:so_dien_thoai', 'nullable', 'string', 'max:20'],
         ]);
 
-        $khachHang = KhachHang::with('hangThanhVien')
-            ->where('SoDienThoai', trim($data['so_dien_thoai']))
-            ->where('TrangThai', 'HoatDong')
-            ->first();
+        $query = KhachHang::with('hangThanhVien')
+            ->where('TrangThai', 'HoatDong');
+
+        if (!empty($data['ma_khach_hang'])) {
+            $query->where('MaKhachHang', $data['ma_khach_hang']);
+        } else {
+            $query->where('SoDienThoai', trim($data['so_dien_thoai']));
+        }
+
+        $khachHang = $query->first();
 
         if (!$khachHang) {
             return response()->json([
