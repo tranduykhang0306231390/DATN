@@ -66,7 +66,7 @@ function isPathActive(currentPath, itemPath) {
 
     /*
      * Hỗ trợ các trang con như:
-     * /admin/banner/create
+     * /admin/uu-dai/create
      * /admin/nhan-vien/NV001
      *
      * Riêng dashboard chỉ active khi đúng chính xác route.

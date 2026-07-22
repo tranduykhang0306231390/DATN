@@ -188,10 +188,6 @@ const CauHinhWebsite = lazy(
     () => import("./pages/admin/CauHinhWebsite")
 );
 
-const QuanLyBanner = lazy(
-    () => import("./pages/admin/QuanLyBanner")
-);
-
 /*
 |--------------------------------------------------------------------------
 | Loading fallback
@@ -540,15 +536,6 @@ function App() {
                         <Route
                             path="cau-hinh-website"
                             element={<CauHinhWebsite />}
-                        />
-
-                        {/*
-                         * Quản lý banner chỉ nằm trong Admin.
-                         * Không thêm banner vào trang Home.
-                         */}
-                        <Route
-                            path="banner"
-                            element={<QuanLyBanner />}
                         />
                     </Route>
 
