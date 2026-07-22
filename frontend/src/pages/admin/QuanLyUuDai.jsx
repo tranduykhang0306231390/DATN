@@ -47,6 +47,12 @@ const EMPTY_FORM = {
 const fmtMoney = (n) =>
     new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(n || 0);
 
+// Ưu đãi hết hạn khi ngày kết thúc đã qua — không phụ thuộc cột TrangThai.
+const isExpired = (ud) => {
+    const ngayKetThuc = (ud.NgayKetThuc || '').slice(0, 10);
+    return ngayKetThuc !== '' && ngayKetThuc < todayStr();
+};
+
 // Ngày hôm nay theo giờ địa phương, dạng YYYY-MM-DD
 const todayStr = () => {
     const d = new Date();
@@ -139,17 +145,15 @@ export default function QuanLyUuDai() {
         }));
 
     const handleSubmit = async () => {
-        // Khi thêm mới: không cho phép ngày bắt đầu / kết thúc nằm trong quá khứ
-        if (!editing) {
-            const today = todayStr();
-            if (form.NgayBatDau && form.NgayBatDau < today) {
-                setFormError('Ngày bắt đầu không được nằm trong quá khứ.');
-                return;
-            }
-            if (form.NgayKetThuc && form.NgayKetThuc < today) {
-                setFormError('Ngày kết thúc không được nằm trong quá khứ.');
-                return;
-            }
+        // Không cho phép ngày bắt đầu / kết thúc nằm trong quá khứ, dù thêm mới hay sửa
+        const today = todayStr();
+        if (form.NgayBatDau && form.NgayBatDau < today) {
+            setFormError('Ngày bắt đầu không được nằm trong quá khứ.');
+            return;
+        }
+        if (form.NgayKetThuc && form.NgayKetThuc < today) {
+            setFormError('Ngày kết thúc không được nằm trong quá khứ.');
+            return;
         }
 
         setSaving(true);
@@ -182,6 +186,15 @@ export default function QuanLyUuDai() {
     };
 
     const handleToggle = async (ud) => {
+        if (isExpired(ud)) {
+            Swal.fire(
+                'Không thể thực hiện',
+                'Ưu đãi đã hết hạn, không thể mở/khóa. Vui lòng cập nhật lại ngày kết thúc nếu muốn tiếp tục áp dụng.',
+                'warning'
+            );
+            return;
+        }
+
         const dangHoatDong = ud.TrangThai === 'HoatDong';
         const confirm = await Swal.fire({
             title: `${dangHoatDong ? 'Ngừng' : 'Kích hoạt'} ưu đãi ${ud.MaUuDai}?`,
@@ -309,9 +322,9 @@ export default function QuanLyUuDai() {
                                     </td>
                                     <td>
                                         <span
-                                            className={`admin-badge ${ud.TrangThai === 'HoatDong' ? 'admin-badge--on' : 'admin-badge--off'}`}
+                                            className={`admin-badge ${isExpired(ud) || ud.TrangThai !== 'HoatDong' ? 'admin-badge--off' : 'admin-badge--on'}`}
                                         >
-                                            {ud.TrangThai === 'HoatDong' ? 'Đang chạy' : 'Đã ngừng'}
+                                            {isExpired(ud) ? 'Hết hạn' : (ud.TrangThai === 'HoatDong' ? 'Đang chạy' : 'Đã ngừng')}
                                         </span>
                                     </td>
                                     <td className="admin-th-action">
@@ -327,8 +340,10 @@ export default function QuanLyUuDai() {
                                                 type="button"
                                                 className={`admin-btn admin-btn--sm ${ud.TrangThai === 'HoatDong' ? 'admin-btn--danger' : 'admin-btn--primary'}`}
                                                 onClick={() => handleToggle(ud)}
+                                                disabled={isExpired(ud)}
+                                                title={isExpired(ud) ? 'Ưu đãi đã hết hạn, không thể mở/khóa' : undefined}
                                             >
-                                                {ud.TrangThai === 'HoatDong' ? 'Ngừng' : 'Mở'}
+                                                {isExpired(ud) ? 'Hết hạn' : (ud.TrangThai === 'HoatDong' ? 'Ngừng' : 'Mở')}
                                             </button>
                                         </div>
                                     </td>
@@ -478,7 +493,7 @@ export default function QuanLyUuDai() {
                         <label>Ngày bắt đầu</label>
                         <AdminDateInput
                             value={form.NgayBatDau}
-                            min={editing ? undefined : todayStr()}
+                            min={todayStr()}
                             max={form.NgayKetThuc || undefined}
                             onChange={(v) => setField('NgayBatDau', v)}
                         />
@@ -488,7 +503,7 @@ export default function QuanLyUuDai() {
                         <label>Ngày kết thúc</label>
                         <AdminDateInput
                             value={form.NgayKetThuc}
-                            min={form.NgayBatDau || (editing ? undefined : todayStr())}
+                            min={form.NgayBatDau || todayStr()}
                             onChange={(v) => setField('NgayKetThuc', v)}
                         />
                     </div>

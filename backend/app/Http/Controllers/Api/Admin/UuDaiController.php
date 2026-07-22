@@ -205,10 +205,7 @@ class UuDaiController extends Controller
     {
         $this->normalizeRequest($request);
 
-        $data = $this->validateData(
-            $request,
-            true
-        );
+        $data = $this->validateData($request);
 
         $uuDai = DB::transaction(
             function () use ($data) {
@@ -323,6 +320,11 @@ class UuDaiController extends Controller
      * Bật hoặc ngừng áp dụng ưu đãi.
      *
      * HoatDong <-> NgungApDung
+     *
+     * Ưu đãi đã hết hạn (NgayKetThuc đã qua) không thể mở lại bằng cách
+     * bật/tắt trạng thái — phải sửa ngày kết thúc trước. Trạng thái hiệu
+     * lực của một ưu đãi hết hạn luôn là "hết hạn" bất kể cột TrangThai
+     * đang lưu giá trị gì, nên không cho phép thao tác này đổi TrangThai.
      */
     public function toggleTrangThai(string $ma)
     {
@@ -335,6 +337,14 @@ class UuDaiController extends Controller
 
                 if (!$uuDai) {
                     return null;
+                }
+
+                if ($uuDai->NgayKetThuc < now()->toDateString()) {
+                    throw ValidationException::withMessages([
+                        'TrangThai' => [
+                            'Ưu đãi đã hết hạn, không thể mở/khóa. Vui lòng cập nhật lại ngày kết thúc nếu muốn tiếp tục áp dụng.',
+                        ],
+                    ]);
                 }
 
                 $uuDai->TrangThai =
@@ -370,17 +380,12 @@ class UuDaiController extends Controller
     /**
      * Validation dùng chung cho tạo và cập nhật.
      *
-     * Khi tạo mới:
-     * - Ngày bắt đầu không được trong quá khứ.
-     * - Ngày kết thúc không được trong quá khứ.
-     *
      * Cả tạo và cập nhật:
+     * - Ngày bắt đầu không được nằm trong quá khứ.
+     * - Ngày kết thúc không được nằm trong quá khứ.
      * - Ngày kết thúc không được trước ngày bắt đầu.
      */
-    private function validateData(
-        Request $request,
-        bool $laTaoMoi = false
-    ): array {
+    private function validateData(Request $request): array {
         $data = $request->validate(
             [
                 'TenUuDai' => [
@@ -426,24 +431,14 @@ class UuDaiController extends Controller
                 'NgayBatDau' => [
                     'required',
                     'date',
-
-                    ...(
-                        $laTaoMoi
-                            ? ['after_or_equal:today']
-                            : []
-                    ),
+                    'after_or_equal:today',
                 ],
 
                 'NgayKetThuc' => [
                     'required',
                     'date',
                     'after_or_equal:NgayBatDau',
-
-                    ...(
-                        $laTaoMoi
-                            ? ['after_or_equal:today']
-                            : []
-                    ),
+                    'after_or_equal:today',
                 ],
 
                 'MaHangThanhVien' => [
