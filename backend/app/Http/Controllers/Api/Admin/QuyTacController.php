@@ -169,6 +169,10 @@ class QuyTacController extends Controller
 
     /**
      * Bật / tắt quy tắc (HoatDong <-> NgungApDung).
+     *
+     * Quy tắc đã hết hạn (NgayHetHan đã qua) không thể mở lại thành
+     * "Đang áp dụng" — trạng thái hiệu lực của nó luôn phải là "Hết hạn",
+     * dù người dùng bấm nút "Mở".
      */
     public function toggleTrangThai(string $ma)
     {
@@ -182,7 +186,16 @@ class QuyTacController extends Controller
             $qt = QuyTacTichDiem::where('MaQuyTac', $ma)->lockForUpdate()->first();
             if (!$qt) return null;
 
-            $qt->TrangThai = $qt->TrangThai === 'HoatDong' ? 'NgungApDung' : 'HoatDong';
+            $daHetHan = $qt->NgayHetHan && $qt->NgayHetHan < now()->toDateString();
+
+            if ($qt->TrangThai === 'HoatDong') {
+                $qt->TrangThai = 'NgungApDung';
+            } elseif ($daHetHan) {
+                $qt->TrangThai = 'HetHan';
+            } else {
+                $qt->TrangThai = 'HoatDong';
+            }
+
             $qt->save();
 
             return $qt;
@@ -192,9 +205,15 @@ class QuyTacController extends Controller
             return response()->json(['success' => false, 'message' => 'Không tìm thấy quy tắc'], 404);
         }
 
+        $message = match ($qt->TrangThai) {
+            'HoatDong' => 'Đã kích hoạt quy tắc',
+            'HetHan'   => 'Quy tắc đã hết hạn, không thể kích hoạt lại. Vui lòng cập nhật ngày hết hạn nếu muốn tiếp tục áp dụng.',
+            default    => 'Đã ngừng quy tắc',
+        };
+
         return response()->json([
             'success' => true,
-            'message' => $qt->TrangThai === 'HoatDong' ? 'Đã kích hoạt quy tắc' : 'Đã ngừng quy tắc',
+            'message' => $message,
             'data'    => $qt,
         ]);
     }
@@ -230,13 +249,20 @@ class QuyTacController extends Controller
         ]);
     }
 
+    /**
+     * Validation dùng chung cho tạo và cập nhật.
+     *
+     * Cả tạo và cập nhật: ngày áp dụng và ngày hết hạn đều không được nằm
+     * trong quá khứ (không chỉ khi tạo mới), tương tự rule đã áp dụng cho
+     * ưu đãi — tránh tạo/sửa ra một quy tắc "chết" ngay từ đầu.
+     */
     private function validateData(Request $request): array
     {
         return $request->validate([
             'SoTienQuyDoi'         => ['required', 'numeric', 'gt:0'],
             'SoDiemNhan'           => ['required', 'integer', 'min:0'],
-            'NgayApDung'           => ['required', 'date'],
-            'NgayHetHan'           => ['nullable', 'date', 'after_or_equal:NgayApDung'],
+            'NgayApDung'           => ['required', 'date', 'after_or_equal:today'],
+            'NgayHetHan'           => ['nullable', 'date', 'after_or_equal:NgayApDung', 'after_or_equal:today'],
             'GiaTriHoaDonToiThieu' => ['nullable', 'numeric', 'min:0'],
             'HeSoNhanDiem'         => ['nullable', 'numeric', 'min:1'],
             'NhanDoiSinhNhat'      => ['nullable', 'boolean'],

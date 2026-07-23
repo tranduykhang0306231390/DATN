@@ -23,6 +23,21 @@ const fmtMoney = (n) =>
 const trangThaiLabel = (tt) =>
     tt === 'HoatDong' ? 'Đang áp dụng' : tt === 'HetHan' ? 'Hết hạn' : 'Đã ngừng';
 
+// Ngày hôm nay theo giờ địa phương, dạng YYYY-MM-DD
+const todayStr = () => {
+    const d = new Date();
+    const off = d.getTimezoneOffset();
+    return new Date(d.getTime() - off * 60000).toISOString().slice(0, 10);
+};
+
+// Quy tắc hết hạn khi ngày hết hạn đã qua — không phụ thuộc cột TrangThai
+// thô (vì trạng thái lưu trong DB chỉ đổi thành "HetHan" khi ai đó bấm nút
+// Mở, không có job tự động cập nhật theo thời gian thực).
+const isExpired = (qt) => {
+    const ngayHetHan = (qt.NgayHetHan || '').slice(0, 10);
+    return qt.TrangThai === 'HetHan' || (ngayHetHan !== '' && ngayHetHan < todayStr());
+};
+
 export default function QuanLyQuyTac() {
     const [list, setList] = useState([]);
     const [pagination, setPagination] = useState({ current_page: 1, last_page: 1, total: 0 });
@@ -86,6 +101,17 @@ export default function QuanLyQuyTac() {
     const setField = (key, value) => setForm((f) => ({ ...f, [key]: value }));
 
     const handleSubmit = async () => {
+        // Không cho phép ngày áp dụng / hết hạn nằm trong quá khứ, dù thêm mới hay sửa
+        const today = todayStr();
+        if (form.NgayApDung && form.NgayApDung < today) {
+            setFormError('Ngày áp dụng không được nằm trong quá khứ.');
+            return;
+        }
+        if (form.NgayHetHan && form.NgayHetHan < today) {
+            setFormError('Ngày hết hạn không được nằm trong quá khứ.');
+            return;
+        }
+
         setSaving(true);
         setFormError('');
         const payload = {
@@ -117,6 +143,15 @@ export default function QuanLyQuyTac() {
     };
 
     const handleToggle = async (qt) => {
+        if (isExpired(qt)) {
+            Swal.fire(
+                'Không thể thực hiện',
+                'Quy tắc đã hết hạn, không thể kích hoạt lại. Vui lòng cập nhật ngày hết hạn nếu muốn tiếp tục áp dụng.',
+                'warning'
+            );
+            return;
+        }
+
         const dangHoatDong = qt.TrangThai === 'HoatDong';
         const confirm = await Swal.fire({
             title: `${dangHoatDong ? 'Ngừng' : 'Kích hoạt'} quy tắc ${qt.MaQuyTac}?`,
@@ -131,12 +166,13 @@ export default function QuanLyQuyTac() {
         });
         if (!confirm.isConfirmed) return;
         try {
-            await quyTacApi.toggleTrangThai(qt.MaQuyTac);
+            const res = await quyTacApi.toggleTrangThai(qt.MaQuyTac);
+            const trangThaiMoi = res.data?.data?.TrangThai;
             Swal.fire({
-                icon: 'success',
-                title: dangHoatDong ? 'Đã ngừng quy tắc' : 'Đã kích hoạt quy tắc',
-                timer: 1500,
-                showConfirmButton: false,
+                icon: trangThaiMoi === 'HetHan' ? 'warning' : 'success',
+                title: res.data?.message || (dangHoatDong ? 'Đã ngừng quy tắc' : 'Đã kích hoạt quy tắc'),
+                timer: trangThaiMoi === 'HetHan' ? undefined : 1500,
+                showConfirmButton: trangThaiMoi === 'HetHan',
             });
             loadList();
         } catch (e) {
@@ -239,9 +275,9 @@ export default function QuanLyQuyTac() {
                                     </td>
                                     <td>
                                         <span
-                                            className={`admin-badge ${qt.TrangThai === 'HoatDong' ? 'admin-badge--on' : 'admin-badge--off'}`}
+                                            className={`admin-badge ${qt.TrangThai === 'HoatDong' && !isExpired(qt) ? 'admin-badge--on' : 'admin-badge--off'}`}
                                         >
-                                            {trangThaiLabel(qt.TrangThai)}
+                                            {isExpired(qt) ? 'Hết hạn' : trangThaiLabel(qt.TrangThai)}
                                         </span>
                                     </td>
                                     <td className="admin-th-action">
@@ -257,8 +293,10 @@ export default function QuanLyQuyTac() {
                                                 type="button"
                                                 className={`admin-btn admin-btn--sm ${qt.TrangThai === 'HoatDong' ? 'admin-btn--danger' : 'admin-btn--primary'}`}
                                                 onClick={() => handleToggle(qt)}
+                                                disabled={isExpired(qt)}
+                                                title={isExpired(qt) ? 'Quy tắc đã hết hạn, không thể mở lại' : undefined}
                                             >
-                                                {qt.TrangThai === 'HoatDong' ? 'Ngừng' : 'Mở'}
+                                                {isExpired(qt) ? 'Hết hạn' : (qt.TrangThai === 'HoatDong' ? 'Ngừng' : 'Mở')}
                                             </button>
                                         </div>
                                     </td>
@@ -348,6 +386,7 @@ export default function QuanLyQuyTac() {
                         <label>Ngày áp dụng</label>
                         <AdminDateInput
                             value={form.NgayApDung}
+                            min={todayStr()}
                             max={form.NgayHetHan || undefined}
                             onChange={(v) => setField('NgayApDung', v)}
                         />
@@ -357,7 +396,7 @@ export default function QuanLyQuyTac() {
                         <label>Ngày hết hạn (tùy chọn)</label>
                         <AdminDateInput
                             value={form.NgayHetHan}
-                            min={form.NgayApDung || undefined}
+                            min={form.NgayApDung || todayStr()}
                             onChange={(v) => setField('NgayHetHan', v)}
                         />
                     </div>
