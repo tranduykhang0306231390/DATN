@@ -1,11 +1,11 @@
 // src/pages/admin/QuanLyUuDai.jsx
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import Swal from 'sweetalert2';
 import '../../assets/css/admin.css';
 import uuDaiApi from '../../api/uuDaiApi';
 import Modal from '../../components/admin/Modal';
 import AdminDateInput from '../../components/admin/AdminDateInput';
-import { useEffect, useState, useCallback, useMemo } from 'react';
+
 const PER_PAGE = 10;
 
 // Thứ tự áp dụng gắn liền với nhóm ưu đãi, KHÔNG cho nhập tay.
@@ -47,18 +47,18 @@ const EMPTY_FORM = {
 const fmtMoney = (n) =>
     new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(n || 0);
 
-// Ưu đãi hết hạn khi ngày kết thúc đã qua — không phụ thuộc cột TrangThai.
-const isExpired = (ud) => {
-    const ngayKetThuc = (ud.NgayKetThuc || '').slice(0, 10);
-    return ngayKetThuc !== '' && ngayKetThuc < todayStr();
-};
-
 // Ngày hôm nay theo giờ địa phương, dạng YYYY-MM-DD
 const todayStr = () => {
     const d = new Date();
     const m = String(d.getMonth() + 1).padStart(2, '0');
     const day = String(d.getDate()).padStart(2, '0');
     return `${d.getFullYear()}-${m}-${day}`;
+};
+
+// Ưu đãi hết hạn khi ngày kết thúc đã qua — không phụ thuộc cột TrangThai.
+const isExpired = (ud) => {
+    const ngayKetThuc = (ud.NgayKetThuc || '').slice(0, 10);
+    return ngayKetThuc !== '' && ngayKetThuc < todayStr();
 };
 
 export default function QuanLyUuDai() {
@@ -145,14 +145,22 @@ export default function QuanLyUuDai() {
         }));
 
     const handleSubmit = async () => {
-        // Không cho phép ngày bắt đầu / kết thúc nằm trong quá khứ, dù thêm mới hay sửa
         const today = todayStr();
-        if (form.NgayBatDau && form.NgayBatDau < today) {
+
+        // Thêm mới: ngày bắt đầu không được nằm trong quá khứ.
+        // Khi sửa: giữ nguyên ngày bắt đầu cũ (ưu đãi đang chạy vốn đã bắt đầu
+        // từ trước), nếu không sẽ không sửa nổi bất kỳ ưu đãi cũ nào.
+        if (!editing && form.NgayBatDau && form.NgayBatDau < today) {
             setFormError('Ngày bắt đầu không được nằm trong quá khứ.');
             return;
         }
+        // Ngày kết thúc luôn phải từ hôm nay trở đi, kể cả khi sửa.
         if (form.NgayKetThuc && form.NgayKetThuc < today) {
             setFormError('Ngày kết thúc không được nằm trong quá khứ.');
+            return;
+        }
+        if (form.NgayBatDau && form.NgayKetThuc && form.NgayKetThuc < form.NgayBatDau) {
+            setFormError('Ngày kết thúc phải sau ngày bắt đầu.');
             return;
         }
 
@@ -170,12 +178,20 @@ export default function QuanLyUuDai() {
         try {
             if (editing) {
                 await uuDaiApi.update(editing, payload);
+                setModalOpen(false);
+                loadList();
             } else {
                 await uuDaiApi.create(payload);
-                setPage(1);
+                setModalOpen(false);
+                // Về trang 1 để thấy bản ghi vừa tạo. Nếu đang ở trang 1 thì
+                // setPage không đổi state nên phải tự gọi loadList, còn nếu đang
+                // ở trang khác thì effect sẽ tự chạy — tránh gọi API hai lần.
+                if (page === 1) {
+                    loadList();
+                } else {
+                    setPage(1);
+                }
             }
-            setModalOpen(false);
-            loadList();
         } catch (err) {
             const res = err.response?.data;
             const firstErr = res?.errors ? Object.values(res.errors)[0]?.[0] : null;
@@ -221,20 +237,23 @@ export default function QuanLyUuDai() {
     };
 
     const applyFilter = () => setPage(1);
-    const pageList = useMemo(() => {
-    const last = pagination.last_page || 1;
-    const cur = pagination.current_page || 1;
-    if (last <= 7) return Array.from({ length: last }, (_, i) => i + 1);
 
-    const pages = [1];
-    const start = Math.max(2, cur - 1);
-    const end = Math.min(last - 1, cur + 1);
-    if (start > 2) pages.push('…');
-    for (let p = start; p <= end; p++) pages.push(p);
-    if (end < last - 1) pages.push('…');
-    pages.push(last);
-    return pages;
-}, [pagination.current_page, pagination.last_page]);
+    // Dãy số trang hiển thị: rút gọn bằng dấu … khi có nhiều hơn 7 trang.
+    const pageList = useMemo(() => {
+        const last = pagination.last_page || 1;
+        const cur = pagination.current_page || 1;
+        if (last <= 7) return Array.from({ length: last }, (_, i) => i + 1);
+
+        const pages = [1];
+        const start = Math.max(2, cur - 1);
+        const end = Math.min(last - 1, cur + 1);
+        if (start > 2) pages.push('…');
+        for (let p = start; p <= end; p++) pages.push(p);
+        if (end < last - 1) pages.push('…');
+        pages.push(last);
+        return pages;
+    }, [pagination.current_page, pagination.last_page]);
+
     const goToPage = (p) => {
         if (p < 1 || p > pagination.last_page || p === pagination.current_page) return;
         setPage(p);
@@ -486,7 +505,6 @@ export default function QuanLyUuDai() {
                             value={form.GiaTriHoaDonToiThieu}
                             onChange={(e) => setField('GiaTriHoaDonToiThieu', e.target.value)}
                         />
-                        
                     </div>
 
                     <div className="admin-field">
@@ -500,13 +518,11 @@ export default function QuanLyUuDai() {
                         />
                     </div>
 
-                    
-
                     <div className="admin-field">
                         <label>Ngày bắt đầu</label>
                         <AdminDateInput
                             value={form.NgayBatDau}
-                            min={todayStr()}
+                            min={editing ? undefined : todayStr()}
                             max={form.NgayKetThuc || undefined}
                             onChange={(v) => setField('NgayBatDau', v)}
                         />
@@ -516,10 +532,15 @@ export default function QuanLyUuDai() {
                         <label>Ngày kết thúc</label>
                         <AdminDateInput
                             value={form.NgayKetThuc}
-                            min={form.NgayBatDau || todayStr()}
+                            min={
+                                form.NgayBatDau && form.NgayBatDau > todayStr()
+                                    ? form.NgayBatDau
+                                    : todayStr()
+                            }
                             onChange={(v) => setField('NgayKetThuc', v)}
                         />
                     </div>
+
                     <div className="admin-field">
                         <label>Số lượng phát hành</label>
                         <input
@@ -575,9 +596,8 @@ export default function QuanLyUuDai() {
                                 lineHeight: 1.6,
                             }}
                         >
-                            <b>Thứ tự áp dụng do hệ thống quyết định</b> 
-                            <b> 1. Tặng món → 2. Giảm tiền → 3. Giảm %</b>.
-                            
+                            <b>Thứ tự áp dụng do hệ thống quyết định:</b>{' '}
+                            <b>1. Tặng món → 2. Giảm tiền → 3. Giảm %</b>.
                         </div>
                     </div>
 
@@ -607,4 +627,3 @@ export default function QuanLyUuDai() {
         </div>
     );
 }
-
