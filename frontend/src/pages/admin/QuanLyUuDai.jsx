@@ -5,7 +5,7 @@ import '../../assets/css/admin.css';
 import uuDaiApi from '../../api/uuDaiApi';
 import Modal from '../../components/admin/Modal';
 import AdminDateInput from '../../components/admin/AdminDateInput';
-
+import { useEffect, useState, useCallback, useMemo } from 'react';
 const PER_PAGE = 10;
 
 // Thứ tự áp dụng gắn liền với nhóm ưu đãi, KHÔNG cho nhập tay.
@@ -221,7 +221,20 @@ export default function QuanLyUuDai() {
     };
 
     const applyFilter = () => setPage(1);
+    const pageList = useMemo(() => {
+    const last = pagination.last_page || 1;
+    const cur = pagination.current_page || 1;
+    if (last <= 7) return Array.from({ length: last }, (_, i) => i + 1);
 
+    const pages = [1];
+    const start = Math.max(2, cur - 1);
+    const end = Math.min(last - 1, cur + 1);
+    if (start > 2) pages.push('…');
+    for (let p = start; p <= end; p++) pages.push(p);
+    if (end < last - 1) pages.push('…');
+    pages.push(last);
+    return pages;
+}, [pagination.current_page, pagination.last_page]);
     const goToPage = (p) => {
         if (p < 1 || p > pagination.last_page || p === pagination.current_page) return;
         setPage(p);
